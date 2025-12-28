@@ -1,205 +1,344 @@
-// Updated Navbar.jsx with modal
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { PawPrint, User, LogIn, Menu, X, LogOut, Heart, Home } from 'lucide-react'
-import LoginModal from './LoginModal'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  PawPrint,
+  Menu,
+  X,
+  ChevronDown,
+  Search,
+  Heart,
+  Dog,
+  HelpCircle,
+  BookOpen,
+  Home,
+  Users,
+  MessageCircle,
+  User,
+  LogIn
+} from 'lucide-react'
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const [user, setUser] = useState(null)
+  const [isAdoptDropdownOpen, setIsAdoptDropdownOpen] = useState(false)
+  const [isRehomeDropdownOpen, setIsRehomeDropdownOpen] = useState(false)
+
+  const adoptRef = useRef(null)
+  const rehomeRef = useRef(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
+    const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const navItems = ['Adopt', 'Rehome', 'Care Guide', 'Why Adopt', 'About Us']
-
-  const handleLoginClick = () => {
-    setIsLoginModalOpen(true)
-    setIsMobileMenuOpen(false)
-  }
-
-  const handleRegisterClick = () => {
-    setIsLoginModalOpen(true)
-    setIsMobileMenuOpen(false)
-  }
-
-  const handleLoginSuccess = (userData) => {
-    setUser(userData)
-    // Save to localStorage for persistence
-    localStorage.setItem('pawhouse_user', JSON.stringify(userData))
-  }
-
-  const handleLogout = () => {
-    setUser(null)
-    localStorage.removeItem('pawhouse_user')
-    setIsMobileMenuOpen(false)
-  }
-
-  const handleProfile = () => {
-    setIsMobileMenuOpen(false)
-    alert(`This would navigate to ${user?.role} profile page`)
-  }
-
-  // Check for saved user on mount
+  // Close dropdowns when clicking outside (for mobile/tablet)
   useEffect(() => {
-    const savedUser = localStorage.getItem('pawhouse_user')
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
+    const handleClickOutside = (e) => {
+      if (adoptRef.current && !adoptRef.current.contains(e.target)) {
+        setIsAdoptDropdownOpen(false)
+      }
+      if (rehomeRef.current && !rehomeRef.current.contains(e.target)) {
+        setIsRehomeDropdownOpen(false)
+      }
     }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Dog Adoption Items
+  const adoptItems = [
+    {
+      icon: Dog,
+      label: 'Browse Dogs',
+      description: 'Find your perfect canine companion',
+      count: '50+ available'
+    },
+    {
+      icon: Search,
+      label: 'Search Dogs',
+      description: 'Filter by breed, age, or location'
+    },
+    {
+      icon: Heart,
+      label: 'How Adoption Works',
+      description: 'Step-by-step guide to adoption'
+    },
+    {
+      icon: HelpCircle,
+      label: 'Adopt FAQ\'s',
+      description: 'Common questions answered'
+    }
+  ]
+
+  // Dog Rehoming Items
+  const rehomeItems = [
+    {
+      icon: Home,
+      label: 'Rehome a Dog',
+      description: 'Find a loving home for your dog'
+    },
+    {
+      icon: BookOpen,
+      label: 'Rehoming Process',
+      description: 'Step-by-step rehoming guide'
+    },
+    {
+      icon: HelpCircle,
+      label: 'Rehome FAQ\'s',
+      description: 'Common rehoming questions'
+    },
+    {
+      icon: Users,
+      label: 'Meet Our Community',
+      description: 'See successful rehoming stories'
+    }
+  ]
+
+  // Regular navigation items (non-dropdown)
+  const navItems = [
+    { name: 'Care Guide', icon: BookOpen, href: '#care-guide' },
+    { name: 'About Us', icon: Users, href: '#about-us' },
+    { name: 'Contact', icon: MessageCircle, href: '#contact' }
+  ]
+
+  // Handler for closing other dropdown when one opens
+  const handleAdoptHover = (isHovering) => {
+    setIsAdoptDropdownOpen(isHovering)
+    if (isHovering) {
+      setIsRehomeDropdownOpen(false)
+    }
+  }
+
+  const handleRehomeHover = (isHovering) => {
+    setIsRehomeDropdownOpen(isHovering)
+    if (isHovering) {
+      setIsAdoptDropdownOpen(false)
+    }
+  }
+
+  // Mobile click handlers
+  const handleMobileAdoptClick = () => {
+    setIsAdoptDropdownOpen(!isAdoptDropdownOpen)
+    setIsRehomeDropdownOpen(false)
+  }
+
+  const handleMobileRehomeClick = () => {
+    setIsRehomeDropdownOpen(!isRehomeDropdownOpen)
+    setIsAdoptDropdownOpen(false)
+  }
+
   return (
-    <>
-      <motion.nav 
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'bg-white/95 backdrop-blur-lg shadow-lg py-3' 
-            : 'bg-white/95 backdrop-blur-sm py-4'
-        }`}
-      >
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            
-            {/* Logo */}
-            <motion.div 
-              className="flex items-center gap-3 group cursor-pointer"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <div className="relative">
-                <motion.div
-                  animate={{ rotate: [0, 10, 0, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <PawPrint className="h-10 w-10 text-[#008737]" />
-                </motion.div>
-                <div className="absolute inset-0 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full opacity-10 blur-sm"></div>
-              </div>
-              <div className="flex flex-col">
-                <h1 className="text-2xl font-bold text-[#063630] tracking-tight">The Paw</h1>
-                <p className="text-xs font-semibold text-[#008737] tracking-wider">HOUSE</p>
-              </div>
-            </motion.div>
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-lg shadow-lg py-3'
+          : 'bg-white/95 backdrop-blur-sm py-4'
+      }`}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center">
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-8">
-              {navItems.map((item, index) => (
-                <motion.a
-                  key={item}
-                  href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="text-[#063630] hover:text-[#008737] font-medium transition-colors duration-300 relative group text-base"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  {item}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#008737] to-[#085558] transition-all duration-300 group-hover:w-full rounded-full"></span>
-                </motion.a>
-              ))}
+          {/* Logo */}
+          <motion.div 
+            className="flex items-center gap-3 group cursor-pointer"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <div className="relative">
+              <motion.div
+                animate={{ rotate: [0, 10, 0, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <PawPrint className="h-10 w-10 text-[#008737]" />
+              </motion.div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full opacity-10 blur-sm"></div>
             </div>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold text-[#063630] tracking-tight">The Paw</h1>
+              <p className="text-xs font-semibold text-[#008737] tracking-wider">HOUSE</p>
+            </div>
+          </motion.div>
 
-            {/* Desktop Action Buttons */}
-            <div className="hidden lg:flex items-center gap-4">
-              {user ? (
-                <>
-                  {/* User Profile Dropdown */}
-                  <div className="relative group">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#008737]/10 to-[#085558]/10 border border-[#008737]/20"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#008737] to-[#085558] flex items-center justify-center">
-                        <User className="h-4 w-4 text-white" />
+          {/* Desktop Menu */}
+          <div className="hidden lg:flex items-center gap-6">
+
+            {/* Adopt Dropdown (Dogs Only) */}
+            <div 
+              ref={adoptRef} 
+              className="relative"
+              onMouseEnter={() => handleAdoptHover(true)}
+              onMouseLeave={() => handleAdoptHover(false)}
+            >
+              <button
+                className="flex items-center gap-1 font-medium text-[#063630] hover:text-[#008737] transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-gray-50 group"
+              >
+                Adopt a Dog
+                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isAdoptDropdownOpen ? 'rotate-180' : ''}`} />
+                <span className="absolute -bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-[#008737] to-[#085558] scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+              </button>
+
+              <AnimatePresence>
+                {isAdoptDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                  >
+                    <div className="p-1">
+                      <div className="p-3 bg-gradient-to-r from-[#008737]/5 to-[#085558]/5 rounded-lg mb-2">
+                        <h3 className="font-bold text-[#063630] text-lg">Dog Adoption</h3>
+                        <p className="text-sm text-gray-600">Find your new best friend</p>
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold text-[#063630]">{user.name}</p>
-                        <p className="text-xs text-[#008737] capitalize">
-                          {user.role === 'adopter' ? 'Pet Adopter' : 'Pet Rehomer'}
-                        </p>
-                      </div>
-                    </motion.button>
-                    
-                    {/* Dropdown Menu */}
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                      <button
-                        onClick={handleProfile}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 text-[#063630] flex items-center gap-2 rounded-t-xl"
-                      >
-                        <User className="h-4 w-4" />
-                        My Profile
-                      </button>
-                      {user.role === 'rehomer' && (
-                        <button
-                          onClick={() => alert('Navigating to My Pets page...')}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 text-[#063630] flex items-center gap-2"
+                      
+                      {adoptItems.map((item, i) => (
+                        <motion.a
+                          key={i}
+                          href="#"
+                          whileHover={{ x: 5 }}
+                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group cursor-pointer"
                         >
-                          <PawPrint className="h-4 w-4" />
-                          My Pets
-                        </button>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 text-red-600 flex items-center gap-2 border-t border-gray-100 rounded-b-xl"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </button>
+                          <div className="p-2 bg-gradient-to-r from-[#008737]/10 to-[#085558]/10 rounded-lg">
+                            <item.icon className="h-5 w-5 text-[#008737]" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold text-[#063630] group-hover:text-[#008737]">
+                                {item.label}
+                              </h4>
+                              {item.count && (
+                                <span className="text-xs font-medium bg-[#008737]/10 text-[#008737] px-2 py-1 rounded-full">
+                                  {item.count}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {item.description}
+                            </p>
+                          </div>
+                        </motion.a>
+                      ))}
                     </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleLoginClick}
-                    className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold border border-[#008737] hover:border-[#085558] px-6 py-2.5 rounded-full transition-all duration-300 hover:shadow-md"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>Login</span>
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleRegisterClick}
-                    className="bg-gradient-to-r from-[#008737] to-[#085558] text-white px-6 py-2.5 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-                  >
-                    <LogIn className="h-4 w-4 text-white" />
-                    <span className="text-white">Register</span>
-                  </motion.button>
-                </>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="Toggle menu"
+            {/* Rehome Dropdown (Dogs Only) */}
+            <div 
+              ref={rehomeRef} 
+              className="relative"
+              onMouseEnter={() => handleRehomeHover(true)}
+              onMouseLeave={() => handleRehomeHover(false)}
             >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6 text-[#063630]" />
-              ) : (
-                <Menu className="h-6 w-6 text-[#063630]" />
-              )}
-            </button>
+              <button
+                className="flex items-center gap-1 font-medium text-[#063630] hover:text-[#085558] transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-gray-50 group"
+              >
+                Rehome a Dog
+                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isRehomeDropdownOpen ? 'rotate-180' : ''}`} />
+                <span className="absolute -bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-[#085558] to-[#008737] scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+              </button>
+
+              <AnimatePresence>
+                {isRehomeDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                  >
+                    <div className="p-1">
+                      <div className="p-3 bg-gradient-to-r from-[#085558]/5 to-[#008737]/5 rounded-lg mb-2">
+                        <h3 className="font-bold text-[#063630] text-lg">Dog Rehoming</h3>
+                        <p className="text-sm text-gray-600">Find a loving home for your dog</p>
+                      </div>
+                      
+                      {rehomeItems.map((item, i) => (
+                        <motion.a
+                          key={i}
+                          href="#"
+                          whileHover={{ x: 5 }}
+                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group cursor-pointer"
+                        >
+                          <div className="p-2 bg-gradient-to-r from-[#085558]/10 to-[#008737]/10 rounded-lg">
+                            <item.icon className="h-5 w-5 text-[#085558]" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-[#063630] group-hover:text-[#085558]">
+                              {item.label}
+                            </h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {item.description}
+                            </p>
+                          </div>
+                        </motion.a>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Regular Navigation Items */}
+            {navItems.map((item) => (
+              <motion.a
+                key={item.name}
+                href={item.href}
+                className="font-medium text-[#063630] hover:text-[#008737] transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-gray-50 group relative"
+                whileHover={{ scale: 1.05 }}
+              >
+                {item.name}
+                <span className="absolute -bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-[#008737] to-[#085558] scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+              </motion.a>
+            ))}
+
+            {/* Login/Register Buttons */}
+            <div className="flex items-center gap-3 ml-4">
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => alert('Login clicked')}
+                className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold border border-[#008737] hover:border-[#085558] px-5 py-2 rounded-full transition-all duration-300 hover:shadow-md"
+              >
+                <User className="h-4 w-4" />
+                <span>Login</span>
+              </motion.button>
+              
+              <motion.button
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => alert('Register clicked')}
+                className="bg-gradient-to-r from-[#008737] to-[#085558] text-white px-5 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+              >
+                <LogIn className="h-4 w-4 text-white" />
+                <span className="text-white">Register</span>
+              </motion.button>
+            </div>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6 text-[#063630]" />
+            ) : (
+              <Menu className="h-6 w-6 text-[#063630]" />
+            )}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -208,90 +347,138 @@ const Navbar = () => {
               transition={{ duration: 0.3 }}
               className="lg:hidden mt-4 pb-4 border-t border-gray-100"
             >
-              <div className="flex flex-col gap-4 pt-4">
+              <div className="flex flex-col gap-1 pt-4">
+                
+                {/* Adopt Mobile Dropdown */}
+                <div className="mb-2">
+                  <button
+                    onClick={handleMobileAdoptClick}
+                    className="w-full flex items-center justify-between text-left font-medium text-[#063630] hover:text-[#008737] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Dog className="h-5 w-5" />
+                      <span>Adopt a Dog</span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isAdoptDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isAdoptDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="pl-10 pr-4"
+                      >
+                        <div className="space-y-2 py-2">
+                          {adoptItems.map((item, i) => (
+                            <a
+                              key={i}
+                              href="#"
+                              className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              <item.icon className="h-4 w-4 text-[#008737]" />
+                              <div className="flex-1">
+                                <p className="font-medium text-[#063630]">{item.label}</p>
+                                <p className="text-xs text-gray-600">{item.description}</p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Rehome Mobile Dropdown */}
+                <div className="mb-2">
+                  <button
+                    onClick={handleMobileRehomeClick}
+                    className="w-full flex items-center justify-between text-left font-medium text-[#063630] hover:text-[#085558] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Home className="h-5 w-5" />
+                      <span>Rehome a Dog</span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isRehomeDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isRehomeDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="pl-10 pr-4"
+                      >
+                        <div className="space-y-2 py-2">
+                          {rehomeItems.map((item, i) => (
+                            <a
+                              key={i}
+                              href="#"
+                              className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              <item.icon className="h-4 w-4 text-[#085558]" />
+                              <div className="flex-1">
+                                <p className="font-medium text-[#063630]">{item.label}</p>
+                                <p className="text-xs text-gray-600">{item.description}</p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Regular Mobile Items */}
                 {navItems.map((item) => (
                   <a
-                    key={item}
-                    href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="text-[#063630] hover:text-[#008737] font-medium py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    key={item.name}
+                    href={item.href}
+                    className="flex items-center gap-2 font-medium text-[#063630] hover:text-[#008737] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    {item}
+                    <item.icon className="h-5 w-5" />
+                    {item.name}
                   </a>
                 ))}
-                
-                <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
-                  {user ? (
-                    <>
-                      <div className="flex items-center gap-3 px-4 py-2">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#008737] to-[#085558] flex items-center justify-center">
-                          <User className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-[#063630]">{user.name}</p>
-                          <p className="text-sm text-[#008737] capitalize">
-                            {user.role === 'adopter' ? 'Pet Adopter' : 'Pet Rehomer'}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleProfile}
-                        className="text-left px-4 py-3 hover:bg-gray-50 text-[#063630] rounded-lg"
-                      >
-                        My Profile
-                      </button>
-                      {user.role === 'rehomer' && (
-                        <button
-                          onClick={() => {
-                            alert('Navigating to My Pets page...')
-                            setIsMobileMenuOpen(false)
-                          }}
-                          className="text-left px-4 py-3 hover:bg-gray-50 text-[#063630] rounded-lg"
-                        >
-                          My Pets
-                        </button>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="text-left px-4 py-3 hover:bg-gray-50 text-red-600 rounded-lg border-t border-gray-100"
-                      >
-                        Logout
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleLoginClick}
-                        className="w-full flex items-center justify-center gap-2 text-[#008737] font-semibold border border-[#008737] py-3 rounded-lg hover:bg-[#008737]/5 transition-colors"
-                      >
-                        <User className="h-4 w-4" />
-                        <span>Login</span>
-                      </motion.button>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleRegisterClick}
-                        className="w-full bg-gradient-to-r from-[#008737] to-[#085558] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-                      >
-                        <LogIn className="h-4 w-4 text-white" />
-                        <span className="text-white">Register</span>
-                      </motion.button>
-                    </>
-                  )}
+
+                {/* Mobile Login/Register Buttons */}
+                <div className="flex flex-col gap-3 pt-4 border-t border-gray-100 mt-2">
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      alert('Login clicked')
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className="w-full flex items-center justify-center gap-2 text-[#008737] font-semibold border border-[#008737] py-3 rounded-lg hover:bg-[#008737]/5 transition-colors"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Login</span>
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      alert('Register clicked')
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className="w-full bg-gradient-to-r from-[#008737] to-[#085558] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <LogIn className="h-4 w-4 text-white" />
+                    <span className="text-white">Register</span>
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
           )}
-        </div>
-      </motion.nav>
-
-      {/* Login/Register Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-      />
-    </>
+        </AnimatePresence>
+      </div>
+    </motion.nav>
   )
 }
 
