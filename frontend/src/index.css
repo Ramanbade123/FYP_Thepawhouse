@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply antialiased bg-[#EDEDED] text-[#063630];
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Fix for any remaining white text visibility issues */
+  h1, h2, h3, h4, h5, h6, p, span, a, li, button, input, textarea {
+    @apply text-[#063630];
+  }
+}
+
+@layer components {
+  .container {
+    @apply px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl;
+  }
+
+  .section-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Custom button styles - FIXED */
+  .btn-primary {
+    @apply bg-gradient-to-r from-[#008737] to-[#085558] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300;
+  }
+
+  .btn-secondary {
+    @apply border-2 border-[#008737] text-[#008737] px-6 py-3 rounded-xl font-semibold hover:bg-[#008737]/5 transition-all duration-300;
+  }
+
+  /* Custom card styles */
+  .card {
+    @apply bg-white rounded-2xl shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300;
+  }
+
+  /* Custom form styles */
+  .form-input {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630];
+  }
+}
+
+@layer utilities {
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+  .animation-delay-800 {
+    animation-delay: 800ms;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-[#008737] to-[#085558] bg-clip-text text-transparent;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl;
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-md bg-white/10 border border-white/20;
+  }
+
+  /* Custom text colors for your palette - FIXED */
+  .text-primary {
+    @apply text-[#063630];
+  }
+  
+  .text-secondary {
+    @apply text-[#085558];
+  }
+  
+  .text-accent {
+    @apply text-[#008737];
+  }
+  
+  .text-highlight {
+    @apply text-[#848AFF];
+  }
+  
+  .text-bg {
+    @apply text-[#EDEDED];
+  }
+
+  /* Ensure links have proper colors */
+  a {
+    @apply text-[#008737] hover:text-[#085558];
+  }
+
+  /* Better focus states for accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-[#848AFF] focus:ring-offset-2;
+  }
+
+  /* Custom utility for text truncation */
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #EDEDED;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #008737;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #085558;
+}
+
+/* Selection color */
+::selection {
+  background-color: #008737;
+  color: white;
+}
+
+/* Remove default focus outlines and add custom ones */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #848AFF;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for all interactive elements */
+a, button, input, textarea {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Ensure images don't overflow */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix for iOS tap highlight color */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
