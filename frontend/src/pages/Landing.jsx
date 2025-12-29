@@ -1,10 +1,11 @@
-import Navbar from '../../../../coding/frontend/src/components/Navbar'
-import Hero from '../../../../coding/frontend/src/components/Hero'
-import Process from '../../../../coding/frontend/src/components/Process'
-import Pets from '../../../../coding/frontend/src/components/Pets'
-import Testimonials from '../../../../coding/frontend/src/components/Testimonials'
-import FAQ from '../../../../coding/frontend/src/components/FAQ'
-import Footer from '../../../../coding/frontend/src/components/Footer'
+// src/pages/Landing.jsx
+import Navbar from '../components/Navbar'
+import Hero from '../components/Hero'
+import Process from '../components/Process'
+import Pets from '../components/Pets'
+import Testimonials from '../components/Testimonials'
+import FAQ from '../components/FAQ'
+import Footer from '../components/Footer'
 
 const Landing = () => {
   return (

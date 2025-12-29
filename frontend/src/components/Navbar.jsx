@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import {
   PawPrint,
   Menu,
@@ -52,22 +53,20 @@ const Navbar = () => {
       icon: Dog,
       label: 'Browse Dogs',
       description: 'Find your perfect canine companion',
-      count: '50+ available'
-    },
-    {
-      icon: Search,
-      label: 'Search Dogs',
-      description: 'Filter by breed, age, or location'
+      count: '50+ available',
+      path: '/adopt'
     },
     {
       icon: Heart,
       label: 'How Adoption Works',
-      description: 'Step-by-step guide to adoption'
+      description: 'Step-by-step guide to adoption',
+      path: '/adoption-process'
     },
     {
       icon: HelpCircle,
       label: 'Adopt FAQ\'s',
-      description: 'Common questions answered'
+      description: 'Common questions answered',
+      path: '/adoption-faq'
     }
   ]
 
@@ -76,30 +75,28 @@ const Navbar = () => {
     {
       icon: Home,
       label: 'Rehome a Dog',
-      description: 'Find a loving home for your dog'
+      description: 'Find a loving home for your dog',
+      path: '/rehome'
     },
     {
       icon: BookOpen,
       label: 'Rehoming Process',
-      description: 'Step-by-step rehoming guide'
+      description: 'Step-by-step rehoming guide',
+      path: '/rehoming-process'
     },
     {
       icon: HelpCircle,
       label: 'Rehome FAQ\'s',
-      description: 'Common rehoming questions'
-    },
-    {
-      icon: Users,
-      label: 'Meet Our Community',
-      description: 'See successful rehoming stories'
+      description: 'Common rehoming questions',
+      path: '/rehoming-faq'
     }
   ]
 
-  // Regular navigation items (non-dropdown)
+  // Regular navigation items (non-dropdown) - Updated with paths
   const navItems = [
-    { name: 'Care Guide', icon: BookOpen, href: '#care-guide' },
-    { name: 'About Us', icon: Users, href: '#about-us' },
-    { name: 'Contact', icon: MessageCircle, href: '#contact' }
+    { name: 'Care Guide', icon: BookOpen, path: '/care-guide' },
+    { name: 'About Us', icon: Users, path: '/about' },
+    { name: 'Contact', icon: MessageCircle, path: '/contact' }
   ]
 
   // Handler for closing other dropdown when one opens
@@ -142,27 +139,28 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
 
-          {/* Logo */}
-          <motion.div 
-            className="flex items-center gap-3 group cursor-pointer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            <div className="relative">
-              <motion.div
-                animate={{ rotate: [0, 10, 0, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <PawPrint className="h-10 w-10 text-[#008737]" />
-              </motion.div>
-              <div className="absolute inset-0 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full opacity-10 blur-sm"></div>
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-2xl font-bold text-[#063630] tracking-tight">The Paw</h1>
-              <p className="text-xs font-semibold text-[#008737] tracking-wider">HOUSE</p>
-            </div>
-          </motion.div>
+          {/* Logo - Links to home page */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-3"
+            >
+              <div className="relative">
+                <motion.div
+                  animate={{ rotate: [0, 10, 0, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <PawPrint className="h-10 w-10 text-[#008737]" />
+                </motion.div>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full opacity-10 blur-sm"></div>
+              </div>
+              <div className="flex flex-col">
+                <h1 className="text-2xl font-bold text-[#063630] tracking-tight">The Paw</h1>
+                <p className="text-xs font-semibold text-[#008737] tracking-wider">HOUSE</p>
+              </div>
+            </motion.div>
+          </Link>
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center gap-6">
@@ -198,11 +196,12 @@ const Navbar = () => {
                       </div>
                       
                       {adoptItems.map((item, i) => (
-                        <motion.a
+                        <Link
                           key={i}
-                          href="#"
+                          to={item.path}
                           whileHover={{ x: 5 }}
-                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group cursor-pointer"
+                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
+                          onClick={() => setIsAdoptDropdownOpen(false)}
                         >
                           <div className="p-2 bg-gradient-to-r from-[#008737]/10 to-[#085558]/10 rounded-lg">
                             <item.icon className="h-5 w-5 text-[#008737]" />
@@ -222,7 +221,7 @@ const Navbar = () => {
                               {item.description}
                             </p>
                           </div>
-                        </motion.a>
+                        </Link>
                       ))}
                     </div>
                   </motion.div>
@@ -261,11 +260,12 @@ const Navbar = () => {
                       </div>
                       
                       {rehomeItems.map((item, i) => (
-                        <motion.a
+                        <Link
                           key={i}
-                          href="#"
+                          to={item.path}
                           whileHover={{ x: 5 }}
-                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group cursor-pointer"
+                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
+                          onClick={() => setIsRehomeDropdownOpen(false)}
                         >
                           <div className="p-2 bg-gradient-to-r from-[#085558]/10 to-[#008737]/10 rounded-lg">
                             <item.icon className="h-5 w-5 text-[#085558]" />
@@ -278,7 +278,7 @@ const Navbar = () => {
                               {item.description}
                             </p>
                           </div>
-                        </motion.a>
+                        </Link>
                       ))}
                     </div>
                   </motion.div>
@@ -288,15 +288,14 @@ const Navbar = () => {
 
             {/* Regular Navigation Items */}
             {navItems.map((item) => (
-              <motion.a
+              <Link
                 key={item.name}
-                href={item.href}
+                to={item.path}
                 className="font-medium text-[#063630] hover:text-[#008737] transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-gray-50 group relative"
-                whileHover={{ scale: 1.05 }}
               >
                 {item.name}
                 <span className="absolute -bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-[#008737] to-[#085558] scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-              </motion.a>
+              </Link>
             ))}
 
             {/* Login/Register Buttons */}
@@ -373,18 +372,18 @@ const Navbar = () => {
                       >
                         <div className="space-y-2 py-2">
                           {adoptItems.map((item, i) => (
-                            <a
+                            <Link
                               key={i}
-                              href="#"
-                              className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
+                              to={item.path}
                               onClick={() => setIsMobileMenuOpen(false)}
+                              className="w-full flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
                             >
                               <item.icon className="h-4 w-4 text-[#008737]" />
                               <div className="flex-1">
                                 <p className="font-medium text-[#063630]">{item.label}</p>
                                 <p className="text-xs text-gray-600">{item.description}</p>
                               </div>
-                            </a>
+                            </Link>
                           ))}
                         </div>
                       </motion.div>
@@ -416,18 +415,18 @@ const Navbar = () => {
                       >
                         <div className="space-y-2 py-2">
                           {rehomeItems.map((item, i) => (
-                            <a
+                            <Link
                               key={i}
-                              href="#"
-                              className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
+                              to={item.path}
                               onClick={() => setIsMobileMenuOpen(false)}
+                              className="w-full flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
                             >
                               <item.icon className="h-4 w-4 text-[#085558]" />
                               <div className="flex-1">
                                 <p className="font-medium text-[#063630]">{item.label}</p>
                                 <p className="text-xs text-gray-600">{item.description}</p>
                               </div>
-                            </a>
+                            </Link>
                           ))}
                         </div>
                       </motion.div>
@@ -437,15 +436,15 @@ const Navbar = () => {
 
                 {/* Regular Mobile Items */}
                 {navItems.map((item) => (
-                  <a
+                  <Link
                     key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-2 font-medium text-[#063630] hover:text-[#008737] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full flex items-center gap-2 font-medium text-[#063630] hover:text-[#008737] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <item.icon className="h-5 w-5" />
                     {item.name}
-                  </a>
+                  </Link>
                 ))}
 
                 {/* Mobile Login/Register Buttons */}
