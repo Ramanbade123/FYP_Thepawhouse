@@ -177,7 +177,7 @@ const FAQ = () => {
             className="mt-12 lg:mt-16 text-center"
           >
             <div className="bg-gradient-to-r from-[#008737] to-[#085558] rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white">
-              <h3 className="text-2xl lg:text-3xl font-bold mb-4">Still Have Questions?</h3>
+              <h3 className="text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#c6f7d9] mb-4">Still Have Questions?</h3>
               <p className="text-white/90 mb-6 lg:mb-8 max-w-2xl mx-auto text-lg">
                 Our support team is here to help you with any questions about adoption, rehoming, or pet care.
               </p>

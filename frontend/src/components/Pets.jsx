@@ -374,35 +374,6 @@ const Pets = () => {
             </button>
           </div>
         )}
-
-        {/* Call to Action */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-12 lg:mt-16 text-center"
-        >
-          <div className="bg-gradient-to-r from-[#008737] to-[#085558] rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white">
-            <h3 className="text-2xl lg:text-3xl font-bold mb-4">Can't Find Your Match?</h3>
-            <p className="text-white/90 mb-6 max-w-2xl mx-auto text-lg">
-              Join our waiting list and be the first to know when new pets are available for adoption.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-6 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-[#008737] px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
-              >
-                Notify Me
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );

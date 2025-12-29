@@ -253,37 +253,6 @@ const Testimonials = () => {
             <ChevronRight className="h-5 w-5 text-[#008737]" />
           </button>
         </div>
-
-        {/* Call to Action */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center"
-        >
-          <div className="bg-gradient-to-br from-[#063630] to-[#05221C] rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white">
-            <h3 className="text-2xl lg:text-3xl font-bold mb-4">Ready to Share Your Success Story?</h3>
-            <p className="text-white/80 mb-6 lg:mb-8 max-w-2xl mx-auto text-lg">
-              Adopt a pet and become part of our growing community of happy pet parents.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white text-[#063630] px-8 lg:px-10 py-3 lg:py-4 rounded-xl font-bold hover:bg-gray-100 transition-colors"
-              >
-                Adopt a Dog Today
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-transparent border-2 border-white text-white px-8 lg:px-10 py-3 lg:py-4 rounded-xl font-bold hover:bg-white/10 transition-colors"
-              >
-                Share Your Story
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   )
