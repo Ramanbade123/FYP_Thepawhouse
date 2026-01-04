@@ -5,7 +5,7 @@ import Process from '../components/Process'
 import Pets from '../components/Pets'
 import Testimonials from '../components/Testimonials'
 import FAQ from '../components/FAQ'
-import Footer from '../components/Footer'
+// import Footer from '../components/Footer'
 
 const Landing = () => {
   return (
@@ -16,7 +16,7 @@ const Landing = () => {
       <Pets />
       <Testimonials />
       <FAQ />
-      <Footer />
+      {/* <Footer /> */}
     </div>
   )
 }

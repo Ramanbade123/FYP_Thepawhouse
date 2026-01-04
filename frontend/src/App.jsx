@@ -8,12 +8,13 @@ import Contact from './pages/Contact'
 import Navbar from './components/Navbar'
 import AdoptionProcess from './pages/AdoptionProcess'
 import RehomingProcess from './pages/RehomingProcess'
+import AdoptionFAQS from './pages/AdoptionFAQS'
 import Footer from './components/Footer'
 
 function App() {
   return (
     <Router>
-      <Navbar /> {/* ✅ Navbar always visible */}
+      <Navbar /> 
 
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -22,6 +23,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/adoption-process" element={<AdoptionProcess />} />
         <Route path="/rehoming-process" element={<RehomingProcess />} />
+        <Route path="/adoption-faq" element={<AdoptionFAQS />} />
       </Routes>
       <Footer />
     </Router>
