@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom' // ADD useNavigate
 import {
   PawPrint,
   Menu,
@@ -15,7 +15,8 @@ import {
   Users,
   MessageCircle,
   User,
-  LogIn
+  LogIn,
+  LogOut // ADD LogOut import
 } from 'lucide-react'
 
 const Navbar = () => {
@@ -23,6 +24,8 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isAdoptDropdownOpen, setIsAdoptDropdownOpen] = useState(false)
   const [isRehomeDropdownOpen, setIsRehomeDropdownOpen] = useState(false)
+  const [user, setUser] = useState(null) // ADD user state
+  const navigate = useNavigate() // ADD navigate hook
 
   const adoptRef = useRef(null)
   const rehomeRef = useRef(null)
@@ -33,7 +36,19 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Close dropdowns when clicking outside (for mobile/tablet)
+  // Check for user on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (error) {
+        console.error('Error parsing user data:', error)
+      }
+    }
+  }, [])
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (adoptRef.current && !adoptRef.current.contains(e.target)) {
@@ -123,6 +138,15 @@ const Navbar = () => {
   const handleMobileRehomeClick = () => {
     setIsRehomeDropdownOpen(!isRehomeDropdownOpen)
     setIsAdoptDropdownOpen(false)
+  }
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+    setIsMobileMenuOpen(false)
+    navigate('/')
   }
 
   return (
@@ -298,28 +322,45 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {/* Login/Register Buttons */}
-            <div className="flex items-center gap-3 ml-4">
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => alert('Login clicked')}
-                className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold border border-[#008737] hover:border-[#085558] px-5 py-2 rounded-full transition-all duration-300 hover:shadow-md"
-              >
-                <User className="h-4 w-4" />
-                <span>Login</span>
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => alert('Register clicked')}
-                className="bg-gradient-to-r from-[#008737] to-[#085558] text-white px-5 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-              >
-                <LogIn className="h-4 w-4 text-white" />
-                <span className="text-white">Register</span>
-              </motion.button>
-            </div>
+            {/* Login/Register Buttons or User Profile */}
+            {user ? (
+              <div className="flex items-center gap-3 ml-4">
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-[#008737] to-[#085558] rounded-full flex items-center justify-center text-white text-sm">
+                    {user.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden md:inline">{user.name?.split(' ')[0]}</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-[#085558] hover:text-[#008737] font-semibold text-sm flex items-center gap-1"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 ml-4">
+                <Link
+                  to="/login"
+                  className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold border border-[#008737] hover:border-[#085558] px-4 py-2 rounded-full transition-all duration-300 hover:shadow-md text-sm whitespace-nowrap"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Login</span>
+                </Link>
+                
+                <Link
+                  to="/register"
+                  className="bg-gradient-to-r from-[#008737] to-[#085558] text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 text-sm whitespace-nowrap"
+                >
+                  <LogIn className="h-4 w-4 text-white" />
+                  <span className="text-white">Register</span>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -447,31 +488,48 @@ const Navbar = () => {
                   </Link>
                 ))}
 
-                {/* Mobile Login/Register Buttons */}
-                <div className="flex flex-col gap-3 pt-4 border-t border-gray-100 mt-2">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      alert('Login clicked')
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className="w-full flex items-center justify-center gap-2 text-[#008737] font-semibold border border-[#008737] py-3 rounded-lg hover:bg-[#008737]/5 transition-colors"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>Login</span>
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      alert('Register clicked')
-                      setIsMobileMenuOpen(false)
-                    }}
-                    className="w-full bg-gradient-to-r from-[#008737] to-[#085558] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <LogIn className="h-4 w-4 text-white" />
-                    <span className="text-white">Register</span>
-                  </motion.button>
-                </div>
+                {/* Mobile Login/Register Buttons or User Profile */}
+                {user ? (
+                  <div className="flex flex-col gap-3 pt-4 border-t border-gray-100 mt-2">
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="w-full flex items-center gap-2 font-medium text-[#063630] hover:text-[#008737] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <User className="h-5 w-5" />
+                      <span>Dashboard</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 text-[#085558] font-semibold border border-[#085558] py-3 rounded-lg hover:bg-[#085558]/5 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3 pt-4 border-t border-gray-100 mt-2">
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="w-full flex items-center gap-2 text-[#008737] font-semibold border border-[#008737] py-3 rounded-lg hover:bg-[#008737]/5 transition-colors"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Login</span>
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="w-full bg-gradient-to-r from-[#008737] to-[#085558] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <LogIn className="h-4 w-4 text-white" />
+                      <span className="text-white">Register</span>
+                    </Link>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
