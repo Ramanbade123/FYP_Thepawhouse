@@ -168,37 +168,6 @@ const FAQ = () => {
               </motion.div>
             ))}
           </div>
-
-          {/* Still Have Questions? */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="mt-12 lg:mt-16 text-center"
-          >
-            <div className="bg-gradient-to-r from-[#008737] to-[#085558] rounded-2xl lg:rounded-3xl p-8 lg:p-12 text-white">
-              <h3 className="text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#c6f7d9] mb-4">Still Have Questions?</h3>
-              <p className="text-white/90 mb-6 lg:mb-8 max-w-2xl mx-auto text-lg">
-                Our support team is here to help you with any questions about adoption, rehoming, or pet care.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-white text-[#008737] px-8 lg:px-10 py-3 lg:py-4 rounded-xl font-bold hover:bg-gray-100 transition-colors"
-                >
-                  Contact Support
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="bg-transparent border-2 border-white text-white px-8 lg:px-10 py-3 lg:py-4 rounded-xl font-bold hover:bg-white/10 transition-colors"
-                >
-                  Schedule a Call
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </div>
     </section>
