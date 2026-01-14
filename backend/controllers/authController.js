@@ -382,12 +382,6 @@ exports.resetPassword = async (req, res) => {
               <h2>Hello ${user.name},</h2>
               <p>Your password has been successfully reset.</p>
               <p>If you did not request this change, please contact our support team immediately.</p>
-              <p>For security reasons, we recommend that you:</p>
-              <ul>
-                <li>Use a strong, unique password</li>
-                <li>Enable two-factor authentication if available</li>
-                <li>Regularly update your password</li>
-              </ul>
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.FRONTEND_URL}/login" style="background: #008737; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                   Login to Your Account
