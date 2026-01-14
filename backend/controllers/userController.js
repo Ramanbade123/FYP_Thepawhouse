@@ -43,6 +43,21 @@ exports.updateProfile = async (req, res) => {
       }
     });
 
+    // If phone is being updated, check for duplicates
+    if (fieldsToUpdate.phone) {
+      const existingPhone = await User.findOne({ 
+        phone: fieldsToUpdate.phone,
+        _id: { $ne: req.user.id }
+      });
+      
+      if (existingPhone) {
+        return res.status(400).json({
+          success: false,
+          error: 'Phone number already in use',
+        });
+      }
+    }
+
     // Update user
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -140,6 +155,14 @@ exports.getDashboardStats = async (req, res) => {
       stats.totalAdopters = totalAdopters;
       stats.totalRehomers = totalRehomers;
       stats.totalAdmins = await User.countDocuments({ role: 'admin' });
+      
+      // Recent activity
+      const recentUsers = await User.find()
+        .sort('-createdAt')
+        .limit(5)
+        .select('name email role createdAt');
+      
+      stats.recentUsers = recentUsers;
     }
 
     res.status(200).json({
@@ -160,11 +183,45 @@ exports.getDashboardStats = async (req, res) => {
 // @access  Private/Admin
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort('-createdAt');
+    // Filtering
+    const queryObj = { ...req.query };
+    const excludedFields = ['page', 'sort', 'limit', 'fields', 'role'];
+    excludedFields.forEach(el => delete queryObj[el]);
+
+    // Filter by role if provided
+    if (req.query.role) {
+      queryObj.role = req.query.role;
+    }
+
+    let query = User.find(queryObj).select('-password');
+
+    // Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+    
+    query = query.skip(skip).limit(limit);
+
+    // Execute query
+    const users = await query;
+
+    // Get total count for pagination
+    const total = await User.countDocuments(queryObj);
 
     res.status(200).json({
       success: true,
       count: users.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
       data: users,
     });
   } catch (error) {
@@ -208,6 +265,23 @@ exports.getUserById = async (req, res) => {
 // @access  Private/Admin
 exports.updateUser = async (req, res) => {
   try {
+    // Don't allow password update through this route
+    if (req.body.password) {
+      delete req.body.password;
+    }
+
+    // Don't allow role changes to admin without proper authorization
+    if (req.body.role === 'admin') {
+      const adminCode = req.body.adminCode;
+      if (!adminCode || adminCode !== process.env.ADMIN_REGISTRATION_CODE) {
+        return res.status(403).json({
+          success: false,
+          error: 'Admin code required to assign admin role',
+        });
+      }
+      delete req.body.adminCode;
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -260,11 +334,23 @@ exports.deleteUser = async (req, res) => {
       });
     }
 
+    // Don't allow deletion of last admin
+    if (user.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          error: 'Cannot delete the last admin account',
+        });
+      }
+    }
+
     await user.deleteOne();
 
     res.status(200).json({
       success: true,
       data: {},
+      message: 'User deleted successfully',
     });
   } catch (error) {
     console.error('Delete user error:', error);

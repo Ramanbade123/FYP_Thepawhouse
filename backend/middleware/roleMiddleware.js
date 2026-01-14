@@ -62,10 +62,36 @@ const isUser = (req, res, next) => {
   next();
 };
 
+// Check if user can access specific user data
+const canAccessUser = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'User not authenticated',
+    });
+  }
+
+  // Admins can access all users
+  if (req.user.role === 'admin') {
+    return next();
+  }
+
+  // Users can only access their own data
+  if (req.params.id && req.params.id !== req.user.id.toString()) {
+    return res.status(403).json({
+      success: false,
+      error: 'Access denied. You can only access your own data.',
+    });
+  }
+
+  next();
+};
+
 module.exports = {
   authorize,
   isAdmin,
   isAdopter,
   isRehomer,
   isUser,
+  canAccessUser,
 };
