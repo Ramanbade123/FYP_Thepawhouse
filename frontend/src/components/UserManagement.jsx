@@ -277,7 +277,207 @@ const UserManagement = ({ preview = false }) => {
         </div>
       )}
 
+      {/* Users Table */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                {!preview && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input type="checkbox" className="rounded border-gray-300" />
+                  </th>
+                )}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  User
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Joined
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last Login
+                </th>
+                {!preview && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={preview ? 6 : 7} className="px-6 py-8 text-center">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  </td>
+                </tr>
+              ) : displayUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={preview ? 6 : 7} className="px-6 py-8 text-center text-gray-500">
+                    No users found
+                  </td>
+                </tr>
+              ) : (
+                displayUsers.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50">
+                    {!preview && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300"
+                          checked={selectedUsers.includes(user._id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUsers([...selectedUsers, user._id]);
+                            } else {
+                              setSelectedUsers(selectedUsers.filter(id => id !== user._id));
+                            }
+                          }}
+                        />
+                      </td>
+                    )}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold">
+                            {user.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <Mail className="h-3 w-3 mr-1" />
+                            {user.email}
+                          </div>
+                          <div className="text-sm text-gray-500 flex items-center">
+                            <Phone className="h-3 w-3 mr-1" />
+                            {user.phone}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getRoleBadge(user.role)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(user.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <Calendar className="h-3 w-3 mr-2 text-gray-400" />
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.lastLogin ? (
+                        <div className="flex items-center">
+                          <Clock className="h-3 w-3 mr-2 text-gray-400" />
+                          {new Date(user.lastLogin).toLocaleDateString()}
+                        </div>
+                      ) : (
+                        'Never'
+                      )}
+                    </td>
+                    {!preview && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            title="View Profile"
+                            className="p-1 text-blue-600 hover:text-blue-800"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            title="Edit User"
+                            className="p-1 text-green-600 hover:text-green-800"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleUserStatus(user._id, user.status)}
+                            title={user.status === 'active' ? 'Deactivate' : 'Activate'}
+                            className={`p-1 ${user.status === 'active' ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'}`}
+                          >
+                            {user.status === 'active' ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user._id)}
+                            title="Delete User"
+                            className="p-1 text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination (only for full view) */}
+        {!preview && !loading && filteredUsers.length > 0 && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing <span className="font-medium">1</span> to{' '}
+                <span className="font-medium">10</span> of{' '}
+                <span className="font-medium">{filteredUsers.length}</span> users
+              </div>
+              <div className="flex items-center space-x-2">
+                <button className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  Previous
+                </button>
+                <button className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  1
+                </button>
+                <button className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  2
+                </button>
+                <button className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  3
+                </button>
+                <button className="px-3 py-1 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Bulk Actions (only for full view) */}
+      {!preview && selectedUsers.length > 0 && (
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-blue-800">
+              {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+            </div>
+            <div className="flex items-center space-x-3">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                Activate Selected
+              </button>
+              <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm">
+                Deactivate Selected
+              </button>
+              <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
