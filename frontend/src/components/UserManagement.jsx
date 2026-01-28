@@ -455,6 +455,28 @@ const UserManagement = ({ preview = false }) => {
           </div>
         )}
       </div>
+
+      {/* Bulk Actions (only for full view) */}
+      {!preview && selectedUsers.length > 0 && (
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-blue-800">
+              {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+            </div>
+            <div className="flex items-center space-x-3">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                Activate Selected
+              </button>
+              <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm">
+                Deactivate Selected
+              </button>
+              <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
