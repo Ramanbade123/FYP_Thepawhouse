@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, PawPrint, CheckCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, PawPrint, CheckCircle, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,60 +22,35 @@ const Login = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
+    if (!email || !password) { setError('Please fill in all fields'); return; }
+    if (!/\S+@\S+\.\S+/.test(email)) { setError('Please enter a valid email address'); return; }
 
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-
       const response = await axios.post(
         'http://localhost:5000/api/auth/login',
         { email, password },
-        config
+        { headers: { 'Content-Type': 'application/json' } }
       );
 
       if (response.data.success) {
         setSuccess('Login successful! Redirecting to dashboard...');
-        
-        // Store token and user data in localStorage
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        // Redirect based on user role
+
         setTimeout(() => {
           const user = response.data.user;
-          if (user.role === 'admin') {
-            navigate('/admin/dashboard');
-          } else if (user.role === 'rehomer') {
-            navigate('/rehomer/dashboard');
-          } else {
-            navigate('/adopter/dashboard');
-          }
+          if (user.role === 'admin') navigate('/admin/dashboard');
+          else if (user.role === 'rehomer') navigate('/rehomer/dashboard');
+          else navigate('/adopter/dashboard');
         }, 1500);
       }
     } catch (err) {
-      setError(
-        err.response?.data?.error || 
-        err.message || 
-        'Login failed. Please check your credentials and try again.'
-      );
+      setError(err.response?.data?.error || err.message || 'Login failed. Please check your credentials and try again.');
     } finally {
       setLoading(false);
     }
@@ -86,6 +58,16 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#EDEDED] to-gray-100 flex items-center justify-center px-4 py-12">
+
+      {/* ── Back Button ── */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed top-6 left-6 flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 group"
+      >
+        <ArrowLeft className="h-4 w-4 text-[#063630] group-hover:text-[#008737] transition-colors" />
+        <span className="text-sm font-medium text-[#063630] group-hover:text-[#008737] transition-colors">Back</span>
+      </button>
+
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
@@ -109,11 +91,9 @@ const Login = () => {
         >
           <h2 className="text-2xl font-bold text-[#063630] mb-6 text-center">Sign In</h2>
 
-          {/* Error Message */}
+          {/* Error */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
             >
               <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -121,11 +101,9 @@ const Login = () => {
             </motion.div>
           )}
 
-          {/* Success Message */}
+          {/* Success */}
           {success && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3"
             >
               <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
@@ -134,37 +112,26 @@ const Login = () => {
           )}
 
           <form onSubmit={onSubmit} className="space-y-6">
-            {/* Email Field */}
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">
-                Email Address
-              </label>
+              <label className="block text-sm font-medium text-[#063630] mb-2">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-[#085558]" />
                 </div>
                 <input
-                  type="email"
-                  name="email"
-                  value={email}
-                  onChange={onChange}
+                  type="email" name="email" value={email} onChange={onChange}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                  placeholder="you@example.com"
-                  required
+                  placeholder="you@example.com" required
                 />
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-[#063630]">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-[#008737] hover:text-[#085558] font-medium"
-                >
+                <label className="block text-sm font-medium text-[#063630]">Password</label>
+                <Link to="/forgot-password" className="text-sm text-[#008737] hover:text-[#085558] font-medium">
                   Forgot password?
                 </Link>
               </div>
@@ -173,35 +140,29 @@ const Login = () => {
                   <Lock className="h-5 w-5 text-[#085558]" />
                 </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={password}
-                  onChange={onChange}
+                  type={showPassword ? 'text' : 'password'} name="password" value={password} onChange={onChange}
                   className="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                  placeholder="••••••••"
-                  required
+                  placeholder="••••••••" required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
+                  {showPassword
+                    ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  }
                 </button>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-all duration-300 flex items-center justify-center gap-2 ${
+              style={{ color: '#ffffff' }}
+              className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
                 loading
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-[#008737] to-[#085558] hover:shadow-lg'
@@ -209,31 +170,26 @@ const Login = () => {
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Signing In...</span>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span style={{ color: '#ffffff' }}>Signing In...</span>
                 </>
               ) : (
                 <>
-                  <LogIn className="h-5 w-5" />
-                  <span>Sign In</span>
+                  <LogIn className="h-5 w-5" style={{ color: '#ffffff' }} />
+                  <span style={{ color: '#ffffff' }}>Sign In</span>
                 </>
               )}
             </motion.button>
           </form>
 
           {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center">
-              <p className="text-gray-600 text-sm">
-                Don't have an account?{' '}
-                <Link
-                  to="/register"
-                  className="text-[#008737] hover:text-[#085558] font-semibold"
-                >
-                  Sign up now
-                </Link>
-              </p>
-            </div>
+          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p className="text-gray-600 text-sm">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-[#008737] hover:text-[#085558] font-semibold">
+                Sign up now
+              </Link>
+            </p>
           </div>
         </motion.div>
 
@@ -241,13 +197,9 @@ const Login = () => {
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
             By signing in, you agree to our{' '}
-            <Link to="/terms" className="text-[#085558] hover:underline">
-              Terms of Service
-            </Link>{' '}
+            <Link to="/terms" className="text-[#085558] hover:underline">Terms of Service</Link>{' '}
             and{' '}
-            <Link to="/privacy" className="text-[#085558] hover:underline">
-              Privacy Policy
-            </Link>
+            <Link to="/privacy" className="text-[#085558] hover:underline">Privacy Policy</Link>
           </p>
         </div>
       </div>

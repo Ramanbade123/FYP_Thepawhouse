@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
-import { PawPrint, Heart, Home, Users, Shield } from 'lucide-react'
+import { Heart, Home, Users, Shield } from 'lucide-react'
 
 const Hero = () => {
   const [ref, inView] = useInView({
@@ -63,15 +63,16 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="flex flex-col sm:flex-row gap-4 mb-12 lg:mb-16"
             >
-              {/* Adopt Now Button */}
+              {/* Adopt Now Button — icon forced white via inline style */}
               <motion.button
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="group relative bg-gradient-to-r from-[#008737] to-[#085558] text-white px-8 lg:px-10 py-4 lg:py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+                className="group relative bg-gradient-to-r from-[#008737] to-[#085558] px-8 lg:px-10 py-4 lg:py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden"
+                style={{ color: '#ffffff' }}
               >
-                <Heart className="h-5 w-5 lg:h-6 lg:w-6" />
-                <span className="relative !text-white z-10">Adopt Now</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-[#085558] to-[#008737] opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300 pointer-events-none z-0"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#085558] to-[#008737] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <Heart style={{ color: '#ffffff', width: 22, height: 22, flexShrink: 0, position: 'relative', zIndex: 1 }} />
+                <span style={{ color: '#ffffff', position: 'relative', zIndex: 1 }}>Adopt Now</span>
               </motion.button>
 
               {/* Rehome Now Button */}
@@ -80,8 +81,8 @@ const Hero = () => {
                 whileTap={{ scale: 0.98 }}
                 className="group bg-white border-2 border-[#008737] text-[#008737] px-8 lg:px-10 py-4 lg:py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 hover:bg-[#008737]/5"
               >
-                <Home className="h-5 w-5 lg:h-6 lg:w-6" />
-                <span>Rehome Now</span>
+                <Home className="h-5 w-5 lg:h-6 lg:w-6" style={{ color: 'inherit' }} />
+                <span style={{ color: 'inherit' }}>Rehome Now</span>
               </motion.button>
             </motion.div>
 

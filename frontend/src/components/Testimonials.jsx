@@ -57,13 +57,8 @@ const Testimonials = () => {
     { icon: Heart, value: "50+", label: "Cities" }
   ]
 
-  const nextSlide = () => {
-    setActiveIndex((prev) => (prev + 1) % testimonials.length)
-  }
-
-  const prevSlide = () => {
-    setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)
-  }
+  const nextSlide = () => setActiveIndex((prev) => (prev + 1) % testimonials.length)
+  const prevSlide = () => setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)
 
   return (
     <section id="testimonials" className="py-16 lg:py-24 bg-white" ref={ref}>
@@ -105,7 +100,7 @@ const Testimonials = () => {
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="w-12 h-12 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full flex items-center justify-center mb-3">
-                    <stat.icon className="h-6 w-6 text-white" />
+                    <stat.icon className="h-6 w-6 text-white" style={{ color: '#ffffff' }} />
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-[#063630] mb-1">{stat.value}</h3>
                   <p className="text-[#063630]/70 text-sm">{stat.label}</p>
@@ -116,110 +111,95 @@ const Testimonials = () => {
         </motion.div>
 
         {/* Testimonials Slider */}
+        {/* KEY FIX: buttons are OUTSIDE the overflow-hidden container and have higher z-index */}
         <div className="relative mb-12 lg:mb-16">
-          {/* Navigation Arrows */}
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            onClick={prevSlide}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 lg:-translate-x-4 z-10 p-3 lg:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-shadow border border-[#008737]/10 hidden md:flex items-center justify-center"
-          >
-            <ChevronLeft className="h-5 w-5 lg:h-6 lg:w-6 text-[#008737]" />
-          </motion.button>
 
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            onClick={nextSlide}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 lg:translate-x-4 z-10 p-3 lg:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-shadow border border-[#008737]/10 hidden md:flex items-center justify-center"
-          >
-            <ChevronRight className="h-5 w-5 lg:h-6 lg:w-6 text-[#008737]" />
-          </motion.button>
+          {/* Cards container — overflow hidden only on the inner div */}
+          <div className="relative h-[400px] lg:h-[450px]">
+            {/* overflow-hidden wrapper — buttons are siblings, not children */}
+            <div className="absolute inset-0 overflow-hidden rounded-2xl">
+              {testimonials.map((testimonial, index) => {
+                const isActive = index === activeIndex
+                const isNext   = index === (activeIndex + 1) % testimonials.length
+                const isPrev   = index === (activeIndex - 1 + testimonials.length) % testimonials.length
 
-          {/* Testimonial Cards Container - FIXED OVERLAP */}
-          <div className="relative h-[400px] lg:h-[450px] overflow-hidden">
-            {testimonials.map((testimonial, index) => {
-              const isActive = index === activeIndex
-              const isNext = index === (activeIndex + 1) % testimonials.length
-              const isPrev = index === (activeIndex - 1 + testimonials.length) % testimonials.length
-
-              return (
-                <motion.div
-                  key={index}
-                  initial={false}
-                  animate={{
-                    scale: isActive ? 1 : 0.9,
-                    opacity: isActive ? 1 : isNext || isPrev ? 0.3 : 0,
-                    x: isActive ? 0 : isNext ? '100%' : isPrev ? '-100%' : 0,
-                    display: isActive || isNext || isPrev ? 'block' : 'none'
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 30
-                  }}
-                  className="absolute inset-0"
-                  style={{
-                    zIndex: isActive ? 30 : isNext || isPrev ? 20 : 10
-                  }}
-                >
-                  <div className="bg-white rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl p-8 lg:p-12 h-full border border-[#008737]/10 mx-4 lg:mx-auto max-w-3xl">
-                    {/* Quote Icon */}
-                    <div className="absolute top-6 lg:top-8 right-6 lg:right-8 text-[#848AFF]/10">
-                      <Quote className="h-12 w-12 lg:h-16 lg:w-16" />
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center mb-6">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-5 w-5 lg:h-6 lg:w-6 ${
-                              i < testimonial.rating
-                                ? 'fill-[#FFD700] text-[#FFD700]'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
+                return (
+                  <motion.div
+                    key={index}
+                    initial={false}
+                    animate={{
+                      scale:   isActive ? 1 : 0.9,
+                      opacity: isActive ? 1 : isNext || isPrev ? 0.3 : 0,
+                      x:       isActive ? 0 : isNext ? '100%' : isPrev ? '-100%' : 0,
+                    }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    style={{
+                      position: 'absolute', inset: 0,
+                      zIndex: isActive ? 2 : 1,
+                      display: isActive || isNext || isPrev ? 'block' : 'none',
+                    }}
+                  >
+                    <div className="bg-white rounded-2xl lg:rounded-3xl shadow-xl lg:shadow-2xl p-8 lg:p-12 h-full border border-[#008737]/10 mx-4 lg:mx-auto max-w-3xl relative">
+                      {/* Quote Icon */}
+                      <div className="absolute top-6 lg:top-8 right-6 lg:right-8 text-[#848AFF]/10">
+                        <Quote className="h-12 w-12 lg:h-16 lg:w-16" />
                       </div>
-                      <span className="ml-3 text-[#063630]/60 text-sm lg:text-base">{testimonial.date}</span>
-                    </div>
 
-                    {/* Content */}
-                    <p className="text-lg lg:text-xl text-[#063630]/80 mb-8 leading-relaxed">
-                      "{testimonial.content}"
-                    </p>
-
-                    {/* Author */}
-                    <div className="flex items-center justify-between mt-8 pt-8 border-t border-[#008737]/10">
-                      <div className="flex items-center">
-                        <div className="mr-4">
-                          <div className="text-3xl lg:text-4xl">{testimonial.image}</div>
+                      {/* Rating */}
+                      <div className="flex items-center mb-6">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-5 w-5 lg:h-6 lg:w-6 ${
+                                i < testimonial.rating
+                                  ? 'fill-[#FFD700] text-[#FFD700]'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
                         </div>
-                        <div>
-                          <h4 className="text-lg lg:text-xl font-bold text-[#063630]">
-                            {testimonial.name}
-                          </h4>
-                          <p className="text-[#008737] font-medium text-sm lg:text-base">
-                            {testimonial.role}
-                          </p>
-                        </div>
+                        <span className="ml-3 text-[#063630]/60 text-sm lg:text-base">{testimonial.date}</span>
                       </div>
-                      <div className="text-[#063630]/60 text-sm lg:text-base">
-                        {testimonial.location}
+
+                      {/* Content */}
+                      <p className="text-lg lg:text-xl text-[#063630]/80 mb-8 leading-relaxed">
+                        "{testimonial.content}"
+                      </p>
+
+                      {/* Author */}
+                      <div className="flex items-center justify-between mt-8 pt-8 border-t border-[#008737]/10">
+                        <div className="flex items-center">
+                          <div className="mr-4 text-3xl lg:text-4xl">{testimonial.image}</div>
+                          <div>
+                            <h4 className="text-lg lg:text-xl font-bold text-[#063630]">{testimonial.name}</h4>
+                            <p className="text-[#008737] font-medium text-sm lg:text-base">{testimonial.role}</p>
+                          </div>
+                        </div>
+                        <div className="text-[#063630]/60 text-sm lg:text-base">{testimonial.location}</div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              )
-            })}
+                  </motion.div>
+                )
+              })}
+            </div>
+
+            {/* ── Arrow buttons: siblings of the overflow container, not inside it ── */}
+            <button
+              onClick={prevSlide}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 lg:-translate-x-6 p-3 lg:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-all border border-[#008737]/10 hidden md:flex items-center justify-center hover:bg-[#008737] group"
+              style={{ zIndex: 50 }}
+            >
+              <ChevronLeft className="h-5 w-5 lg:h-6 lg:w-6 text-[#008737] group-hover:text-white transition-colors" style={{ color: 'inherit' }} />
+            </button>
+
+            <button
+              onClick={nextSlide}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 lg:translate-x-6 p-3 lg:p-4 bg-white rounded-full shadow-xl hover:shadow-2xl transition-all border border-[#008737]/10 hidden md:flex items-center justify-center hover:bg-[#008737] group"
+              style={{ zIndex: 50 }}
+            >
+              <ChevronRight className="h-5 w-5 lg:h-6 lg:w-6 text-[#008737] group-hover:text-white transition-colors" style={{ color: 'inherit' }} />
+            </button>
           </div>
         </div>
 
@@ -253,6 +233,7 @@ const Testimonials = () => {
             <ChevronRight className="h-5 w-5 text-[#008737]" />
           </button>
         </div>
+
       </div>
     </section>
   )
