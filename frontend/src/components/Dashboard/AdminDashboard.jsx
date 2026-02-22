@@ -6,12 +6,11 @@ import {
   Filter, Download, Eye, Edit, Trash2,
   ChevronRight, ChevronLeft, MoreVertical
 } from 'lucide-react';
-import AdminSidebar from './AdminSidebar';
-import AdminHeader from './AdminHeader';
-import StatsCard from './StatsCard';
-import RecentActivity from './RecentActivity';
-import UserManagement from './UserManagement';
-import AdoptionStats from './AdoptionStats';
+import AdminSidebar from '../AdminSidebar';
+import AdminHeader from '../AdminHeader';
+import StatsCard from '../StatsCard';
+import RecentActivity from '../RecentActivity';
+import UserManagement from '../UserManagement';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -20,15 +19,13 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalAdopters: 0,
     totalRehomers: 0,
-    pendingAdoptions: 0,
-    pendingVerifications: 0,
-    monthlyGrowth: 0,
-    revenue: 0
+    pendingAdoptions: 24,
+    pendingVerifications: 12,
+    monthlyGrowth: 15.3,
+    revenue: 2450.50
   });
 
-  // Mock data - replace with API calls
   useEffect(() => {
-    // Fetch dashboard stats
     const fetchStats = async () => {
       try {
         const response = await fetch('/api/users/dashboard/stats', {
@@ -159,34 +156,19 @@ const AdminDashboard = () => {
                 ))}
               </div>
 
-              {/* Charts and Tables */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Adoption Statistics */}
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold text-gray-800">Adoption Statistics</h2>
-                    <button className="text-sm text-blue-600 hover:text-blue-800 flex items-center">
-                      <Filter className="h-4 w-4 mr-1" />
-                      Filter
-                    </button>
-                  </div>
-                  <AdoptionStats />
+              {/* Recent Activity - now full width */}
+              <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-gray-800">Recent Activity</h2>
+                  <button className="text-sm text-blue-600 hover:text-blue-800">
+                    View All
+                  </button>
                 </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold text-gray-800">Recent Activity</h2>
-                    <button className="text-sm text-blue-600 hover:text-blue-800">
-                      View All
-                    </button>
-                  </div>
-                  <RecentActivity />
-                </div>
+                <RecentActivity />
               </div>
 
               {/* User Management Preview */}
-              <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+              <div className="bg-white rounded-xl shadow-sm p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold text-gray-800">Recent Users</h2>
                   <button 

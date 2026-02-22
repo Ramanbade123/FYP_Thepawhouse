@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, PawPrint } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, PawPrint, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
 const Login = () => {
@@ -55,7 +55,7 @@ const Login = () => {
       );
 
       if (response.data.success) {
-        setSuccess('Login successful!');
+        setSuccess('Login successful! Redirecting to dashboard...');
         
         // Store token and user data in localStorage
         localStorage.setItem('token', response.data.token);
@@ -66,16 +66,18 @@ const Login = () => {
           const user = response.data.user;
           if (user.role === 'admin') {
             navigate('/admin/dashboard');
+          } else if (user.role === 'rehomer') {
+            navigate('/rehomer/dashboard');
           } else {
-            navigate('/dashboard');
+            navigate('/adopter/dashboard');
           }
-        }, 1000);
+        }, 1500);
       }
     } catch (err) {
       setError(
         err.response?.data?.error || 
         err.message || 
-        'Login failed. Please try again.'
+        'Login failed. Please check your credentials and try again.'
       );
     } finally {
       setLoading(false);
@@ -126,9 +128,7 @@ const Login = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3"
             >
-              <svg className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
               <p className="text-green-700 text-sm">{success}</p>
             </motion.div>
           )}
