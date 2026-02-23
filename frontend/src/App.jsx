@@ -9,6 +9,7 @@ import Contact from './pages/Contact'
 import AdoptionProcess from './pages/AdoptionProcess'
 import RehomingProcess from './pages/RehomingProcess'
 import AdoptionFAQS from './pages/AdoptionFAQS'
+import RehomingFAQs from './pages/Rehomingfaqs' 
 
 // Components
 import Navbar from './components/Navbar'
@@ -116,6 +117,14 @@ function App() {
             <PrivateRoute allowedRoles={['rehomer']}>
               <RehomerDashboard />
             </PrivateRoute>
+          }
+        />
+                <Route
+          path="/rehoming-faq"
+          element={
+            <MainLayout>
+              <RehomingFAQs />
+            </MainLayout>
           }
         />
 
