@@ -67,6 +67,16 @@ const Register = () => {
   };
 
   const validateStep3 = () => {
+    if (!password) {
+      setError('Please provide a password');
+      return false;
+    }
+
+    if (!confirmPassword) {
+      setError('Please confirm your password');
+      return false;
+    }
+
     if (password.length < 8) {
       setError('Password must be at least 8 characters long');
       return false;
@@ -123,12 +133,13 @@ const Register = () => {
         },
       };
 
-      // Prepare data for API
+      // ✅ FIX: confirmPassword is now included in the request body
       const userData = {
         name,
         email,
         phone,
         password,
+        confirmPassword, // <-- THIS WAS THE MISSING FIELD
         role,
         userType: formData.userType,
         address: {
