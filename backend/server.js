@@ -43,6 +43,8 @@ app.use(cookieParser());
 
 // Mount routers
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/pets', require('./routes/petRoutes'));   
+app.use('/api/users', require('./routes/userRoutes')); 
 
 // Test route
 app.get('/api/test', (req, res) => {

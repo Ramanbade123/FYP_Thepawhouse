@@ -10,6 +10,7 @@ import AdoptionProcess from './pages/AdoptionProcess'
 import RehomingProcess from './pages/RehomingProcess'
 import AdoptionFAQS from './pages/AdoptionFAQS'
 import RehomingFAQs from './pages/Rehomingfaqs' 
+import ListDogPage from './pages/ListDogPage'; 
 
 // Components
 import Navbar from './components/Navbar'
@@ -146,7 +147,8 @@ function App() {
         <Route path="/adoption-process" element={<MainLayout><AdoptionProcess /></MainLayout>} />
         <Route path="/rehoming-process" element={<MainLayout><RehomingProcess /></MainLayout>} />
         <Route path="/adoption-faq" element={<MainLayout><AdoptionFAQS /></MainLayout>} />
-
+        <Route path="/list-dog" element={<ListDogPage />} />
+        
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
 
