@@ -277,9 +277,6 @@ const Register = () => {
       case 2:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-[#063630] mb-4 text-center">
-              Personal Information
-            </h3>
             <p className="text-gray-600 text-center mb-6">
               {role === 'adopter' 
                 ? 'Tell us about yourself as an adopter' 
@@ -424,9 +421,6 @@ const Register = () => {
       case 3:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-[#063630] mb-4 text-center">
-              Account Security
-            </h3>
             <p className="text-gray-600 text-center mb-6">
               Create a secure password for your account
             </p>

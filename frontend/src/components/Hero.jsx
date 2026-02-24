@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
+import { useNavigate } from 'react-router-dom'
 import { Heart, Home, Users, Shield } from 'lucide-react'
 
 const Hero = () => {
@@ -7,6 +8,7 @@ const Hero = () => {
     threshold: 0.1,
     triggerOnce: true
   })
+  const navigate = useNavigate()
 
   return (
     <section id="home" className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 lg:py-20 relative overflow-hidden bg-[#EDEDED]">
@@ -63,10 +65,11 @@ const Hero = () => {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="flex flex-col sm:flex-row gap-4 mb-12 lg:mb-16"
             >
-              {/* Adopt Now Button — icon forced white via inline style */}
+              {/* Adopt Now Button */}
               <motion.button
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => navigate('/register')}
                 className="group relative bg-gradient-to-r from-[#008737] to-[#085558] px-8 lg:px-10 py-4 lg:py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 overflow-hidden"
                 style={{ color: '#ffffff' }}
               >
@@ -79,6 +82,7 @@ const Hero = () => {
               <motion.button
                 whileHover={{ scale: 1.03, y: -2 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => navigate('/register')}
                 className="group bg-white border-2 border-[#008737] text-[#008737] px-8 lg:px-10 py-4 lg:py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 hover:bg-[#008737]/5"
               >
                 <Home className="h-5 w-5 lg:h-6 lg:w-6" style={{ color: 'inherit' }} />
