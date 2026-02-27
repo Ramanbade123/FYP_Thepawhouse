@@ -1,18 +1,81 @@
-const Pet  = require('../models/Pet');
-const User = require('../models/User');
+const Pet    = require('../models/Pet');
+const User   = require('../models/User');
+const multer = require('multer');
+const path   = require('path');
+const fs     = require('fs');
+
+// ── Multer setup (saves uploaded images to /uploads folder) ──
+const uploadDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename:    (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `pet_${Date.now()}${ext}`);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (/jpeg|jpg|png|webp/.test(path.extname(file.originalname).toLowerCase())) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only jpg, png, webp images are allowed'), false);
+  }
+};
+
+exports.upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
 // ─────────────────────────────────────────────────────────────
 // REHOMER: Create listing  →  POST /api/pets
 // ─────────────────────────────────────────────────────────────
 exports.createPet = async (req, res) => {
   try {
-    req.body.rehomer       = req.user.id;
-    req.body.adminApproval = 'pending'; // always starts pending
+    // multer puts text fields in req.body, file in req.file
+    const body = req.body;
 
-    const pet = await Pet.create(req.body);
+    // Build the pet data object, parsing nested fields from FormData
+    const petData = {
+      name:          body.name,
+      breed:         body.breed,
+      gender:        body.gender,
+      color:         body.color,
+      age: {
+        value: Number(body['age[value]'] ?? body.age?.value),
+        unit:  body['age[unit]']  ?? body.age?.unit ?? 'years',
+      },
+      size:          body.size         || 'medium',
+      description:   body.description,
+      vaccinated:    body.vaccinated   === 'true' || body.vaccinated   === true,
+      neutered:      body.neutered     === 'true' || body.neutered     === true,
+      microchipped:  body.microchipped === 'true' || body.microchipped === true,
+      goodWithKids:  body.goodWithKids === 'true' || body.goodWithKids === true,
+      goodWithDogs:  body.goodWithDogs === 'true' || body.goodWithDogs === true,
+      goodWithCats:  body.goodWithCats === 'true' || body.goodWithCats === true,
+      activityLevel: body.activityLevel || 'medium',
+      reason:        body.reason,
+      rehomingFee:   Number(body.rehomingFee) || 0,
+      urgency:       body.urgency || 'medium',
+      location: {
+        city:    body['location[city]']  ?? body.location?.city  ?? '',
+        state:   body['location[state]'] ?? body.location?.state ?? '',
+        country: 'Nepal',
+      },
+      rehomer:       req.user.id,
+      adminApproval: 'approved', // listings go live immediately
+    };
+
+    // Attach uploaded image if provided
+    if (req.file) {
+      const serverUrl = process.env.SERVER_URL || 'http://localhost:5000';
+      petData.primaryImage = `${serverUrl}/uploads/${req.file.filename}`;
+      petData.images       = [petData.primaryImage];
+    }
+
+    const pet = await Pet.create(petData);
 
     await User.findByIdAndUpdate(req.user.id, {
-      $push: { petsRehomed: { petId: pet._id, petName: pet.name, status: 'pending' } },
+      $push: { petsRehomed: { petId: pet._id, petName: pet.name, status: 'approved' } },
     });
 
     res.status(201).json({ success: true, data: pet });
@@ -21,7 +84,7 @@ exports.createPet = async (req, res) => {
       const messages = Object.values(error.errors).map(e => e.message);
       return res.status(400).json({ success: false, error: messages.join(', ') });
     }
-    res.status(500).json({ success: false, error: 'Server error' });
+    res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
 
@@ -30,14 +93,14 @@ exports.createPet = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.getPets = async (req, res) => {
   try {
-    // Only show admin-approved listings to the public
-    const filter = { status: 'available', adminApproval: 'approved' };
+    // Show all available listings to adopters (no admin approval gate)
+    const filter = { status: 'available' };
 
-    if (req.query.breed)         filter.breed          = new RegExp(req.query.breed,  'i');
-    if (req.query.gender)        filter.gender         = req.query.gender;
-    if (req.query.size)          filter.size           = req.query.size;
+    if (req.query.breed)         filter.breed            = new RegExp(req.query.breed,  'i');
+    if (req.query.gender)        filter.gender           = req.query.gender;
+    if (req.query.size)          filter.size             = req.query.size;
     if (req.query.city)          filter['location.city'] = new RegExp(req.query.city, 'i');
-    if (req.query.activityLevel) filter.activityLevel  = req.query.activityLevel;
+    if (req.query.activityLevel) filter.activityLevel    = req.query.activityLevel;
 
     const page  = parseInt(req.query.page,  10) || 1;
     const limit = parseInt(req.query.limit, 10) || 12;
@@ -105,14 +168,6 @@ exports.updatePet = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Not authorized' });
     }
 
-    // If rehomer edits an approved listing, reset approval so admin re-reviews
-    if (pet.adminApproval === 'approved' && req.user.role !== 'admin') {
-      req.body.adminApproval = 'pending';
-      req.body.approvedBy    = null;
-      req.body.approvedAt    = null;
-      req.body.adminNote     = '';
-    }
-
     pet = await Pet.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     res.status(200).json({ success: true, data: pet });
   } catch (error) {
@@ -140,7 +195,7 @@ exports.deletePet = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// ADMIN: Get ALL pets (any approval status) → GET /api/pets/admin/all
+// ADMIN: Get ALL pets  →  GET /api/pets/admin/all
 // ─────────────────────────────────────────────────────────────
 exports.adminGetAllPets = async (req, res) => {
   try {
@@ -163,7 +218,6 @@ exports.adminGetAllPets = async (req, res) => {
       Pet.countDocuments(filter),
     ]);
 
-    // Summary counts for admin dashboard stats
     const [pendingCount, approvedCount, rejectedCount] = await Promise.all([
       Pet.countDocuments({ adminApproval: 'pending'  }),
       Pet.countDocuments({ adminApproval: 'approved' }),
@@ -204,7 +258,6 @@ exports.adminUpdateApproval = async (req, res) => {
     pet.approvedAt    = new Date();
 
     await pet.save();
-
     res.status(200).json({ success: true, message: `Pet ${adminApproval}`, data: pet });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
@@ -219,7 +272,7 @@ exports.applyForPet = async (req, res) => {
     const pet = await Pet.findById(req.params.id);
     if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
 
-    if (pet.adminApproval !== 'approved') {
+    if (pet.status !== 'available') {
       return res.status(400).json({ success: false, error: 'This pet is not available for adoption' });
     }
 

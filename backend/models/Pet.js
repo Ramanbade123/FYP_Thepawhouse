@@ -51,7 +51,7 @@ const petSchema = new mongoose.Schema(
     adminApproval: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',   // all new listings start pending
+      default: 'approved',  // listings go live immediately, admin can remove if needed
     },
     adminNote:  { type: String, maxlength: 500, default: '' },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

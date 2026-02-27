@@ -148,7 +148,7 @@ const ListDogPage = () => {
           <p className="text-xs text-gray-400 mb-8">This typically takes 24–48 hours.</p>
           <div className="flex flex-col gap-3">
             <button
-              onClick={() => navigate('/rehomer-dashboard')}
+              onClick={() => navigate('/rehomer/dashboard')}
               className="w-full py-3.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#008737]/20 transition-all text-sm"
             >
               Back to Dashboard

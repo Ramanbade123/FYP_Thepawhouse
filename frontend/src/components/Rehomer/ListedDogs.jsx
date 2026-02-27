@@ -1,3 +1,4 @@
+import EditDogForm from './EditDogForm';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -5,6 +6,7 @@ import { Plus, Edit, Trash2, Dog, RefreshCw, Clock, CheckCircle, XCircle, AlertC
 
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = 'http://localhost:5000';
 
 const statusColor = {
   available: 'bg-green-100 text-green-800',
@@ -85,12 +87,6 @@ const ListedDogs = ({ onStatsChange }) => {
           </div>
         </div>
 
-        {/* Info banner */}
-        <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-5 text-sm text-blue-700">
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <span>New listings must be <strong>approved by an admin</strong> before they appear to adopters.</span>
-        </div>
-
         {loading && (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-[#085558] border-t-transparent rounded-full animate-spin" />
@@ -134,7 +130,7 @@ const ListedDogs = ({ onStatsChange }) => {
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-[#085558]/20 to-[#008737]/20 flex items-center justify-center flex-shrink-0">
                       {dog.primaryImage
-                        ? <img src={dog.primaryImage} alt={dog.name} className="w-full h-full object-cover" />
+                        ? <img src={dog.primaryImage?.startsWith('http') ? dog.primaryImage : `http://localhost:5000${dog.primaryImage}`} alt={dog.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
                         : <Dog className="h-7 w-7 text-[#085558]" />
                       }
                     </div>
