@@ -10,7 +10,8 @@ import AdoptionProcess from './pages/AdoptionProcess'
 import RehomingProcess from './pages/RehomingProcess'
 import AdoptionFAQS from './pages/AdoptionFAQS'
 import RehomingFAQs from './pages/Rehomingfaqs' 
-import ListDogPage from './pages/ListDogPage'; 
+import ListDogPage from './pages/ListDogPage';
+import DogDetailPage from './pages/DogDetailPage'; 
 
 // Components
 import Navbar from './components/Navbar'
@@ -149,6 +150,8 @@ function App() {
         <Route path="/adoption-faq" element={<MainLayout><AdoptionFAQS /></MainLayout>} />
         <Route path="/list-dog" element={<ListDogPage />} />
         
+        <Route path="/dogs/:id" element={<DogDetailPage />} />
+
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
 
