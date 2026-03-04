@@ -1,40 +1,64 @@
-import React from 'react';
-import { Heart, UserCheck, PawPrint, Shield, MessageSquare, ChevronRight } from 'lucide-react';
-import { C } from './adminConstants';
+import { useState, useEffect } from 'react';
+import { UserPlus, Dog, RefreshCw, Clock } from 'lucide-react';
 
-// Edit this array to update the activity feed
-const activityData = [
-  { icon: Heart,         color: C.green,  text: 'New adoption request from Sarah J.',     time: '2 min ago'  },
-  { icon: UserCheck,     color: C.purple, text: "Mike Chen's rehomer profile verified",   time: '15 min ago' },
-  { icon: PawPrint,      color: C.teal,   text: 'Buddy the Labrador listed for rehoming', time: '1 hr ago'   },
-  { icon: Shield,        color: C.green,  text: 'System security check completed',        time: '2 hr ago'   },
-  { icon: MessageSquare, color: C.purple, text: '3 new messages in support queue',        time: '3 hr ago'   },
-  { icon: UserCheck,     color: C.green,  text: 'Adoption completed: Luna → Emma D.',     time: '5 hr ago'   },
-];
+const API = 'http://localhost:5000/api';
 
-const RecentActivity = () => (
-  <div style={{ background: C.white, borderRadius: 16, padding: 22, border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(6,54,48,0.06)' }}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-      <h2 style={{ fontSize: 15, fontWeight: 700, color: C.dark, margin: 0 }}>Recent Activity</h2>
-      <button style={{ fontSize: 12, color: C.green, fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
-        View All <ChevronRight size={12} />
-      </button>
-    </div>
+const RecentActivity = () => {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading]       = useState(true);
 
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {activityData.map(({ icon: Icon, color, text, time }, i) => (
-        <div key={i} style={{ display: 'flex', gap: 12, padding: '11px 0', borderBottom: i < activityData.length - 1 ? '1px solid #f1f5f9' : 'none', alignItems: 'flex-start' }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Icon size={14} color={color} />
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const [uRes, pRes] = await Promise.all([
+          fetch(`${API}/users?limit=3`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API}/pets/admin/all?limit=3`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        const uData = await uRes.json();
+        const pData = await pRes.json();
+        const items = [];
+        if (uData.success) uData.data.forEach(u => items.push({
+          id: `u-${u._id}`, Icon: UserPlus, bg: 'bg-blue-50', color: 'text-blue-500',
+          title: 'New user registered', desc: `${u.name} joined as ${u.role}`,
+          time: new Date(u.createdAt).toLocaleDateString(),
+          badge: 'bg-blue-100 text-blue-700', label: u.role,
+        }));
+        if (pData.success) pData.data.forEach(p => items.push({
+          id: `p-${p._id}`, Icon: Dog, bg: 'bg-green-50', color: 'text-green-500',
+          title: 'Dog listed', desc: `${p.name} (${p.breed})`,
+          time: new Date(p.createdAt).toLocaleDateString(),
+          badge: 'bg-green-100 text-green-700', label: p.status,
+        }));
+        setActivities(items.slice(0, 5));
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-8"><RefreshCw className="h-5 w-5 text-gray-300 animate-spin" /></div>;
+  if (!activities.length) return <div className="text-center py-8 text-gray-400"><Clock className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm">No recent activity yet.</p></div>;
+
+  return (
+    <div className="space-y-3">
+      {activities.map(({ id, Icon, bg, color, title, desc, time, badge, label }) => (
+        <div key={id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+          <div className={`w-9 h-9 ${bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <Icon className={`h-4 w-4 ${color}`} />
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: C.dark, fontWeight: 500, lineHeight: 1.4 }}>{text}</div>
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{time}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-gray-800 truncate">{title}</p>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 capitalize ${badge}`}>{label}</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+            <div className="flex items-center gap-1 mt-1 text-xs text-gray-400"><Clock className="h-3 w-3" />{time}</div>
           </div>
         </div>
       ))}
     </div>
-  </div>
-);
+  );
+};
 
 export default RecentActivity;

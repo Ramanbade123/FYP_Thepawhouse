@@ -1,97 +1,106 @@
-import React from 'react';
-import { PawPrint, LogOut } from 'lucide-react';
-import { C, navItems } from './adminConstants';
+import { useNavigate } from 'react-router-dom';
+import { 
+  LayoutDashboard, Users, Dog, Home,
+  Settings, LogOut, X, PawPrint,
+  BarChart3, Shield, MessageSquare, Calendar
+} from 'lucide-react';
 
-const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen }) => {
+const menuItems = [
+  { id: 'dashboard',     label: 'Dashboard',      icon: LayoutDashboard },
+  { id: 'users',         label: 'User Management',icon: Users           },
+  { id: 'pets',          label: 'Pet Management', icon: Dog             },
+  { id: 'adoptions',     label: 'Adoptions',      icon: Home            },
+  { id: 'reports',       label: 'Reports',        icon: BarChart3       },
+  { id: 'verifications', label: 'Verifications',  icon: Shield          },
+  { id: 'messages',      label: 'Messages',       icon: MessageSquare   },
+  { id: 'calendar',      label: 'Calendar',       icon: Calendar        },
+  { id: 'settings',      label: 'Settings',       icon: Settings        },
+];
+
+const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   return (
-    <aside style={{
-      width: sidebarOpen ? 256 : 72,
-      minHeight: '100vh',
-      background: C.dark,
-      display: 'flex',
-      flexDirection: 'column',
-      transition: 'width 0.3s ease',
-      position: 'fixed',
-      top: 0, left: 0, bottom: 0,
-      zIndex: 100,
-      overflow: 'hidden',
-    }}>
+    <>
+      {sidebarOpen && (
+        <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setSidebarOpen(false)} />
+      )}
 
-      {/* ── Logo ── */}
-      <div style={{ padding: '22px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 12, minHeight: 68 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${C.green}, ${C.teal})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <PawPrint size={18} color="white" />
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 flex flex-col
+        bg-gradient-to-b from-[#063630] to-[#085558]
+        transform transition-transform duration-300
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0 lg:static lg:inset-auto
+      `}>
+
+        {/* Logo */}
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+              <PawPrint className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-white font-bold text-lg leading-tight">The Paw House</h2>
+              <p className="text-white/60 text-xs">Admin Panel</p>
+            </div>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/60 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
         </div>
-        {sidebarOpen && (
-          <div>
-            <div style={{ color: 'white', fontWeight: 800, fontSize: 14, lineHeight: 1.2 }}>The Paw House</div>
-            <div style={{ color: C.green, fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Admin Panel</div>
-          </div>
-        )}
-      </div>
 
-      {/* ── Nav Links ── */}
-      <nav style={{ flex: 1, padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {navItems.map(({ id, label, icon: Icon }) => {
-          const active = activeTab === id;
-          return (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: sidebarOpen ? '9px 14px' : '9px',
-                borderRadius: 10, border: 'none', cursor: 'pointer',
-                background: active ? `${C.green}22` : 'transparent',
-                borderLeft: `3px solid ${active ? C.green : 'transparent'}`,
-                color: active ? C.green : 'rgba(255,255,255,0.5)',
-                transition: 'all 0.2s',
-                justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                width: '100%',
-              }}
-              onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'white'; }}}
-              onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}}
-            >
-              <Icon size={17} style={{ flexShrink: 0 }} />
-              {sidebarOpen && (
-                <span style={{ fontSize: 13, fontWeight: active ? 700 : 500, whiteSpace: 'nowrap' }}>
-                  {label}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* ── User + Logout ── */}
-      <div style={{ padding: '14px 10px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        {sidebarOpen && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', marginBottom: 4 }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${C.green}, ${C.teal})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ color: 'white', fontWeight: 700, fontSize: 11 }}>A</span>
+        {/* User info */}
+        <div className="p-5 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              {user?.name?.charAt(0)?.toUpperCase() || 'A'}
             </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ color: 'white', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Administrator</div>
-              <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>admin@pawhouse.com</div>
+            <div className="overflow-hidden">
+              <p className="text-white font-semibold text-sm truncate">{user?.name || 'Administrator'}</p>
+              <p className="text-white/50 text-xs truncate">{user?.email || 'admin@pawhouse.com'}</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                <span className="text-green-400 text-xs">Online</span>
+              </div>
             </div>
           </div>
-        )}
-        <button
-          onClick={handleLogout}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen ? '9px 14px' : '9px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: 'rgba(255,255,255,0.35)', width: '100%', justifyContent: sidebarOpen ? 'flex-start' : 'center', transition: 'all 0.2s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.color = '#f87171'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
-        >
-          <LogOut size={15} />
-          {sidebarOpen && <span style={{ fontSize: 13 }}>Logout</span>}
-        </button>
-      </div>
-    </aside>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {menuItems.map(({ id, label, icon: Icon }) => {
+            const active = activeTab === id;
+            return (
+              <button key={id} onClick={() => setActiveTab(id)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                  active
+                    ? 'bg-white/20 text-white shadow-sm'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                }`}>
+                <Icon className="h-5 w-5 flex-shrink-0" style={{ color: 'inherit' }} />
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-4 border-t border-white/10">
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-white/70 hover:text-white hover:bg-red-500/20 rounded-xl text-sm font-medium transition-all">
+            <LogOut className="h-5 w-5" />
+            Logout
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 

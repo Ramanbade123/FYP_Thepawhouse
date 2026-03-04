@@ -1,15 +1,24 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PawPrint, Bell, Home, Search, FileText, MessageSquare, Settings, LogOut } from 'lucide-react';
+import { PawPrint, Bell, Search, FileText, MessageSquare, Settings, ChevronDown, User, LogOut } from 'lucide-react';
 
 const tabs = [
-  { id: 'browse',       label: 'Browse Dogs',   icon: Search       },
-  { id: 'applications', label: 'Applications',  icon: FileText     },
-  { id: 'messages',     label: 'Messages',      icon: MessageSquare },
-  { id: 'settings',     label: 'Settings',      icon: Settings     },
+  { id: 'browse',       label: 'Browse Dogs',  icon: Search        },
+  { id: 'applications', label: 'Applications', icon: FileText      },
+  { id: 'messages',     label: 'Messages',     icon: MessageSquare },
+  { id: 'settings',     label: 'Settings',     icon: Settings      },
 ];
 
 const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -32,7 +41,7 @@ const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
             </div>
           </Link>
 
-          {/* Nav tabs */}
+          {/* Nav */}
           <nav className="flex items-center gap-1">
             {tabs.map(({ id, label, icon: Icon }) => {
               const isActive = activeTab === id;
@@ -49,24 +58,51 @@ const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
             })}
           </nav>
 
-          {/* Right — Bell + User + Logout */}
+          {/* Right */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <button className="p-2 text-gray-500 hover:text-[#085558] relative">
               <Bell className="h-5 w-5" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="text-right hidden md:block">
-                <p className="font-semibold text-[#063630] text-sm leading-tight">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500 leading-tight">Adopter</p>
-              </div>
-              <div className="w-9 h-9 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                {user?.name?.charAt(0)?.toUpperCase() || 'A'}
-              </div>
+
+            {/* User dropdown */}
+            <div className="relative" ref={menuRef}>
+              <button onClick={() => setShowMenu(p => !p)}
+                className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
+                <div className="w-8 h-8 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                </div>
+                <div className="text-left hidden md:block">
+                  <p className="font-semibold text-[#063630] text-sm leading-tight">{user?.name || 'User'}</p>
+                  <p className="text-xs text-gray-500 leading-tight">Adopter</p>
+                </div>
+                <ChevronDown className="h-4 w-4 text-gray-400 hidden md:block" />
+              </button>
+
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="p-4 border-b border-gray-100 bg-gray-50">
+                    <p className="font-semibold text-gray-800 text-sm">{user?.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{user?.email}</p>
+                  </div>
+                  <div className="p-2">
+                    <button onClick={() => { setActiveTab('settings'); setShowMenu(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
+                      <User className="h-4 w-4" /> My Profile
+                    </button>
+                    <button onClick={() => { setActiveTab('settings'); setShowMenu(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
+                      <Settings className="h-4 w-4" /> Settings
+                    </button>
+                  </div>
+                  <div className="p-2 border-t border-gray-100">
+                    <button onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium">
+                      <LogOut className="h-4 w-4" /> Logout
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <button onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-red-500 border border-gray-200 rounded-lg hover:border-red-200 transition-all">
-              <LogOut className="h-3.5 w-3.5" /> Logout
-            </button>
           </div>
 
         </div>
