@@ -1,9 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useNavigate as useNav, Link } from 'react-router-dom';
 import {
-  Dog, PawPrint, CheckCircle, ArrowLeft,
-  Shield, Upload, Info, ImagePlus, X, AlertTriangle, RefreshCw
+  PawPrint, CheckCircle, ArrowLeft,
+  Shield, Upload, Info, ImagePlus, X, RefreshCw
 } from 'lucide-react';
 
 const API = 'http://localhost:5000/api';
@@ -179,7 +178,7 @@ const EditDogPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#f0f7f4] to-gray-100 flex items-center justify-center">
       <div className="text-center">
         <p className="text-red-500 mb-4">{fetchError}</p>
-        <button onClick={() => navigate('/rehomer-dashboard')} className="text-[#085558] font-semibold hover:underline">Back to Dashboard</button>
+        <button onClick={() => navigate('/rehomer/dashboard')} className="text-[#085558] font-semibold hover:underline">Back to Dashboard</button>
       </div>
     </div>
   );
@@ -197,7 +196,7 @@ const EditDogPage = () => {
         <div className="inline-block px-3 py-1 bg-[#008737]/10 text-[#085558] text-xs font-bold uppercase tracking-widest rounded-full mb-4">Update Received</div>
         <h2 className="text-2xl font-bold text-[#063630] mb-3">Listing Updated!</h2>
         <p className="text-gray-500 text-sm leading-relaxed mb-8">Your changes have been submitted for admin review and will go live once approved.</p>
-        <button onClick={() => navigate('/rehomer-dashboard')}
+        <button onClick={() => navigate('/rehomer/dashboard')}
           className="w-full py-3.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-semibold text-sm hover:shadow-lg transition-all"
           style={{ color: '#ffffff' }}>
           Back to Dashboard
@@ -218,16 +217,13 @@ const EditDogPage = () => {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40 border-b border-gray-100">
         <div className="container mx-auto px-4 py-4 max-w-5xl flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
+          <button onClick={() => navigate('/rehomer/dashboard')} className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-gradient-to-r from-[#085558] to-[#008737] rounded-xl flex items-center justify-center shadow-md">
               <PawPrint className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-[#063630] leading-tight">The Paw House</h1>
-              <p className="text-xs text-[#008737] font-medium">Edit Listing</p>
-            </div>
-          </Link>
-          <button onClick={() => navigate('/rehomer-dashboard')}
+            <h1 className="text-lg font-bold text-[#063630] leading-tight">The Paw House</h1>
+          </button>
+          <button onClick={() => navigate('/rehomer/dashboard')}
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#085558] font-medium bg-gray-50 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back to Dashboard
           </button>
@@ -235,24 +231,6 @@ const EditDogPage = () => {
       </header>
 
       <div className="container mx-auto px-4 py-10 max-w-4xl relative z-10">
-
-        {/* Hero */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#008737]/10 rounded-full mb-5">
-            <Dog className="h-4 w-4 text-[#085558]" />
-            <span className="text-xs font-bold text-[#085558] uppercase tracking-widest">Edit Listing — {dog?.name}</span>
-          </div>
-          <h2 className="text-3xl font-bold text-[#063630] mb-3 leading-tight">Update Your Dog's<br />Listing Details</h2>
-          <p className="text-sm text-gray-500 max-w-lg mx-auto leading-relaxed">
-            Make changes below. Your listing will be re-submitted for admin review before going live again.
-          </p>
-        </div>
-
-        {/* Warning */}
-        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-6">
-          <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-          <p className="text-amber-700 text-sm font-medium">Saving changes will reset this listing to <strong>pending</strong> and require admin re-approval.</p>
-        </div>
 
         <form onSubmit={submit} className="space-y-4">
           {error && (
@@ -439,7 +417,7 @@ const EditDogPage = () => {
           {/* Submit */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between gap-4">
-              <button type="button" onClick={() => navigate('/rehomer-dashboard')}
+              <button type="button" onClick={() => navigate('/rehomer/dashboard')}
                 className="px-8 py-3.5 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all text-sm">
                 Cancel
               </button>
