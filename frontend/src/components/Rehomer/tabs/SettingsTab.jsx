@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { User, Lock, Bell, Shield, Save, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { User, Lock, Bell, Shield, Save, Eye, EyeOff, CheckCircle, Camera, Trash2 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -29,15 +29,40 @@ const SettingsTab = ({ user }) => {
     weeklyDigest: false,
   });
 
+  const fileRef = useRef(null);
+  const [avatarPreview, setAvatarPreview] = useState(user?.profileImage || null);
+  const [avatarFile, setAvatarFile]       = useState(null);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const removeAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
   const saveProfile = async () => {
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${API}/users/profile`, {
-        method:  'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body:    JSON.stringify(profile),
-      });
-      // Update localStorage
+      if (avatarFile) {
+        const fd = new FormData();
+        Object.entries(profile).forEach(([k, v]) => fd.append(k, v));
+        fd.append('profileImage', avatarFile);
+        const res  = await fetch(`${API}/users/profile`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd });
+        const data = await res.json();
+        if (data.success && data.data?.profileImage) setAvatarPreview(data.data.profileImage);
+      } else {
+        await fetch(`${API}/users/profile`, {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body:    JSON.stringify(profile),
+        });
+      }
       const stored = JSON.parse(localStorage.getItem('user') || '{}');
       localStorage.setItem('user', JSON.stringify({ ...stored, ...profile }));
     } catch {}
@@ -93,12 +118,37 @@ const SettingsTab = ({ user }) => {
 
               {/* Avatar */}
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {profile.name?.charAt(0)?.toUpperCase() || 'R'}
+                <div className="relative group flex-shrink-0">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="avatar"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-100" />
+                  ) : (
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                      {profile.name?.charAt(0)?.toUpperCase() || 'R'}
+                    </div>
+                  )}
+                  <button type="button" onClick={() => fileRef.current?.click()}
+                    className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <Camera className="h-4 w-4 text-white" />
+                  </button>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-700">{profile.name || 'Rehomer'}</p>
-                  <p className="text-xs text-gray-400">Rehomer account</p>
+                  <p className="text-xs text-gray-400 mb-2">Rehomer account</p>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => fileRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-[#085558] text-[#085558] rounded-lg text-xs font-medium hover:bg-[#085558]/5 transition-colors">
+                      <Camera className="h-3 w-3" /> Upload Photo
+                    </button>
+                    {avatarPreview && (
+                      <button type="button" onClick={removeAvatar}
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-500 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
+                        <Trash2 className="h-3 w-3" /> Remove
+                      </button>
+                    )}
+                  </div>
+                  <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+                  <p className="text-[10px] text-gray-400 mt-1.5">JPG, PNG or WEBP — max 5MB</p>
                 </div>
               </div>
 
