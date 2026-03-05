@@ -5,39 +5,45 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const SettingsTab = ({ user }) => {
   const [activeSection, setActiveSection] = useState('profile');
-  const [saved, setSaved]                 = useState(false);
-  const [showPassword, setShowPassword]   = useState(false);
+  const [saved, setSaved]               = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving]             = useState(false);
+  const fileRef = useRef(null);
+
+  // Only use profileImage if it's a real URL (not the default placeholder)
+  const initialImage = (user?.profileImage && user.profileImage !== 'default-profile.jpg')
+    ? user.profileImage : null;
 
   const [profile, setProfile] = useState({
-    name:    user?.name    || '',
-    email:   user?.email   || '',
-    phone:   user?.phone   || '',
-    city:    user?.location?.city  || '',
-    state:   user?.location?.state || '',
-    bio:     user?.bio     || '',
+    name:  user?.name            || '',
+    email: user?.email           || '',
+    phone: user?.phone           || '',
+    city:  user?.location?.city  || '',
+    state: user?.location?.state || '',
+    bio:   user?.bio             || '',
   });
 
-  const [passwords, setPasswords] = useState({
-    current: '', newPass: '', confirm: '',
-  });
+  const [avatarPreview, setAvatarPreview] = useState(initialImage);
+  const [avatarFile, setAvatarFile]       = useState(null);
+
+  const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' });
 
   const [notifications, setNotifications] = useState({
-    newApplication: true,
-    applicationUpdate: true,
-    messages: true,
-    adminApproval: true,
-    weeklyDigest: false,
+    newApplication: true, applicationUpdate: true,
+    messages: true, adminApproval: true, weeklyDigest: false,
   });
 
-  const fileRef = useRef(null);
-  const [avatarPreview, setAvatarPreview] = useState(user?.profileImage || null);
-  const [avatarFile, setAvatarFile]       = useState(null);
+  const [privacy, setPrivacy] = useState({
+    showPhone: true, showEmail: false, allowMessages: true,
+  });
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const removeAvatar = () => {
@@ -47,25 +53,41 @@ const SettingsTab = ({ user }) => {
   };
 
   const saveProfile = async () => {
+    setSaving(true);
     try {
       const token = localStorage.getItem('token');
+      const payload = { ...profile };
+
+      // If new file selected, convert to base64 and include
       if (avatarFile) {
-        const fd = new FormData();
-        Object.entries(profile).forEach(([k, v]) => fd.append(k, v));
-        fd.append('profileImage', avatarFile);
-        const res  = await fetch(`${API}/users/profile`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body: fd });
-        const data = await res.json();
-        if (data.success && data.data?.profileImage) setAvatarPreview(data.data.profileImage);
-      } else {
-        await fetch(`${API}/users/profile`, {
-          method:  'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body:    JSON.stringify(profile),
+        const base64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload  = () => res(reader.result);
+          reader.onerror = rej;
+          reader.readAsDataURL(avatarFile);
         });
+        payload.profileImage = base64;
+        setAvatarPreview(base64);
       }
+
+      await fetch(`${API}/users/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+
+      // Update localStorage and broadcast to header
       const stored = JSON.parse(localStorage.getItem('user') || '{}');
-      localStorage.setItem('user', JSON.stringify({ ...stored, ...profile }));
-    } catch {}
+      const updated = {
+        ...stored,
+        name: profile.name,
+        email: profile.email,
+        ...(payload.profileImage ? { profileImage: payload.profileImage } : {}),
+      };
+      localStorage.setItem('user', JSON.stringify(updated));
+      window.dispatchEvent(new Event('userUpdated'));
+    } catch (e) { console.error(e); }
+    setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -84,7 +106,6 @@ const SettingsTab = ({ user }) => {
         <p className="text-gray-500 mt-1">Manage your account preferences.</p>
       </div>
 
-      {/* Saved toast */}
       {saved && (
         <div className="fixed top-6 right-6 z-50 bg-[#063630] text-white px-5 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2">
           <CheckCircle className="h-4 w-4" /> Saved successfully
@@ -92,7 +113,7 @@ const SettingsTab = ({ user }) => {
       )}
 
       <div className="flex gap-6">
-        {/* Section nav */}
+        {/* Sidebar */}
         <div className="w-52 flex-shrink-0">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             {sections.map(({ id, label, icon: Icon }) => (
@@ -116,12 +137,15 @@ const SettingsTab = ({ user }) => {
             <div className="space-y-5">
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Profile Information</h3>
 
-              {/* Avatar */}
+              {/* Avatar upload */}
               <div className="flex items-center gap-4">
                 <div className="relative group flex-shrink-0">
                   {avatarPreview ? (
-                    <img src={avatarPreview} alt="avatar"
-                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-100" />
+                    <img
+                      src={avatarPreview}
+                      alt="Profile"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-100"
+                    />
                   ) : (
                     <div className="w-16 h-16 bg-gradient-to-br from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white text-2xl font-bold">
                       {profile.name?.charAt(0)?.toUpperCase() || 'R'}
@@ -154,15 +178,16 @@ const SettingsTab = ({ user }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Full Name',   key: 'name',  placeholder: 'Your name'  },
-                  { label: 'Email',       key: 'email', placeholder: 'your@email.com', type: 'email' },
-                  { label: 'Phone',       key: 'phone', placeholder: '+977 98XXXXXXXX' },
-                  { label: 'City',        key: 'city',  placeholder: 'Kathmandu'  },
-                  { label: 'State',       key: 'state', placeholder: 'Bagmati'    },
+                  { label: 'Full Name', key: 'name',  placeholder: 'Your name' },
+                  { label: 'Email',     key: 'email', placeholder: 'your@email.com', type: 'email' },
+                  { label: 'Phone',     key: 'phone', placeholder: '+977 98XXXXXXXX' },
+                  { label: 'City',      key: 'city',  placeholder: 'Kathmandu' },
+                  { label: 'State',     key: 'state', placeholder: 'Bagmati' },
                 ].map(({ label, key, placeholder, type = 'text' }) => (
                   <div key={key} className={key === 'email' ? 'col-span-2' : ''}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                    <input type={type} value={profile[key]} onChange={e => setProfile(p => ({ ...p, [key]: e.target.value }))}
+                    <input type={type} value={profile[key]}
+                      onChange={e => setProfile(p => ({ ...p, [key]: e.target.value }))}
                       placeholder={placeholder}
                       className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008737] text-sm" />
                   </div>
@@ -175,10 +200,11 @@ const SettingsTab = ({ user }) => {
                 </div>
               </div>
 
-              <button onClick={saveProfile}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md transition-shadow"
+              <button onClick={saveProfile} disabled={saving}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md transition-shadow disabled:opacity-60"
                 style={{ color: '#ffffff' }}>
-                <Save className="h-4 w-4" style={{ color: '#ffffff' }} /> Save Changes
+                <Save className="h-4 w-4" style={{ color: '#ffffff' }} />
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           )}
@@ -188,20 +214,17 @@ const SettingsTab = ({ user }) => {
             <div className="space-y-5">
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Change Password</h3>
               {[
-                { label: 'Current Password', key: 'current' },
-                { label: 'New Password',     key: 'newPass' },
+                { label: 'Current Password',    key: 'current' },
+                { label: 'New Password',         key: 'newPass' },
                 { label: 'Confirm New Password', key: 'confirm' },
               ].map(({ label, key }) => (
                 <div key={key}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
                   <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={passwords[key]}
+                    <input type={showPassword ? 'text' : 'password'} value={passwords[key]}
                       onChange={e => setPasswords(p => ({ ...p, [key]: e.target.value }))}
                       className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:border-[#008737] text-sm pr-10"
-                      placeholder="••••••••"
-                    />
+                      placeholder="••••••••" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -212,8 +235,7 @@ const SettingsTab = ({ user }) => {
               {passwords.newPass && passwords.confirm && passwords.newPass !== passwords.confirm && (
                 <p className="text-red-500 text-xs">Passwords do not match</p>
               )}
-              <button
-                onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2500); }}
+              <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2500); }}
                 disabled={!passwords.current || !passwords.newPass || passwords.newPass !== passwords.confirm}
                 className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md transition-shadow disabled:opacity-50"
                 style={{ color: '#ffffff' }}>
@@ -228,11 +250,11 @@ const SettingsTab = ({ user }) => {
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Notification Preferences</h3>
               <div className="space-y-4">
                 {[
-                  { key: 'newApplication',   label: 'New Application',     desc: 'When someone applies for one of your dogs'    },
-                  { key: 'applicationUpdate',label: 'Application Updates',  desc: 'Status changes on applications'               },
-                  { key: 'messages',         label: 'New Messages',        desc: 'When you receive a new message'               },
-                  { key: 'adminApproval',    label: 'Admin Approvals',     desc: 'When your listing is approved or rejected'    },
-                  { key: 'weeklyDigest',     label: 'Weekly Digest',       desc: 'A weekly summary of your activity'            },
+                  { key: 'newApplication',    label: 'New Application',    desc: 'When someone applies for one of your dogs'  },
+                  { key: 'applicationUpdate', label: 'Application Updates', desc: 'Status changes on applications'             },
+                  { key: 'messages',          label: 'New Messages',       desc: 'When you receive a new message'             },
+                  { key: 'adminApproval',     label: 'Admin Approvals',    desc: 'When your listing is approved or rejected'  },
+                  { key: 'weeklyDigest',      label: 'Weekly Digest',      desc: 'A weekly summary of your activity'          },
                 ].map(({ key, label, desc }) => (
                   <div key={key} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
                     <div>
@@ -243,13 +265,12 @@ const SettingsTab = ({ user }) => {
                       <input type="checkbox" checked={notifications[key]}
                         onChange={e => setNotifications(n => ({ ...n, [key]: e.target.checked }))}
                         className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]"></div>
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]" />
                     </label>
                   </div>
                 ))}
               </div>
-              <button onClick={saveProfile}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md"
+              <button onClick={saveProfile} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md"
                 style={{ color: '#ffffff' }}>
                 <Save className="h-4 w-4" style={{ color: '#ffffff' }} /> Save Preferences
               </button>
@@ -262,23 +283,24 @@ const SettingsTab = ({ user }) => {
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Privacy & Security</h3>
               <div className="space-y-4">
                 {[
-                  { label: 'Show phone number to adopters', desc: 'Adopters can see your phone on your listings' },
-                  { label: 'Show email to adopters',        desc: 'Adopters can see your email on your listings' },
-                  { label: 'Allow direct messages',         desc: 'Adopters can message you directly'            },
-                ].map(({ label, desc }) => (
-                  <div key={label} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50">
+                  { key: 'showPhone',     label: 'Show phone number to adopters', desc: 'Adopters can see your phone on your listings' },
+                  { key: 'showEmail',     label: 'Show email to adopters',         desc: 'Adopters can see your email on your listings' },
+                  { key: 'allowMessages', label: 'Allow direct messages',          desc: 'Adopters can message you directly'            },
+                ].map(({ key, label, desc }) => (
+                  <div key={key} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50">
                     <div>
                       <p className="font-medium text-gray-800 text-sm">{label}</p>
                       <p className="text-gray-500 text-xs mt-0.5">{desc}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" defaultChecked className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]"></div>
+                      <input type="checkbox" checked={privacy[key]}
+                        onChange={e => setPrivacy(p => ({ ...p, [key]: e.target.checked }))}
+                        className="sr-only peer" />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]" />
                     </label>
                   </div>
                 ))}
               </div>
-
               <div className="border-t border-gray-100 pt-5">
                 <h4 className="font-semibold text-red-600 mb-3">Danger Zone</h4>
                 <button className="px-4 py-2 border border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors">

@@ -13,6 +13,7 @@ const {
 
 const { protect }  = require('../middleware/authMiddleware');
 const { isAdmin }  = require('../middleware/roleMiddleware');
+const upload       = require('../middleware/uploadMiddleware');
 
 // ── Public ────────────────────────────────────────────────────
 router.post('/register',                  register);
@@ -26,7 +27,7 @@ router.put('/updatedetails',   protect, updateDetails);
 router.put('/updatepassword',  protect, updatePassword);
 router.get('/logout',          protect, logout);
 router.get('/profile',         protect, getProfile);
-router.put('/profile',         protect, updateProfile);
+router.put('/profile',         protect, upload.single('profileImage'), updateProfile);
 router.put('/preferences/:type', protect, updatePreferences);
 router.get('/dashboard/stats', protect, getDashboardStats);
 

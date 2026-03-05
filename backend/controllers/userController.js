@@ -32,7 +32,8 @@ exports.updateProfile = async (req, res) => {
       'phone',
       'address',
       'userType',
-      'profileImage'
+      'profileImage',
+      'bio',
     ];
 
     // Filter allowed fields
@@ -42,6 +43,11 @@ exports.updateProfile = async (req, res) => {
         fieldsToUpdate[key] = req.body[key];
       }
     });
+
+    // If a file was uploaded via multer, set the profileImage to its URL
+    if (req.file) {
+      fieldsToUpdate.profileImage = `/uploads/profiles/${req.file.filename}`;
+    }
 
     // If phone is being updated, check for duplicates
     if (fieldsToUpdate.phone) {
