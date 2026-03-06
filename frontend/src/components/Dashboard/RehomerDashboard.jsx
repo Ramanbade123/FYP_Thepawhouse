@@ -37,7 +37,7 @@ const RehomerDashboard = () => {
         {(activeTab === 'dashboard' || activeTab === 'my-dogs') && <ListedDogs />}
         {activeTab === 'applications' && <ApplicationsTab />}
         {activeTab === 'messages'     && <MessagesTab user={user} />}
-        {activeTab === 'settings'     && <SettingsTab user={user} />}
+        {activeTab === 'settings'     && <SettingsTab user={user} onProfileUpdate={setUser} />}
       </div>
 
       <RehomerFooter />

@@ -3,38 +3,37 @@ import {
   Search, Filter, Download, Eye, 
   Edit, Trash2, MoreVertical, User,
   Mail, Phone, Calendar, CheckCircle,
-  XCircle, Clock, UserCheck, UserX
+  XCircle, Clock, UserCheck, UserX, RefreshCw
 } from 'lucide-react';
 
 const UserManagement = ({ preview = false }) => {
+  const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const BASE_URL = API.replace('/api', '');
+  const imgSrc   = (url) => (!url || url === 'default-profile.jpg') ? null : url.startsWith('http') ? url : `${BASE_URL}${url}`;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState([]);
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API}/users`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+      if (data.success) setUsers(data.data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setUsers(mockUsers);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch users from API
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/users', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const data = await response.json();
-        if (data.success) {
-          setUsers(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        // Mock data for demo
-        setUsers(mockUsers);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
 
@@ -218,6 +217,11 @@ const UserManagement = ({ preview = false }) => {
               <p className="text-gray-600">Manage all users, adopters, and rehomers</p>
             </div>
             <div className="flex items-center space-x-3 mt-4 md:mt-0">
+              <button onClick={fetchUsers}
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </button>
               <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center">
                 <Download className="h-4 w-4 mr-2" />
                 Export
@@ -346,10 +350,11 @@ const UserManagement = ({ preview = false }) => {
                     )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
+                        <div className="h-10 w-10 flex-shrink-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center overflow-hidden">
+                          {imgSrc(user.profileImage)
+                            ? <img src={imgSrc(user.profileImage)} alt={user.name} className="w-full h-full object-cover" />
+                            : <span className="text-white font-semibold">{user.name.charAt(0).toUpperCase()}</span>
+                          }
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{user.name}</div>

@@ -1,30 +1,31 @@
 import { useState, useRef } from 'react';
-import { User, Lock, Bell, Shield, Save, Eye, EyeOff, CheckCircle, Camera, Trash2 } from 'lucide-react';
+import { User, Lock, Bell, Shield, Save, Eye, EyeOff, CheckCircle, Camera, X } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = API.replace('/api', '');
 
-const SettingsTab = ({ user }) => {
+const imgSrc = (url) => {
+  if (!url || url === 'default-profile.jpg') return null;
+  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+};
+
+const SettingsTab = ({ user, onProfileUpdate }) => {
   const [activeSection, setActiveSection] = useState('profile');
-  const [saved, setSaved]               = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [saving, setSaving]             = useState(false);
-  const fileRef = useRef(null);
-
-  // Only use profileImage if it's a real URL (not the default placeholder)
-  const initialImage = (user?.profileImage && user.profileImage !== 'default-profile.jpg')
-    ? user.profileImage : null;
+  const [saved, setSaved]                 = useState(false);
+  const [showPassword, setShowPassword]   = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(imgSrc(user?.profileImage));
+  const [avatarFile, setAvatarFile]       = useState(null);
+  const [uploading, setUploading]         = useState(false);
+  const fileInputRef = useRef();
 
   const [profile, setProfile] = useState({
-    name:  user?.name            || '',
-    email: user?.email           || '',
-    phone: user?.phone           || '',
+    name:  user?.name  || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     city:  user?.location?.city  || '',
     state: user?.location?.state || '',
-    bio:   user?.bio             || '',
+    bio:   user?.bio   || '',
   });
-
-  const [avatarPreview, setAvatarPreview] = useState(initialImage);
-  const [avatarFile, setAvatarFile]       = useState(null);
 
   const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' });
 
@@ -33,61 +34,46 @@ const SettingsTab = ({ user }) => {
     messages: true, adminApproval: true, weeklyDigest: false,
   });
 
-  const [privacy, setPrivacy] = useState({
-    showPhone: true, showEmail: false, allowMessages: true,
-  });
-
   const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
     setAvatarFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setAvatarPreview(reader.result);
-    reader.readAsDataURL(file);
+    setAvatarPreview(URL.createObjectURL(file));
   };
 
   const removeAvatar = () => {
     setAvatarFile(null);
     setAvatarPreview(null);
-    if (fileRef.current) fileRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const saveProfile = async () => {
-    setSaving(true);
+    setUploading(true);
     try {
       const token = localStorage.getItem('token');
-      const payload = { ...profile };
+      const formData = new FormData();
+      formData.append('name',  profile.name);
+      formData.append('phone', profile.phone);
+      if (avatarFile) formData.append('profileImage', avatarFile);
 
-      // If new file selected, convert to base64 and include
-      if (avatarFile) {
-        const base64 = await new Promise((res, rej) => {
-          const reader = new FileReader();
-          reader.onload  = () => res(reader.result);
-          reader.onerror = rej;
-          reader.readAsDataURL(avatarFile);
-        });
-        payload.profileImage = base64;
-        setAvatarPreview(base64);
-      }
-
-      await fetch(`${API}/users/profile`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(payload),
+      const res  = await fetch(`${API}/users/profile`, {
+        method:  'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body:    formData,
       });
+      const data = await res.json();
 
-      // Update localStorage and broadcast to header
-      const stored = JSON.parse(localStorage.getItem('user') || '{}');
-      const updated = {
-        ...stored,
-        name: profile.name,
-        email: profile.email,
-        ...(payload.profileImage ? { profileImage: payload.profileImage } : {}),
-      };
-      localStorage.setItem('user', JSON.stringify(updated));
-      window.dispatchEvent(new Event('userUpdated'));
-    } catch (e) { console.error(e); }
-    setSaving(false);
+      if (data.success) {
+        const stored  = JSON.parse(localStorage.getItem('user') || '{}');
+        const updated = { ...stored, name: profile.name, phone: profile.phone, profileImage: data.data?.profileImage || stored.profileImage };
+        localStorage.setItem('user', JSON.stringify(updated));
+        setAvatarFile(null);
+        if (onProfileUpdate) onProfileUpdate(updated);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setUploading(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -98,6 +84,8 @@ const SettingsTab = ({ user }) => {
     { id: 'notifications', label: 'Notifications', icon: Bell   },
     { id: 'privacy',       label: 'Privacy',       icon: Shield },
   ];
+
+  const initials = profile.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
   return (
     <div>
@@ -113,7 +101,6 @@ const SettingsTab = ({ user }) => {
       )}
 
       <div className="flex gap-6">
-        {/* Sidebar */}
         <div className="w-52 flex-shrink-0">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             {sections.map(({ id, label, icon: Icon }) => (
@@ -129,60 +116,54 @@ const SettingsTab = ({ user }) => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
 
-          {/* ── Profile ── */}
           {activeSection === 'profile' && (
             <div className="space-y-5">
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Profile Information</h3>
 
               {/* Avatar upload */}
-              <div className="flex items-center gap-4">
-                <div className="relative group flex-shrink-0">
-                  {avatarPreview ? (
-                    <img
-                      src={avatarPreview}
-                      alt="Profile"
-                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-100"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                      {profile.name?.charAt(0)?.toUpperCase() || 'R'}
-                    </div>
-                  )}
-                  <button type="button" onClick={() => fileRef.current?.click()}
-                    className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <Camera className="h-4 w-4 text-white" />
+              <div className="flex items-center gap-5">
+                <div className="relative group">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-[#085558] to-[#008737] flex items-center justify-center text-white text-2xl font-bold ring-4 ring-white shadow-md">
+                    {avatarPreview
+                      ? <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                      : <span>{initials}</span>
+                    }
+                  </div>
+                  <button onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera className="h-5 w-5 text-white" />
                   </button>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                 </div>
+
                 <div>
-                  <p className="font-semibold text-gray-700">{profile.name || 'Rehomer'}</p>
-                  <p className="text-xs text-gray-400 mb-2">Rehomer account</p>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => fileRef.current?.click()}
+                  <p className="font-semibold text-gray-800">{profile.name || 'Your Name'}</p>
+                  <p className="text-xs text-gray-400 capitalize mb-2">{user?.role || 'user'} account</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => fileInputRef.current?.click()}
                       className="flex items-center gap-1.5 px-3 py-1.5 border border-[#085558] text-[#085558] rounded-lg text-xs font-medium hover:bg-[#085558]/5 transition-colors">
-                      <Camera className="h-3 w-3" /> Upload Photo
+                      <Camera className="h-3.5 w-3.5" /> Upload Photo
                     </button>
                     {avatarPreview && (
-                      <button type="button" onClick={removeAvatar}
+                      <button onClick={removeAvatar}
                         className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-500 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
-                        <Trash2 className="h-3 w-3" /> Remove
+                        <X className="h-3.5 w-3.5" /> Remove
                       </button>
                     )}
                   </div>
-                  <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-                  <p className="text-[10px] text-gray-400 mt-1.5">JPG, PNG or WEBP — max 5MB</p>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG or WEBP — max 5MB</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Full Name', key: 'name',  placeholder: 'Your name' },
+                  { label: 'Full Name', key: 'name',  placeholder: 'Your name'  },
                   { label: 'Email',     key: 'email', placeholder: 'your@email.com', type: 'email' },
                   { label: 'Phone',     key: 'phone', placeholder: '+977 98XXXXXXXX' },
-                  { label: 'City',      key: 'city',  placeholder: 'Kathmandu' },
-                  { label: 'State',     key: 'state', placeholder: 'Bagmati' },
+                  { label: 'City',      key: 'city',  placeholder: 'Kathmandu'  },
+                  { label: 'State',     key: 'state', placeholder: 'Bagmati'    },
                 ].map(({ label, key, placeholder, type = 'text' }) => (
                   <div key={key} className={key === 'email' ? 'col-span-2' : ''}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -200,16 +181,15 @@ const SettingsTab = ({ user }) => {
                 </div>
               </div>
 
-              <button onClick={saveProfile} disabled={saving}
+              <button onClick={saveProfile} disabled={uploading}
                 className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md transition-shadow disabled:opacity-60"
                 style={{ color: '#ffffff' }}>
                 <Save className="h-4 w-4" style={{ color: '#ffffff' }} />
-                {saving ? 'Saving...' : 'Save Changes'}
+                {uploading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           )}
 
-          {/* ── Password ── */}
           {activeSection === 'password' && (
             <div className="space-y-5">
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Change Password</h3>
@@ -237,14 +217,13 @@ const SettingsTab = ({ user }) => {
               )}
               <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2500); }}
                 disabled={!passwords.current || !passwords.newPass || passwords.newPass !== passwords.confirm}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md transition-shadow disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md disabled:opacity-50"
                 style={{ color: '#ffffff' }}>
                 <Lock className="h-4 w-4" style={{ color: '#ffffff' }} /> Update Password
               </button>
             </div>
           )}
 
-          {/* ── Notifications ── */}
           {activeSection === 'notifications' && (
             <div className="space-y-5">
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Notification Preferences</h3>
@@ -252,11 +231,11 @@ const SettingsTab = ({ user }) => {
                 {[
                   { key: 'newApplication',    label: 'New Application',    desc: 'When someone applies for one of your dogs'  },
                   { key: 'applicationUpdate', label: 'Application Updates', desc: 'Status changes on applications'             },
-                  { key: 'messages',          label: 'New Messages',       desc: 'When you receive a new message'             },
-                  { key: 'adminApproval',     label: 'Admin Approvals',    desc: 'When your listing is approved or rejected'  },
-                  { key: 'weeklyDigest',      label: 'Weekly Digest',      desc: 'A weekly summary of your activity'          },
+                  { key: 'messages',          label: 'New Messages',        desc: 'When you receive a new message'             },
+                  { key: 'adminApproval',     label: 'Admin Approvals',     desc: 'When your listing is approved or rejected'  },
+                  { key: 'weeklyDigest',      label: 'Weekly Digest',       desc: 'A weekly summary of your activity'          },
                 ].map(({ key, label, desc }) => (
-                  <div key={key} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                  <div key={key} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50">
                     <div>
                       <p className="font-medium text-gray-800 text-sm">{label}</p>
                       <p className="text-gray-500 text-xs mt-0.5">{desc}</p>
@@ -265,45 +244,38 @@ const SettingsTab = ({ user }) => {
                       <input type="checkbox" checked={notifications[key]}
                         onChange={e => setNotifications(n => ({ ...n, [key]: e.target.checked }))}
                         className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]" />
+                      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]" />
                     </label>
                   </div>
                 ))}
               </div>
-              <button onClick={saveProfile} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md"
-                style={{ color: '#ffffff' }}>
-                <Save className="h-4 w-4" style={{ color: '#ffffff' }} /> Save Preferences
-              </button>
             </div>
           )}
 
-          {/* ── Privacy ── */}
           {activeSection === 'privacy' && (
             <div className="space-y-5">
               <h3 className="font-bold text-[#063630] text-lg border-b border-gray-100 pb-3">Privacy & Security</h3>
               <div className="space-y-4">
                 {[
-                  { key: 'showPhone',     label: 'Show phone number to adopters', desc: 'Adopters can see your phone on your listings' },
-                  { key: 'showEmail',     label: 'Show email to adopters',         desc: 'Adopters can see your email on your listings' },
-                  { key: 'allowMessages', label: 'Allow direct messages',          desc: 'Adopters can message you directly'            },
-                ].map(({ key, label, desc }) => (
-                  <div key={key} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50">
+                  { label: 'Show phone number to adopters', desc: 'Adopters can see your phone on your listings' },
+                  { label: 'Show email to adopters',        desc: 'Adopters can see your email on your listings' },
+                  { label: 'Allow direct messages',         desc: 'Adopters can message you directly'            },
+                ].map(({ label, desc }) => (
+                  <div key={label} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50">
                     <div>
                       <p className="font-medium text-gray-800 text-sm">{label}</p>
                       <p className="text-gray-500 text-xs mt-0.5">{desc}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" checked={privacy[key]}
-                        onChange={e => setPrivacy(p => ({ ...p, [key]: e.target.checked }))}
-                        className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]" />
+                      <input type="checkbox" defaultChecked className="sr-only peer" />
+                      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#008737]" />
                     </label>
                   </div>
                 ))}
               </div>
               <div className="border-t border-gray-100 pt-5">
                 <h4 className="font-semibold text-red-600 mb-3">Danger Zone</h4>
-                <button className="px-4 py-2 border border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors">
+                <button className="px-4 py-2 border border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50">
                   Deactivate Account
                 </button>
               </div>
