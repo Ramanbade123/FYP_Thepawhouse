@@ -32,9 +32,14 @@ exports.updateProfile = async (req, res) => {
       'phone',
       'address',
       'userType',
-      'profileImage',
-      'bio',
+      'profileImage'
     ];
+
+    // Handle uploaded profile image file
+    if (req.file) {
+      const folder = req.file.fieldname === 'profileImage' ? 'users' : 'pets';
+      req.body.profileImage = `/uploads/${folder}/${req.file.filename}`;
+    }
 
     // Filter allowed fields
     const fieldsToUpdate = {};
@@ -43,11 +48,6 @@ exports.updateProfile = async (req, res) => {
         fieldsToUpdate[key] = req.body[key];
       }
     });
-
-    // If a file was uploaded via multer, set the profileImage to its URL
-    if (req.file) {
-      fieldsToUpdate.profileImage = `/uploads/profiles/${req.file.filename}`;
-    }
 
     // If phone is being updated, check for duplicates
     if (fieldsToUpdate.phone) {

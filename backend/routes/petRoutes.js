@@ -2,7 +2,6 @@ const express = require('express');
 const router  = express.Router();
 
 const {
-  upload,
   createPet, getPets, getPet,
   getMyListings, updatePet, deletePet,
   adminGetAllPets, adminUpdateApproval,
@@ -10,14 +9,15 @@ const {
   updateApplicationStatus, getMyApplications,
 } = require('../controllers/petController');
 
-const { protect }                       = require('../middleware/authMiddleware');
-const { isRehomer, isAdopter, isAdmin } = require('../middleware/roleMiddleware');
+const { protect }                        = require('../middleware/authMiddleware');
+const { isRehomer, isAdopter, isAdmin }  = require('../middleware/roleMiddleware');
+const upload                             = require('../middleware/uploadMiddleware');
 
 // ── IMPORTANT: specific named routes BEFORE /:id param routes ──
 
 // Admin
-router.get('/admin/all',          protect, isAdmin,   adminGetAllPets);
-router.put('/admin/:id/approval', protect, isAdmin,   adminUpdateApproval);
+router.get('/admin/all',               protect, isAdmin,   adminGetAllPets);
+router.put('/admin/:id/approval',      protect, isAdmin,   adminUpdateApproval);
 
 // Rehomer named routes (must be before /:id)
 router.get('/rehomer/my-listings',     protect, isRehomer, getMyListings);
@@ -29,14 +29,14 @@ router.get('/adopter/my-applications', protect, isAdopter, getMyApplications);
 router.get('/',    getPets);
 router.get('/:id', getPet);
 
-// Rehomer param routes — multer handles the image upload on POST
-router.post('/',                       protect, isRehomer, upload.single('primaryImage'), createPet);
-router.put('/:id',                     protect, isRehomer, updatePet);
-router.delete('/:id',                  protect, isRehomer, deletePet);
-router.get('/:id/applications',        protect, isRehomer, getPetApplications);
-router.put('/:id/applications/:appId', protect, isRehomer, updateApplicationStatus);
+// Rehomer param routes (after named routes)
+router.post('/',      protect, isRehomer, upload.single('primaryImage'), createPet);
+router.put('/:id',   protect, isRehomer, upload.single('primaryImage'), updatePet);
+router.delete('/:id',                      protect, isRehomer, deletePet);
+router.get('/:id/applications',            protect, isRehomer, getPetApplications);
+router.put('/:id/applications/:appId',     protect, isRehomer, updateApplicationStatus);
 
 // Adopter param routes
-router.post('/:id/apply', protect, isAdopter, applyForPet);
+router.post('/:id/apply',                  protect, isAdopter, applyForPet);
 
 module.exports = router;

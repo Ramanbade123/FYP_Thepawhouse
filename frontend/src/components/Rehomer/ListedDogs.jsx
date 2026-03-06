@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Dog, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = API.replace('/api', '');
 
 const statusColor = {
   available: 'bg-green-100 text-green-800',
@@ -58,8 +59,6 @@ const ListedDogs = ({ onStatsChange }) => {
 
   return (
     <>
-
-
       <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-[#063630]">Your Listed Dogs</h2>
@@ -127,7 +126,7 @@ const ListedDogs = ({ onStatsChange }) => {
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-[#085558]/20 to-[#008737]/20 flex items-center justify-center flex-shrink-0">
                       {dog.primaryImage
-                        ? <img src={dog.primaryImage} alt={dog.name} className="w-full h-full object-cover" />
+                        ? <img src={dog.primaryImage.startsWith('http') ? dog.primaryImage : `${BASE_URL}${dog.primaryImage}`} alt={dog.name} className="w-full h-full object-cover" />
                         : <Dog className="h-7 w-7 text-[#085558]" />
                       }
                     </div>

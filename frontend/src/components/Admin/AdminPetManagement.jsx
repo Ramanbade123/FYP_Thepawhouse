@@ -6,7 +6,10 @@ import {
   AlertTriangle, MapPin, User
 } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = API.replace('/api', '');
+
+const imgSrc = (url) => !url ? null : url.startsWith('http') ? url : `${BASE_URL}${url}`;
 
 const approvalColors = {
   pending:  'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -57,7 +60,7 @@ const PetDetailModal = ({ pet, onClose, onAction }) => {
         <div className="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
           {/* Image */}
           {pet.primaryImage && (
-            <img src={pet.primaryImage} alt={pet.name}
+            <img src={imgSrc(pet.primaryImage)} alt={pet.name}
               className="w-full h-48 object-cover rounded-xl" />
           )}
 
@@ -273,7 +276,7 @@ const AdminPetManagement = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Pet Listings</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage all rehomer listings — delete or disable as needed</p>
+          <p className="text-gray-500 text-sm mt-1">Review and approve rehomer submissions</p>
         </div>
         <button onClick={fetchPets}
           className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors text-sm">
@@ -352,7 +355,7 @@ const AdminPetManagement = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-[#085558]/20 to-[#008737]/20 flex items-center justify-center flex-shrink-0">
                         {pet.primaryImage
-                          ? <img src={pet.primaryImage} alt={pet.name} className="w-full h-full object-cover" />
+                          ? <img src={imgSrc(pet.primaryImage)} alt={pet.name} className="w-full h-full object-cover" />
                           : <Dog className="h-5 w-5 text-[#085558]/40" />
                         }
                       </div>

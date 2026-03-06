@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const jwt    = require('jsonwebtoken');
 const User = require('../models/User');
 const { sendTokenResponse } = require('../utils/generateToken');
 const validator = require('validator');
@@ -581,4 +582,49 @@ exports.logout = (req, res) => {
     success: true,
     message: 'Logged out successfully',
   });
+};
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh-token
+// @access  Public
+exports.refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, error: 'No refresh token provided' });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ success: false, error: 'User not found or inactive' });
+    }
+
+    const newToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE,
+    });
+
+    const newRefreshToken = jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: process.env.JWT_REFRESH_EXPIRE,
+    });
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+    };
+
+    res
+      .cookie('token', newToken, cookieOptions)
+      .cookie('refreshToken', newRefreshToken, {
+        ...cookieOptions,
+        expires: new Date(Date.now() + process.env.JWT_REFRESH_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+      })
+      .json({ success: true, token: newToken });
+  } catch (error) {
+    // jwt.verify throws on invalid/expired token — return 401, not 500
+    return res.status(401).json({ success: false, error: 'Invalid or expired refresh token' });
+  }
 };

@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
+    // Suppress the findOneAndUpdate deprecation warning globally
+    mongoose.set('returnOriginal', false);
+
     const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
