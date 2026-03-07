@@ -27,18 +27,19 @@ exports.getProfile = async (req, res) => {
 // @access  Private
 exports.updateProfile = async (req, res) => {
   try {
+    console.log('📸 updateProfile called');
+    console.log('   req.file:', req.file);
+    console.log('   req.body:', req.body);
+
     const allowedFields = [
-      'name',
-      'phone',
-      'address',
-      'userType',
-      'profileImage'
+      'name', 'phone', 'address', 'userType', 'profileImage'
     ];
 
     // Handle uploaded profile image file
     if (req.file) {
       const folder = req.file.fieldname === 'profileImage' ? 'users' : 'pets';
       req.body.profileImage = `/uploads/${folder}/${req.file.filename}`;
+      console.log('   saving profileImage:', req.body.profileImage);
     }
 
     // Filter allowed fields
@@ -48,6 +49,8 @@ exports.updateProfile = async (req, res) => {
         fieldsToUpdate[key] = req.body[key];
       }
     });
+
+    console.log('   fieldsToUpdate:', fieldsToUpdate);
 
     // If phone is being updated, check for duplicates
     if (fieldsToUpdate.phone) {

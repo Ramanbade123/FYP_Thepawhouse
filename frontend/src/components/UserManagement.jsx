@@ -9,7 +9,13 @@ import {
 const UserManagement = ({ preview = false }) => {
   const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const BASE_URL = API.replace('/api', '');
-  const imgSrc   = (url) => (!url || url === 'default-profile.jpg') ? null : url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  const imgSrc   = (url, updatedAt) => {
+    if (!url || url === 'default-profile.jpg') return null;
+    const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+    // Use updatedAt as stable cache-buster so image refreshes when user data changes
+    const bust = updatedAt ? new Date(updatedAt).getTime() : '';
+    return bust ? `${base}?t=${bust}` : base;
+  };
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +29,14 @@ const UserManagement = ({ preview = false }) => {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
-      if (data.success) setUsers(data.data || []);
+      if (data.success) {
+        // Normalize isActive (boolean from DB) → status (string used in UI)
+        const normalized = (data.data || []).map(u => ({
+          ...u,
+          status: u.status || (u.isActive === false ? 'inactive' : 'active'),
+        }));
+        setUsers(normalized);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
       setUsers(mockUsers);
@@ -351,8 +364,8 @@ const UserManagement = ({ preview = false }) => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center overflow-hidden">
-                          {imgSrc(user.profileImage)
-                            ? <img src={imgSrc(user.profileImage)} alt={user.name} className="w-full h-full object-cover" />
+                          {imgSrc(user.profileImage, user.updatedAt)
+                            ? <img src={imgSrc(user.profileImage, user.updatedAt)} alt={user.name} className="w-full h-full object-cover" />
                             : <span className="text-white font-semibold">{user.name.charAt(0).toUpperCase()}</span>
                           }
                         </div>

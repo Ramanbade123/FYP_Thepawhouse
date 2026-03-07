@@ -6,7 +6,8 @@ const BASE_URL = API.replace('/api', '');
 
 const imgSrc = (url) => {
   if (!url || url === 'default-profile.jpg') return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  return `${base}?t=${Date.now()}`;
 };
 
 const SettingsTab = ({ user, onProfileUpdate }) => {
@@ -65,9 +66,12 @@ const SettingsTab = ({ user, onProfileUpdate }) => {
 
       if (data.success) {
         const stored  = JSON.parse(localStorage.getItem('user') || '{}');
-        const updated = { ...stored, name: profile.name, phone: profile.phone, profileImage: data.data?.profileImage || stored.profileImage };
+        const newProfileImage = data.data?.profileImage || stored.profileImage;
+        const updated = { ...stored, name: profile.name, phone: profile.phone, profileImage: newProfileImage };
         localStorage.setItem('user', JSON.stringify(updated));
         setAvatarFile(null);
+        // Update preview with the server-stored URL (cache-busted)
+        setAvatarPreview(imgSrc(newProfileImage));
         if (onProfileUpdate) onProfileUpdate(updated);
       }
     } catch (err) {

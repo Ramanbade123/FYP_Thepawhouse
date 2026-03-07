@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, ChevronRight, Trash2, ChevronLeft, Search } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API      = 'http://localhost:5000/api';
+const BASE_URL = API.replace('/api', '');
+
+const imgSrc = (url, updatedAt) => {
+  if (!url || url === 'default-profile.jpg') return null;
+  const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  const bust  = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+  return `${base}?t=${bust}`;
+};
 
 const roleColor = {
   adopter: 'bg-blue-100 text-blue-700',
@@ -120,8 +128,11 @@ const RecentUsersTable = ({ preview = true, onManageUsers }) => {
                 <tr key={u._id} className="hover:bg-gray-50 transition-colors">
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#085558] to-[#008737] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                        {u.name?.slice(0,2).toUpperCase()}
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#085558] to-[#008737] flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden">
+                        {imgSrc(u.profileImage, u.updatedAt)
+                          ? <img src={imgSrc(u.profileImage, u.updatedAt)} alt={u.name} className="w-full h-full object-cover" />
+                          : u.name?.slice(0,2).toUpperCase()
+                        }
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-800">{u.name}</p>
