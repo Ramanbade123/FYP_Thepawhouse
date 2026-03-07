@@ -2,6 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PawPrint, Bell, Search, FileText, MessageSquare, Settings, ChevronDown, User, LogOut } from 'lucide-react';
 
+const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = API.replace('/api', '');
+const imgSrc   = (url, updatedAt) => {
+  if (!url || url === 'default-profile.jpg') return null;
+  const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  const bust  = updatedAt ? new Date(updatedAt).getTime() : '';
+  return bust ? `${base}?t=${bust}` : base;
+};
+
 const tabs = [
   { id: 'browse',       label: 'Browse Dogs',  icon: Search        },
   { id: 'applications', label: 'Applications', icon: FileText      },
@@ -68,8 +77,11 @@ const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
             <div className="relative" ref={menuRef}>
               <button onClick={() => setShowMenu(p => !p)}
                 className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
-                <div className="w-8 h-8 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                <div className="w-8 h-8 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                  {imgSrc(user?.profileImage, user?.updatedAt)
+                    ? <img src={imgSrc(user.profileImage, user.updatedAt)} alt={user.name} className="w-full h-full object-cover" />
+                    : user?.name?.charAt(0)?.toUpperCase() || 'A'
+                  }
                 </div>
                 <div className="text-left hidden md:block">
                   <p className="font-semibold text-[#063630] text-sm leading-tight">{user?.name || 'User'}</p>

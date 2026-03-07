@@ -37,7 +37,7 @@ const AdopterDashboard = () => {
         {activeTab === 'browse'       && <BrowseDogsTab />}
         {activeTab === 'applications' && <AdopterApplicationsTab />}
         {activeTab === 'messages'     && <AdopterMessagesTab />}
-        {activeTab === 'settings'     && <AdopterSettingsTab user={user} />}
+        {activeTab === 'settings'     && <AdopterSettingsTab user={user} onProfileUpdate={setUser} />}
       </div>
 
       <AdopterFooter />
