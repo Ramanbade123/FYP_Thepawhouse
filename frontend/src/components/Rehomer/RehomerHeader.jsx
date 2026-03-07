@@ -4,7 +4,12 @@ import { PawPrint, Bell, Home, Dog, FileText, MessageSquare, Settings, ChevronDo
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
-const imgSrc   = (url) => (!url || url === 'default-profile.jpg') ? null : url.startsWith('http') ? url : `${BASE_URL}${url}`;
+const imgSrc   = (url, updatedAt) => {
+  if (!url || url === 'default-profile.jpg') return null;
+  const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  const bust  = updatedAt ? new Date(updatedAt).getTime() : '';
+  return bust ? `${base}?t=${bust}` : base;
+};
 
 const tabs = [
   { id: 'dashboard',    label: 'Dashboard',    icon: Home          },
@@ -92,8 +97,8 @@ const RehomerHeader = ({ user, activeTab, setActiveTab }) => {
                   <p className="text-xs text-gray-500 leading-tight">Rehomer</p>
                 </div>
                 <div className="w-9 h-9 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
-                  {imgSrc(user?.profileImage)
-                    ? <img src={imgSrc(user.profileImage)} alt={user.name} className="w-full h-full object-cover" />
+                  {imgSrc(user?.profileImage, user?.updatedAt)
+                    ? <img src={imgSrc(user.profileImage, user.updatedAt)} alt={user.name} className="w-full h-full object-cover" />
                     : initials
                   }
                 </div>

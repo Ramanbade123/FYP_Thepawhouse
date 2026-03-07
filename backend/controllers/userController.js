@@ -32,7 +32,7 @@ exports.updateProfile = async (req, res) => {
     console.log('   req.body:', req.body);
 
     const allowedFields = [
-      'name', 'phone', 'address', 'userType', 'profileImage'
+      'name', 'phone', 'address', 'userType', 'profileImage', 'bio'
     ];
 
     // Handle uploaded profile image file
@@ -42,6 +42,11 @@ exports.updateProfile = async (req, res) => {
       console.log('   saving profileImage:', req.body.profileImage);
     }
 
+    // Parse address if it was sent as a JSON string (from FormData)
+    if (req.body.address && typeof req.body.address === 'string') {
+      try { req.body.address = JSON.parse(req.body.address); } catch {}
+    }
+
     // Filter allowed fields
     const fieldsToUpdate = {};
     Object.keys(req.body).forEach(key => {
@@ -49,6 +54,14 @@ exports.updateProfile = async (req, res) => {
         fieldsToUpdate[key] = req.body[key];
       }
     });
+
+    // Use dot-notation for nested address fields so other address sub-fields aren't wiped
+    if (fieldsToUpdate.address && typeof fieldsToUpdate.address === 'object') {
+      Object.entries(fieldsToUpdate.address).forEach(([k, v]) => {
+        fieldsToUpdate[`address.${k}`] = v;
+      });
+      delete fieldsToUpdate.address;
+    }
 
     console.log('   fieldsToUpdate:', fieldsToUpdate);
 

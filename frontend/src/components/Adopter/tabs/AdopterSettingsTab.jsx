@@ -56,6 +56,8 @@ const AdopterSettingsTab = ({ user, onProfileUpdate }) => {
       const formData = new FormData();
       formData.append('name',  profile.name);
       formData.append('phone', profile.phone);
+      formData.append('address', JSON.stringify({ city: profile.city, state: profile.state }));
+      if (profile.bio) formData.append('bio', profile.bio);
       if (avatarFile) formData.append('profileImage', avatarFile);
 
       const res  = await fetch(`${API}/users/profile`, {
@@ -69,7 +71,15 @@ const AdopterSettingsTab = ({ user, onProfileUpdate }) => {
         const stored  = JSON.parse(localStorage.getItem('user') || '{}');
         const newProfileImage = data.data?.profileImage || stored.profileImage;
         const newUpdatedAt    = data.data?.updatedAt    || new Date().toISOString();
-        const updated = { ...stored, name: profile.name, phone: profile.phone, profileImage: newProfileImage, updatedAt: newUpdatedAt };
+        const updated = {
+          ...stored,
+          name:         profile.name,
+          phone:        profile.phone,
+          address:      { ...stored.address, city: profile.city, state: profile.state },
+          bio:          profile.bio,
+          profileImage: newProfileImage,
+          updatedAt:    newUpdatedAt,
+        };
         localStorage.setItem('user', JSON.stringify(updated));
         setAvatarFile(null);
         setAvatarPreview(imgSrc(newProfileImage, newUpdatedAt));

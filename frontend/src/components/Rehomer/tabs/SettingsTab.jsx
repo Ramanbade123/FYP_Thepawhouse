@@ -4,17 +4,18 @@ import { User, Lock, Bell, Shield, Save, Eye, EyeOff, CheckCircle, Camera, X } f
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
 
-const imgSrc = (url) => {
+const imgSrc = (url, updatedAt) => {
   if (!url || url === 'default-profile.jpg') return null;
   const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
-  return `${base}?t=${Date.now()}`;
+  const bust  = updatedAt ? new Date(updatedAt).getTime() : '';
+  return bust ? `${base}?t=${bust}` : base;
 };
 
 const SettingsTab = ({ user, onProfileUpdate }) => {
   const [activeSection, setActiveSection] = useState('profile');
   const [saved, setSaved]                 = useState(false);
   const [showPassword, setShowPassword]   = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState(imgSrc(user?.profileImage));
+  const [avatarPreview, setAvatarPreview] = useState(imgSrc(user?.profileImage, user?.updatedAt));
   const [avatarFile, setAvatarFile]       = useState(null);
   const [uploading, setUploading]         = useState(false);
   const fileInputRef = useRef();
@@ -23,8 +24,8 @@ const SettingsTab = ({ user, onProfileUpdate }) => {
     name:  user?.name  || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    city:  user?.location?.city  || '',
-    state: user?.location?.state || '',
+    city:  user?.address?.city  || '',
+    state: user?.address?.state || '',
     bio:   user?.bio   || '',
   });
 
@@ -51,10 +52,13 @@ const SettingsTab = ({ user, onProfileUpdate }) => {
   const saveProfile = async () => {
     setUploading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token    = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('name',  profile.name);
       formData.append('phone', profile.phone);
+      // address must be sent as JSON string since FormData is multipart
+      formData.append('address', JSON.stringify({ city: profile.city, state: profile.state }));
+      if (profile.bio) formData.append('bio', profile.bio);
       if (avatarFile) formData.append('profileImage', avatarFile);
 
       const res  = await fetch(`${API}/users/profile`, {
@@ -66,12 +70,18 @@ const SettingsTab = ({ user, onProfileUpdate }) => {
 
       if (data.success) {
         const stored  = JSON.parse(localStorage.getItem('user') || '{}');
-        const newProfileImage = data.data?.profileImage || stored.profileImage;
-        const updated = { ...stored, name: profile.name, phone: profile.phone, profileImage: newProfileImage };
+        const updated = {
+          ...stored,
+          name:         profile.name,
+          phone:        profile.phone,
+          address:      { ...stored.address, city: profile.city, state: profile.state },
+          bio:          profile.bio,
+          profileImage: data.data?.profileImage || stored.profileImage,
+          updatedAt:    data.data?.updatedAt    || new Date().toISOString(),
+        };
         localStorage.setItem('user', JSON.stringify(updated));
         setAvatarFile(null);
-        // Update preview with the server-stored URL (cache-busted)
-        setAvatarPreview(imgSrc(newProfileImage));
+        setAvatarPreview(imgSrc(updated.profileImage, updated.updatedAt));
         if (onProfileUpdate) onProfileUpdate(updated);
       }
     } catch (err) {
