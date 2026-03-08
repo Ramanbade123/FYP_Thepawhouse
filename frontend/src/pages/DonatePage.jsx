@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { HandHeart, CheckCircle, AlertCircle, Heart, Utensils, Stethoscope, Home, Syringe, Shield } from 'lucide-react';
-import api from '../api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const authHeaders = (extra = {}) => {
+  const token = localStorage.getItem('token');
+  return { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extra };
+};
+const apiFetch = async (method, url, body = null, isForm = false) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  if (!isForm && body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(`${API}${url}`, { method, headers, body: isForm ? body : (body ? JSON.stringify(body) : undefined) });
+  const data = await res.json();
+  if (!res.ok) throw { response: { data } };
+  return { data };
+};
+
 
 const PURPOSES = [
   { value: 'general',     label: 'General Fund',     icon: Heart,       color: '#e85d04', desc: 'Support overall shelter operations' },
@@ -38,7 +53,7 @@ const DonatePage = () => {
     // Pre-fill if logged in
     if (user) setForm(p => ({ ...p, donorName: user.name || '', donorEmail: user.email || '', donorPhone: user.phone || '' }));
     // Fetch public stats
-    api.get('/donations/stats').then(res => setStats(res.data.data)).catch(() => {});
+    apiFetch('GET', '/donations/stats').then(res => setStats(res.data.data)).catch(() => {});
   }, []);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
@@ -53,7 +68,7 @@ const DonatePage = () => {
     setLoading(true);
     setError('');
     try {
-      await api.post('/donations', {
+      await apiFetch('POST', '/donations', {
         donorName:     form.anonymous ? 'Anonymous' : form.donorName,
         donorEmail:    form.donorEmail,
         donorPhone:    form.donorPhone,

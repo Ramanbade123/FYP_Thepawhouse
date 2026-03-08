@@ -1,6 +1,21 @@
 import { useState } from 'react';
 import { AlertTriangle, MapPin, User, Phone, Mail, Camera, X, ChevronDown, CheckCircle } from 'lucide-react';
-import api from '../api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const authHeaders = (extra = {}) => {
+  const token = localStorage.getItem('token');
+  return { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extra };
+};
+const apiFetch = async (method, url, body = null, isForm = false) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  if (!isForm && body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(`${API}${url}`, { method, headers, body: isForm ? body : (body ? JSON.stringify(body) : undefined) });
+  const data = await res.json();
+  if (!res.ok) throw { response: { data } };
+  return { data };
+};
+
 
 const CATEGORIES = [
   { value: 'abuse',            label: 'Physical Abuse',      color: '#d62828' },
@@ -59,7 +74,7 @@ const ReportAbusePage = () => {
       fd.append('location', JSON.stringify({ area: form.area, city: form.city, details: form.details }));
       if (photo) fd.append('photo', photo);
 
-      await api.post('/reports', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await apiFetch('POST', '/reports', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSubmitted(true);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to submit. Please try again.');

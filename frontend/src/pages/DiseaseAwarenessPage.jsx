@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Stethoscope, Search, AlertCircle, ChevronDown, ChevronUp, Shield, Zap, Users } from 'lucide-react';
-import api from '../api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const authHeaders = (extra = {}) => {
+  const token = localStorage.getItem('token');
+  return { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...extra };
+};
+const apiFetch = async (method, url, body = null, isForm = false) => {
+  const token = localStorage.getItem('token');
+  const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  if (!isForm && body) headers['Content-Type'] = 'application/json';
+  const res = await fetch(`${API}${url}`, { method, headers, body: isForm ? body : (body ? JSON.stringify(body) : undefined) });
+  const data = await res.json();
+  if (!res.ok) throw { response: { data } };
+  return { data };
+};
+
 
 const CATEGORIES = ['all', 'viral', 'bacterial', 'parasitic', 'fungal', 'nutritional', 'genetic', 'other'];
 
@@ -105,7 +120,7 @@ const DiseaseAwarenessPage = () => {
   const fetchDiseases = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/diseases');
+      const res = await apiFetch('GET', '/diseases');
       setDiseases(res.data.data?.length > 0 ? res.data.data : SEED_DISEASES);
     } catch {
       setDiseases(SEED_DISEASES);
