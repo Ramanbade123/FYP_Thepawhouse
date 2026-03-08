@@ -16,7 +16,12 @@ import {
   MessageCircle,
   User,
   LogIn,
-  LogOut // ADD LogOut import
+  LogOut,
+  HandHeart,
+  MapPin,
+  Stethoscope,
+  Flag,
+  AlertTriangle
 } from 'lucide-react'
 
 const Navbar = () => {
@@ -24,11 +29,13 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isAdoptDropdownOpen, setIsAdoptDropdownOpen] = useState(false)
   const [isRehomeDropdownOpen, setIsRehomeDropdownOpen] = useState(false)
-  const [user, setUser] = useState(null) // ADD user state
-  const navigate = useNavigate() // ADD navigate hook
+  const [isCommunityDropdownOpen, setIsCommunityDropdownOpen] = useState(false)
+  const [user, setUser] = useState(null)
+  const navigate = useNavigate()
 
   const adoptRef = useRef(null)
   const rehomeRef = useRef(null)
+  const communityRef = useRef(null)
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -56,6 +63,9 @@ const Navbar = () => {
       }
       if (rehomeRef.current && !rehomeRef.current.contains(e.target)) {
         setIsRehomeDropdownOpen(false)
+      }
+      if (communityRef.current && !communityRef.current.contains(e.target)) {
+        setIsCommunityDropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -107,37 +117,78 @@ const Navbar = () => {
     }
   ]
 
-  // Regular navigation items (non-dropdown) - Updated with paths
+  // Community Items (Donate, Lost & Found, Disease Awareness, Report)
+  const communityItems = [
+    {
+      icon: HandHeart,
+      label: 'Donate',
+      description: 'Support shelters & animal welfare',
+      badge: 'Help Now',
+      path: '/donate',
+      color: '#e85d04'
+    },
+    {
+      icon: MapPin,
+      label: 'Lost & Found',
+      description: 'Report or find a lost dog',
+      path: '/lost-found',
+      color: '#7209b7'
+    },
+    {
+      icon: Stethoscope,
+      label: 'Disease Awareness',
+      description: '25+ common dog diseases explained',
+      path: '/disease-awareness',
+      color: '#0077b6'
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Report Abuse',
+      description: 'Report neglect or animal cruelty',
+      path: '/report',
+      color: '#d62828'
+    }
+  ]
+
+  // Regular navigation items
   const navItems = [
     { name: 'Care Guide', icon: BookOpen, path: '/care-guide' },
     { name: 'About Us', icon: Users, path: '/about' },
     { name: 'Contact', icon: MessageCircle, path: '/contact' }
   ]
 
-  // Handler for closing other dropdown when one opens
   const handleAdoptHover = (isHovering) => {
     setIsAdoptDropdownOpen(isHovering)
-    if (isHovering) {
-      setIsRehomeDropdownOpen(false)
-    }
+    if (isHovering) { setIsRehomeDropdownOpen(false); setIsCommunityDropdownOpen(false) }
   }
 
   const handleRehomeHover = (isHovering) => {
     setIsRehomeDropdownOpen(isHovering)
-    if (isHovering) {
-      setIsAdoptDropdownOpen(false)
-    }
+    if (isHovering) { setIsAdoptDropdownOpen(false); setIsCommunityDropdownOpen(false) }
+  }
+
+  const handleCommunityHover = (isHovering) => {
+    setIsCommunityDropdownOpen(isHovering)
+    if (isHovering) { setIsAdoptDropdownOpen(false); setIsRehomeDropdownOpen(false) }
   }
 
   // Mobile click handlers
   const handleMobileAdoptClick = () => {
     setIsAdoptDropdownOpen(!isAdoptDropdownOpen)
     setIsRehomeDropdownOpen(false)
+    setIsCommunityDropdownOpen(false)
   }
 
   const handleMobileRehomeClick = () => {
     setIsRehomeDropdownOpen(!isRehomeDropdownOpen)
     setIsAdoptDropdownOpen(false)
+    setIsCommunityDropdownOpen(false)
+  }
+
+  const handleMobileCommunityClick = () => {
+    setIsCommunityDropdownOpen(!isCommunityDropdownOpen)
+    setIsAdoptDropdownOpen(false)
+    setIsRehomeDropdownOpen(false)
   }
 
   // Logout handler
@@ -156,15 +207,15 @@ const Navbar = () => {
       transition={{ duration: 0.5 }}
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-lg shadow-lg py-3'
-          : 'bg-white/95 backdrop-blur-sm py-4'
+          ? 'bg-white/95 backdrop-blur-lg shadow-lg'
+          : 'bg-white/95 backdrop-blur-sm'
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center h-16 gap-4">
 
           {/* Logo - Links to home page */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
             <motion.div 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -186,8 +237,8 @@ const Navbar = () => {
             </motion.div>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center gap-6">
+          {/* Desktop Nav - Center */}
+          <div className="hidden lg:flex flex-1 items-center justify-center gap-6">
 
             {/* Adopt Dropdown (Dogs Only) */}
             <div 
@@ -224,24 +275,24 @@ const Navbar = () => {
                           key={i}
                           to={item.path}
                           whileHover={{ x: 5 }}
-                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
                           onClick={() => setIsAdoptDropdownOpen(false)}
                         >
-                          <div className="p-2 bg-gradient-to-r from-[#008737]/10 to-[#085558]/10 rounded-lg">
-                            <item.icon className="h-5 w-5 text-[#008737]" />
+                          <div className="w-10 h-10 bg-[#008737]/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <item.icon className="h-5 w-5 text-[#008737]" strokeWidth={2} />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
                               <h4 className="font-semibold text-[#063630] group-hover:text-[#008737]">
                                 {item.label}
                               </h4>
                               {item.count && (
-                                <span className="text-xs font-medium bg-[#008737]/10 text-[#008737] px-2 py-1 rounded-full">
+                                <span className="text-xs font-medium bg-[#008737]/10 text-[#008737] px-2 py-0.5 rounded-full">
                                   {item.count}
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-500 mt-0.5">
                               {item.description}
                             </p>
                           </div>
@@ -288,19 +339,73 @@ const Navbar = () => {
                           key={i}
                           to={item.path}
                           whileHover={{ x: 5 }}
-                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
                           onClick={() => setIsRehomeDropdownOpen(false)}
                         >
-                          <div className="p-2 bg-gradient-to-r from-[#085558]/10 to-[#008737]/10 rounded-lg">
+                          <div className="w-10 h-10 bg-[#085558]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                             <item.icon className="h-5 w-5 text-[#085558]" />
                           </div>
                           <div className="flex-1">
                             <h4 className="font-semibold text-[#063630] group-hover:text-[#085558]">
                               {item.label}
                             </h4>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-gray-500 mt-0.5">
                               {item.description}
                             </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Community Dropdown */}
+            <div
+              ref={communityRef}
+              className="relative"
+              onMouseEnter={() => handleCommunityHover(true)}
+              onMouseLeave={() => handleCommunityHover(false)}
+            >
+              <button className="flex items-center gap-1 font-medium text-[#063630] hover:text-[#e85d04] transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-orange-50 group">
+                Community
+                <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isCommunityDropdownOpen ? 'rotate-180' : ''}`} />
+                <span className="absolute -bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-[#e85d04] to-[#d62828] scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+              </button>
+
+              <AnimatePresence>
+                {isCommunityDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-0 top-full mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                  >
+                    <div className="p-1">
+                      <div className="p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg mb-2">
+                        <h3 className="font-bold text-[#063630] text-lg">Community</h3>
+                        <p className="text-sm text-gray-600">Help dogs, report issues, stay informed</p>
+                      </div>
+                      {communityItems.map((item, i) => (
+                        <Link
+                          key={i}
+                          to={item.path}
+                          className="flex flex-row items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
+                          onClick={() => setIsCommunityDropdownOpen(false)}
+                        >
+                          <div className="w-10 h-10 bg-[#008737]/15 rounded-lg flex-shrink-0 flex items-center justify-center">
+                            <item.icon className="h-5 w-5 text-[#008737]" />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div className="flex flex-row items-center gap-2">
+                              <span className="font-semibold text-[#063630] group-hover:text-[#008737] text-sm">{item.label}</span>
+                              {item.badge && (
+                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">{item.badge}</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
                           </div>
                         </Link>
                       ))}
@@ -322,9 +427,12 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {/* Login/Register Buttons or User Profile */}
+          </div>
+
+          {/* User / Login - Right */}
+          <div className="hidden lg:flex items-center flex-shrink-0">
             {user ? (
-              <div className="flex items-center gap-3 ml-4">
+              <div className="flex items-center gap-3">
                 <Link
                   to="/dashboard"
                   className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold"
@@ -343,7 +451,7 @@ const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-3 ml-4">
+              <div className="flex items-center gap-3">
                 <Link
                   to="/login"
                   className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold border border-[#008737] hover:border-[#085558] px-4 py-2 rounded-full transition-all duration-300 hover:shadow-md text-sm whitespace-nowrap"
@@ -351,7 +459,6 @@ const Navbar = () => {
                   <User className="h-4 w-4" />
                   <span>Login</span>
                 </Link>
-                
                 <Link
                   to="/register"
                   className="bg-gradient-to-r from-[#008737] to-[#085558] text-white px-4 py-2 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 text-sm whitespace-nowrap"
@@ -466,6 +573,49 @@ const Navbar = () => {
                               <div className="flex-1">
                                 <p className="font-medium text-[#063630]">{item.label}</p>
                                 <p className="text-xs text-gray-600">{item.description}</p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Community Mobile Dropdown */}
+                <div className="mb-2">
+                  <button
+                    onClick={handleMobileCommunityClick}
+                    className="w-full flex items-center justify-between text-left font-medium text-[#063630] hover:text-[#e85d04] py-3 px-4 rounded-lg hover:bg-orange-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <HandHeart className="h-5 w-5" />
+                      <span>Community</span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isCommunityDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isCommunityDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="pl-10 pr-4"
+                      >
+                        <div className="space-y-2 py-2">
+                          {communityItems.map((item, i) => (
+                            <Link
+                              key={i}
+                              to={item.path}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className="w-full flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
+                            >
+                              <item.icon className="h-4 w-4" style={{ color: item.color }} />
+                              <div className="flex-1">
+                                <p className="font-medium text-[#063630]">{item.label}</p>
+                                <p className="text-xs text-gray-500">{item.description}</p>
                               </div>
                             </Link>
                           ))}
