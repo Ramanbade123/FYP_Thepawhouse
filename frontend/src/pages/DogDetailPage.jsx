@@ -6,8 +6,11 @@ import {
   Dog, Phone, Mail, CheckCircle, XCircle, PawPrint,
   Activity, Users, Cat, Baby, Home, Clock
 } from 'lucide-react';
+import AdopterHeader from '../components/Adopter/AdopterHeader';
 
-const API = 'http://localhost:5000/api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+const imgSrc = (url) => { if (!url) return null; return url.startsWith('http') ? url : `${BASE_URL}${url}`; };
 
 const DogDetailPage = () => {
   const { id }       = useParams();
@@ -75,36 +78,30 @@ const DogDetailPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#EDEDED] to-gray-100">
 
-      {/* Top nav */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-[#063630] hover:text-[#008737] font-medium transition-colors">
-            <ArrowLeft className="h-5 w-5" /> Back
-          </button>
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center">
-              <PawPrint className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-[#063630]">The Paw House</span>
-          </Link>
-          <button onClick={() => setFavorite(p => !p)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl hover:border-red-300 transition-all">
-            <Heart className={`h-5 w-5 ${favorite ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-            <span className="text-sm font-medium text-gray-600">{favorite ? 'Saved' : 'Save'}</span>
-          </button>
-        </div>
-      </div>
+      {/* Adopter Header */}
+      <AdopterHeader
+        user={user}
+        activeTab="browse"
+        setActiveTab={(tab) => navigate('/adopter/dashboard', { state: { tab } })}
+      />
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
+
+        {/* Back button */}
+        <button onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-[#063630] hover:text-[#008737] font-medium transition-colors mb-6 group">
+          <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform duration-200" />
+          Back to Browse
+        </button>
+
         <div className="grid lg:grid-cols-2 gap-8">
 
           {/* Left — Image */}
           <div>
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}
               className="rounded-2xl overflow-hidden shadow-2xl aspect-square bg-gradient-to-br from-[#085558]/20 to-[#008737]/20">
-              {pet.primaryImage ? (
-                <img src={pet.primaryImage} alt={pet.name} crossOrigin="anonymous"
+              {imgSrc(pet.primaryImage) ? (
+                <img src={imgSrc(pet.primaryImage)} alt={pet.name} crossOrigin="anonymous"
                   className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">

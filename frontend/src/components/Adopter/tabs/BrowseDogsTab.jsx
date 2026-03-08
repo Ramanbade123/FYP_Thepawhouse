@@ -7,7 +7,13 @@ import {
   Dog, Bone, X, SlidersHorizontal
 } from 'lucide-react';
 
-const API = 'http://localhost:5000/api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+
+const imgSrc = (url) => {
+  if (!url) return null;
+  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+};
 
 const quickFilters = [
   { id: 'all',        label: 'All Dogs'          },
@@ -299,8 +305,8 @@ const BrowseDogsTab = () => {
                 className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-[#008737]/10 group">
 
                 <div className="relative h-64 lg:h-72 overflow-hidden">
-                  {dog.primaryImage ? (
-                    <img src={dog.primaryImage} alt={dog.name} crossOrigin="anonymous"
+                  {imgSrc(dog.primaryImage) ? (
+                    <img src={imgSrc(dog.primaryImage)} alt={dog.name} crossOrigin="anonymous"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[#085558]/20 to-[#008737]/20 flex items-center justify-center">

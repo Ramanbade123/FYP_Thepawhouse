@@ -16,6 +16,7 @@ import LostFoundPage from './pages/LostFoundPage';
 import ReportAbusePage from './pages/ReportAbusePage';
 import DiseaseAwarenessPage from './pages/DiseaseAwarenessPage';
 import DonatePage from './pages/DonatePage';
+import DogDetailPage from './pages/DogDetailPage';
 
 // Components
 import Navbar from './components/Navbar'
@@ -158,6 +159,7 @@ function App() {
         <Route path="/report" element={<MainLayout><ReportAbusePage /></MainLayout>} />
         <Route path="/disease-awareness" element={<MainLayout><DiseaseAwarenessPage /></MainLayout>} />
         <Route path="/donate" element={<MainLayout><DonatePage /></MainLayout>} />
+        <Route path="/dogs/:id" element={<DogDetailPage />} />
         
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

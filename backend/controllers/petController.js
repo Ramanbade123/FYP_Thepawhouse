@@ -68,10 +68,13 @@ exports.getPet = async (req, res) => {
   try {
     const pet = await Pet.findById(req.params.id).populate('rehomer', 'name phone email location');
     if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
-    pet.views += 1;
-    await pet.save({ validateBeforeSave: false });
+    // Increment views silently — don't let a save failure block the response
+    Pet.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {});
     res.status(200).json({ success: true, data: pet });
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ success: false, error: 'Pet not found' });
+    }
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
