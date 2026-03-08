@@ -45,7 +45,7 @@ const DiseaseCard = ({ disease }) => {
   const sev = SEVERITY_STYLES[disease.severity] || SEVERITY_STYLES.moderate;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#008737]/10 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200">
       <div className="p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
@@ -82,7 +82,7 @@ const DiseaseCard = ({ disease }) => {
       </div>
 
       {expanded && (
-        <div className="border-t border-gray-100 p-5 space-y-4 bg-gray-50">
+        <div className="border-t border-[#008737]/10 p-5 space-y-4" style={{ backgroundColor: '#EDEDED' }}>
           {disease.causes?.length > 0 && (
             <div>
               <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Causes</p>
@@ -136,22 +136,26 @@ const DiseaseAwarenessPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-16">
+    <div className="min-h-screen pt-24 pb-16" style={{ backgroundColor: '#EDEDED', fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* Hero */}
-      <div className="bg-gradient-to-br from-[#0077b6] to-[#023e8a] text-white py-10 px-4 mb-10">
+      <div className="bg-gradient-to-br from-[#063630] to-[#085558] text-white py-14 px-4 mb-10">
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="inline-flex items-center gap-2 bg-[#008737]/30 text-green-200 px-4 py-2 rounded-full mb-5 text-sm font-semibold">
+            <div className="w-2 h-2 bg-green-300 rounded-full"></div>
+            Health & Wellness — Nepal
+          </div>
+          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Stethoscope className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-2">Dog Disease Awareness</h1>
-          <p className="text-blue-200 text-lg mb-4">Know the signs, prevent the spread, protect your dog</p>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-3" style={{ color: '#ffffff' }}>Dog Disease Awareness</h1>
+          <p className="text-green-200 text-lg mb-8">Know the signs, prevent the spread, protect your dog</p>
           <div className="flex items-center justify-center gap-8">
-            <div><p className="text-3xl font-bold">{diseases.length}+</p><p className="text-blue-200 text-sm">Diseases Covered</p></div>
-            <div className="w-px h-10 bg-white/20" />
-            <div><p className="text-3xl font-bold">{diseases.filter(d => d.commonInNepal).length}</p><p className="text-blue-200 text-sm">Common in Nepal</p></div>
-            <div className="w-px h-10 bg-white/20" />
-            <div><p className="text-3xl font-bold">{diseases.filter(d => d.zoonoticRisk).length}</p><p className="text-blue-200 text-sm">Risk to Humans</p></div>
+            <div><p className="text-4xl font-bold" style={{ color: '#ffffff' }}>{diseases.length}+</p><p className="text-green-200 text-sm mt-1">Diseases Covered</p></div>
+            <div className="w-px h-12 bg-white/20" />
+            <div><p className="text-4xl font-bold" style={{ color: '#ffffff' }}>{diseases.filter(d => d.commonInNepal).length}</p><p className="text-green-200 text-sm mt-1">Common in Nepal</p></div>
+            <div className="w-px h-12 bg-white/20" />
+            <div><p className="text-4xl font-bold" style={{ color: '#ffffff' }}>{diseases.filter(d => d.zoonoticRisk).length}</p><p className="text-green-200 text-sm mt-1">Risk to Humans</p></div>
           </div>
         </div>
       </div>
@@ -159,31 +163,32 @@ const DiseaseAwarenessPage = () => {
       <div className="container mx-auto max-w-5xl px-4">
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 flex-1 min-w-[200px]">
-            <Search className="h-4 w-4 text-gray-400" />
+        <div className="bg-white rounded-2xl shadow-sm border border-[#008737]/10 p-4 mb-6 flex flex-wrap gap-3 items-center">
+          <div className="flex items-center gap-2 rounded-xl px-3 py-2 flex-1 min-w-[200px]" style={{ backgroundColor: '#EDEDED' }}>
+            <Search className="h-4 w-4 text-[#063630]/40" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search by disease name or affected area..."
-              className="bg-transparent text-sm focus:outline-none w-full" />
+              className="bg-transparent text-sm focus:outline-none w-full text-[#063630] placeholder-[#063630]/40" />
           </div>
           <div className="flex flex-wrap gap-1.5">
             {CATEGORIES.map(c => (
               <button key={c} onClick={() => setCategory(c)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all ${
-                  category === c ? 'bg-[#0077b6] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}>{c}</button>
+                  category === c ? 'bg-gradient-to-r from-[#008737] to-[#085558] text-white shadow-sm' : 'text-[#063630]/60 hover:text-[#063630]'
+                }`}
+                style={category !== c ? { backgroundColor: '#EDEDED' } : {}}>{c}</button>
             ))}
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-[#0077b6] border-t-transparent rounded-full animate-spin" />
+            <div className="w-12 h-12 border-4 border-[#008737] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <Stethoscope className="h-16 w-16 text-gray-200 mx-auto mb-4" />
-            <p className="text-gray-500">No diseases found matching your search.</p>
+            <Stethoscope className="h-16 w-16 mx-auto mb-4" style={{ color: 'rgba(6,54,48,0.15)' }} />
+            <p className="text-[#063630]/60">No diseases found matching your search.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -192,9 +197,9 @@ const DiseaseAwarenessPage = () => {
         )}
 
         {/* Disclaimer */}
-        <div className="mt-10 bg-blue-50 border border-blue-100 rounded-2xl p-5 flex gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-blue-800">This information is for educational purposes only. Always consult a licensed veterinarian for diagnosis and treatment of your dog.</p>
+        <div className="mt-10 bg-white border border-[#008737]/15 rounded-2xl p-5 flex gap-3">
+          <AlertCircle className="h-5 w-5 text-[#008737] flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-[#063630]/80">This information is for educational purposes only. Always consult a licensed veterinarian for diagnosis and treatment of your dog.</p>
         </div>
       </div>
     </div>

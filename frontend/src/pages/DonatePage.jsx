@@ -87,16 +87,16 @@ const DonatePage = () => {
   };
 
   if (submitted) return (
-    <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 max-w-md w-full text-center">
-        <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="h-10 w-10 text-orange-500" />
+    <div className="min-h-screen pt-24 flex items-center justify-center px-4" style={{ backgroundColor: '#EDEDED' }}>
+      <div className="bg-white rounded-2xl shadow-sm border border-[#008737]/10 p-12 max-w-md w-full text-center">
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: 'rgba(0,135,55,0.1)' }}>
+          <CheckCircle className="h-10 w-10 text-[#008737]" />
         </div>
         <h2 className="text-2xl font-bold text-[#063630] mb-2">Thank You! 🐾</h2>
-        <p className="text-gray-500 mb-2">Your donation of <span className="font-bold text-[#063630]">NPR {finalAmount.toLocaleString()}</span> has been recorded.</p>
-        <p className="text-gray-400 text-sm mb-8">Your generosity helps dogs in Nepal find safety, food, and love.</p>
+        <p className="text-[#063630]/60 mb-2">Your donation of <span className="font-bold text-[#063630]">NPR {finalAmount.toLocaleString()}</span> has been recorded.</p>
+        <p className="text-[#063630]/40 text-sm mb-8">Your generosity helps dogs in Nepal find safety, food, and love.</p>
         <button onClick={() => setSubmitted(false)}
-          className="w-full py-3 bg-gradient-to-r from-[#e85d04] to-[#e07c3a] text-white font-bold rounded-xl">
+          className="w-full py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white font-bold rounded-xl hover:shadow-lg transition-all">
           Donate Again
         </button>
       </div>
@@ -104,26 +104,30 @@ const DonatePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-16">
+    <div className="min-h-screen pt-24 pb-16" style={{ backgroundColor: '#EDEDED', fontFamily: "'Inter', system-ui, sans-serif" }}>
 
       {/* Hero */}
-      <div className="bg-gradient-to-br from-[#e85d04] to-[#c1440e] text-white py-10 px-4 mb-10">
+      <div className="bg-gradient-to-br from-[#063630] to-[#085558] text-white py-14 px-4 mb-10">
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="inline-flex items-center gap-2 bg-[#008737]/30 text-green-200 px-4 py-2 rounded-full mb-5 text-sm font-semibold">
+            <div className="w-2 h-2 bg-green-300 rounded-full"></div>
+            Make a Difference — Nepal
+          </div>
+          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <HandHeart className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-2">Support The Paw House</h1>
-          <p className="text-orange-100 text-lg mb-6">Every rupee helps a dog in Nepal find safety and love</p>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-3" style={{ color: '#ffffff' }}>Support The Paw House</h1>
+          <p className="text-green-200 text-lg mb-8">Every rupee helps a dog in Nepal find safety and love</p>
           <div className="flex items-center justify-center gap-8">
-            <div><p className="text-3xl font-bold">NPR {stats.totalRaised.toLocaleString()}</p><p className="text-orange-200 text-sm">Total Raised</p></div>
-            <div className="w-px h-10 bg-white/20" />
-            <div><p className="text-3xl font-bold">{stats.totalDonors}</p><p className="text-orange-200 text-sm">Generous Donors</p></div>
+            <div><p className="text-4xl font-bold" style={{ color: '#ffffff' }}>NPR {stats.totalRaised.toLocaleString()}</p><p className="text-green-200 text-sm mt-1">Total Raised</p></div>
+            <div className="w-px h-12 bg-white/20" />
+            <div><p className="text-4xl font-bold" style={{ color: '#ffffff' }}>{stats.totalDonors}</p><p className="text-green-200 text-sm mt-1">Generous Donors</p></div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto max-w-2xl px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-[#008737]/10 overflow-hidden">
           <div className="p-6 space-y-6">
 
             {/* Purpose */}
@@ -135,7 +139,7 @@ const DonatePage = () => {
                   return (
                     <button key={p.value} onClick={() => set('purpose', p.value)}
                       className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        form.purpose === p.value ? 'border-transparent' : 'border-gray-200 hover:border-gray-300'
+                        form.purpose === p.value ? 'border-transparent' : 'border-[#008737]/15 hover:border-[#008737]/40'
                       }`}
                       style={form.purpose === p.value ? { borderColor: p.color, backgroundColor: p.color + '10' } : {}}>
                       <Icon className="h-5 w-5 mb-1.5" style={{ color: p.color }} />
@@ -155,8 +159,8 @@ const DonatePage = () => {
                   <button key={a} onClick={() => { set('amount', a); setUseCustom(false); }}
                     className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${
                       !useCustom && form.amount === a
-                        ? 'bg-[#e85d04] text-white border-transparent'
-                        : 'border-gray-200 text-gray-700 hover:border-orange-300'
+                        ? 'bg-gradient-to-r from-[#008737] to-[#085558] text-white border-transparent shadow-sm'
+                        : 'border-[#008737]/20 text-[#063630] hover:border-[#008737]'
                     }`}>
                     NPR {a.toLocaleString()}
                   </button>
@@ -169,11 +173,11 @@ const DonatePage = () => {
                   value={form.customAmount}
                   onChange={e => { set('customAmount', e.target.value); setUseCustom(true); }}
                   onFocus={() => setUseCustom(true)}
-                  className={`flex-1 border-2 rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all ${
-                    useCustom ? 'border-[#e85d04]' : 'border-gray-200'
+                  className={`flex-1 border-2 rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-all text-[#063630] ${
+                    useCustom ? 'border-[#008737]' : 'border-[#008737]/20'
                   }`}
                 />
-                {useCustom && <span className="text-sm text-gray-500 font-medium">NPR</span>}
+                {useCustom && <span className="text-sm text-[#063630]/60 font-medium">NPR</span>}
               </div>
             </div>
 
@@ -185,9 +189,10 @@ const DonatePage = () => {
                   <button key={m.value} onClick={() => set('paymentMethod', m.value)}
                     className={`py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
                       form.paymentMethod === m.value
-                        ? 'bg-[#e85d04]/10 border-[#e85d04] text-[#e85d04]'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                    }`}>
+                        ? 'bg-[#008737]/8 border-[#008737] text-[#008737]'
+                        : 'border-[#008737]/20 text-[#063630]/60 hover:border-[#008737]'
+                    }`}
+                    style={form.paymentMethod === m.value ? { backgroundColor: 'rgba(0,135,55,0.07)' } : {}}>
                     {m.label}
                   </button>
                 ))}
@@ -195,38 +200,38 @@ const DonatePage = () => {
             </div>
 
             {/* Donor details */}
-            <div className="border-t border-gray-100 pt-5">
+            <div className="border-t border-[#008737]/10 pt-5">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-bold text-[#063630]">Your Details</label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.anonymous} onChange={e => set('anonymous', e.target.checked)} className="w-4 h-4 accent-orange-500" />
-                  <span className="text-sm text-gray-600">Donate anonymously</span>
+                  <input type="checkbox" checked={form.anonymous} onChange={e => set('anonymous', e.target.checked)} className="w-4 h-4 accent-[#008737]" />
+                  <span className="text-sm text-[#063630]/60">Donate anonymously</span>
                 </label>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Full Name *</label>
+                  <label className="block text-xs text-[#063630]/60 mb-1">Full Name *</label>
                   <input value={form.donorName} onChange={e => set('donorName', e.target.value)}
                     placeholder="Your name" disabled={form.anonymous}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                    className="w-full border border-[#008737]/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#008737] text-[#063630] disabled:opacity-50" />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Phone</label>
+                  <label className="block text-xs text-[#063630]/60 mb-1">Phone</label>
                   <input value={form.donorPhone} onChange={e => set('donorPhone', e.target.value)}
                     placeholder="98XXXXXXXX" disabled={form.anonymous}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                    className="w-full border border-[#008737]/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#008737] text-[#063630] disabled:opacity-50" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">Email</label>
+                  <label className="block text-xs text-[#063630]/60 mb-1">Email</label>
                   <input value={form.donorEmail} onChange={e => set('donorEmail', e.target.value)}
                     placeholder="your@email.com" disabled={form.anonymous}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 disabled:bg-gray-50 disabled:text-gray-400" />
+                    className="w-full border border-[#008737]/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#008737] text-[#063630] disabled:opacity-50" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">Message (optional)</label>
+                  <label className="block text-xs text-[#063630]/60 mb-1">Message (optional)</label>
                   <textarea value={form.message} onChange={e => set('message', e.target.value)}
                     rows={2} placeholder="Leave a message of support..."
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-orange-400 resize-none" />
+                    className="w-full border border-[#008737]/20 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#008737] text-[#063630] resize-none" />
                 </div>
               </div>
             </div>
@@ -238,21 +243,21 @@ const DonatePage = () => {
             )}
 
             {/* Summary */}
-            <div className="bg-orange-50 rounded-xl p-4 flex items-center justify-between">
+            <div className="rounded-xl p-4 flex items-center justify-between border border-[#008737]/15" style={{ backgroundColor: 'rgba(0,135,55,0.05)' }}>
               <div>
-                <p className="text-sm text-gray-600">Donating to <span className="font-semibold text-[#063630]">{PURPOSES.find(p => p.value === form.purpose)?.label}</span></p>
-                <p className="text-xs text-gray-400 mt-0.5">via {PAYMENT_METHODS.find(m => m.value === form.paymentMethod)?.label}</p>
+                <p className="text-sm text-[#063630]/70">Donating to <span className="font-semibold text-[#063630]">{PURPOSES.find(p => p.value === form.purpose)?.label}</span></p>
+                <p className="text-xs text-[#063630]/40 mt-0.5">via {PAYMENT_METHODS.find(m => m.value === form.paymentMethod)?.label}</p>
               </div>
-              <p className="text-2xl font-bold text-[#e85d04]">NPR {(finalAmount || 0).toLocaleString()}</p>
+              <p className="text-2xl font-bold text-[#008737]">NPR {(finalAmount || 0).toLocaleString()}</p>
             </div>
 
             <button onClick={handleSubmit} disabled={loading}
-              className="w-full py-3.5 bg-gradient-to-r from-[#e85d04] to-[#c1440e] text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-60 text-base flex items-center justify-center gap-2">
+              className="w-full py-3.5 bg-gradient-to-r from-[#008737] to-[#085558] text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-60 text-base flex items-center justify-center gap-2">
               <HandHeart className="h-5 w-5" />
               {loading ? 'Processing...' : `Donate NPR ${(finalAmount || 0).toLocaleString()}`}
             </button>
 
-            <p className="text-center text-xs text-gray-400">🔒 Your donation is secure. All funds go directly to dog welfare in Nepal.</p>
+            <p className="text-center text-xs text-[#063630]/40">🔒 Your donation is secure. All funds go directly to dog welfare in Nepal.</p>
           </div>
         </div>
       </div>
