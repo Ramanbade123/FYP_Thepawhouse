@@ -57,6 +57,7 @@ app.use('/api/lostfound',  require('./routes/lostFoundRoutes'));
 app.use('/api/reports',    require('./routes/reportRoutes'));
 app.use('/api/diseases',   require('./routes/diseaseRoutes'));
 app.use('/api/donations',  require('./routes/donationRoutes'));
+app.use('/api/contact',    require('./routes/contactRoutes'));
 
 // Test route
 app.get('/api/test', (req, res) => {

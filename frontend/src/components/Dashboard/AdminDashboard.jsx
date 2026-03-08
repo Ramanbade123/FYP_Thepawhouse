@@ -10,6 +10,7 @@ import RecentActivity     from '../Admin/RecentActivity';
 import RecentUsersTable   from '../Admin/RecentUsersTable';
 import AdminPetManagement from '../Admin/AdminPetManagement';
 import AdminCommunityTab  from '../Admin/AdminCommunityTab';
+import AdminMessagesTab   from '../Admin/AdminMessagesTab';
 
 const API = 'http://localhost:5000/api';
 
@@ -163,6 +164,7 @@ const AdminDashboard = () => {
           {activeTab === 'pets' && <AdminPetManagement />}
 
           {activeTab === 'community' && <AdminCommunityTab />}
+          {activeTab === 'messages'  && <AdminMessagesTab />}
 
           {activeTab === 'adoptions' && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -171,7 +173,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {!['dashboard','users','pets','adoptions','community'].includes(activeTab) && (
+          {!['dashboard','users','pets','adoptions','community','messages'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 capitalize">{activeTab}</h2>
               <p className="text-gray-500">Coming soon.</p>

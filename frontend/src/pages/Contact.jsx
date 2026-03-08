@@ -9,14 +9,30 @@ import {
 const Contact = () => {
   const [ref, inView] = useInView({ threshold: 0.1, triggerOnce: true });
   const [formState, setFormState] = useState('idle');
+  const [error, setError]         = useState('');
+  const [form, setForm] = useState({ name: '', email: '', subject: 'General Inquiry', message: '' });
 
-  const handleSubmit = (e) => {
+  const onChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setFormState('loading');
-    setTimeout(() => {
+    setError('');
+    try {
+      const res = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to send message');
       setFormState('success');
+      setForm({ name: '', email: '', subject: 'General Inquiry', message: '' });
       setTimeout(() => setFormState('idle'), 5000);
-    }, 1500);
+    } catch (err) {
+      setError(err.message);
+      setFormState('idle');
+    }
   };
 
   const contactDetails = [
@@ -106,20 +122,23 @@ const Contact = () => {
               <h3 className="text-2xl lg:text-3xl font-bold mb-8">Send us a Message</h3>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm font-medium">{error}</div>
+                )}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-700 ml-1">Full Name</label>
-                    <input required type="text" placeholder="John Doe" className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none" />
+                    <input required type="text" name="name" value={form.name} onChange={onChange} placeholder="John Doe" className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-gray-700 ml-1">Email Address</label>
-                    <input required type="email" placeholder="john@example.com" className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none" />
+                    <input required type="email" name="email" value={form.email} onChange={onChange} placeholder="john@example.com" className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700 ml-1">Subject</label>
-                  <select className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none appearance-none">
+                  <select name="subject" value={form.subject} onChange={onChange} className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none appearance-none">
                     <option>General Inquiry</option>
                     <option>Adoption Question</option>
                     <option>Rehoming Support</option>
@@ -131,7 +150,7 @@ const Contact = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700 ml-1">Your Message</label>
-                  <textarea required rows="5" placeholder="How can we help you and our furry friends?" className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none resize-none"></textarea>
+                  <textarea required name="message" value={form.message} onChange={onChange} rows="5" placeholder="How can we help you and our furry friends?" className="w-full px-6 py-4 rounded-2xl bg-[#EDEDED] border-2 border-transparent focus:border-[#008737] focus:bg-white transition-all outline-none resize-none"></textarea>
                 </div>
 
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={formState === 'loading'} type="submit"
