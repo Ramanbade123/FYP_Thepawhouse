@@ -12,6 +12,10 @@ import AdoptionFAQS from './pages/AdoptionFAQS'
 import RehomingFAQs from './pages/Rehomingfaqs' 
 import ListDogPage from './pages/ListDogPage';
 import EditDogPage from './pages/EditDogPage'; 
+import LostFoundPage from './pages/LostFoundPage';
+import ReportAbusePage from './pages/ReportAbusePage';
+import DiseaseAwarenessPage from './pages/DiseaseAwarenessPage';
+import DonatePage from './pages/DonatePage';
 
 // Components
 import Navbar from './components/Navbar'
@@ -150,6 +154,10 @@ function App() {
         <Route path="/adoption-faq" element={<MainLayout><AdoptionFAQS /></MainLayout>} />
         <Route path="/list-dog" element={<ListDogPage />} />
         <Route path="/edit-dog/:id" element={<PrivateRoute allowedRoles={['rehomer']}><EditDogPage /></PrivateRoute>} />
+        <Route path="/lost-found" element={<MainLayout><LostFoundPage /></MainLayout>} />
+        <Route path="/report" element={<MainLayout><ReportAbusePage /></MainLayout>} />
+        <Route path="/disease-awareness" element={<MainLayout><DiseaseAwarenessPage /></MainLayout>} />
+        <Route path="/donate" element={<MainLayout><DonatePage /></MainLayout>} />
         
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
