@@ -181,7 +181,7 @@ const ReportForm = ({ onClose, onSuccess }) => {
       fd.append('contactEmail', form.contactEmail);
       if (photo) fd.append('photo', photo);
 
-      await apiFetch('POST', '/lostfound', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await apiFetch('POST', '/lostfound', fd, true);
       onSuccess();
       onClose();
     } catch (err) {

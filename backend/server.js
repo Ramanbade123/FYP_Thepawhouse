@@ -35,8 +35,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
+  max: 500, // increased limit per IP
+  message: { success: false, error: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/api', limiter);
 
@@ -48,9 +50,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Mount routers
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/pets', require('./routes/petRoutes'));   
-app.use('/api/users', require('./routes/userRoutes')); 
+app.use('/api/auth',       require('./routes/authRoutes'));
+app.use('/api/pets',       require('./routes/petRoutes'));
+app.use('/api/users',      require('./routes/userRoutes'));
+app.use('/api/lostfound',  require('./routes/lostFoundRoutes'));
+app.use('/api/reports',    require('./routes/reportRoutes'));
+app.use('/api/diseases',   require('./routes/diseaseRoutes'));
+app.use('/api/donations',  require('./routes/donationRoutes'));
 
 // Test route
 app.get('/api/test', (req, res) => {

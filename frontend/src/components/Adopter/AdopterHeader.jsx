@@ -31,7 +31,7 @@ const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate('/login');
+    navigate('/');
   };
 
   return (

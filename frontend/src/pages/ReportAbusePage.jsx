@@ -74,7 +74,7 @@ const ReportAbusePage = () => {
       fd.append('location', JSON.stringify({ area: form.area, city: form.city, details: form.details }));
       if (photo) fd.append('photo', photo);
 
-      await apiFetch('POST', '/reports', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await apiFetch('POST', '/reports', fd, true);
       setSubmitted(true);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to submit. Please try again.');
