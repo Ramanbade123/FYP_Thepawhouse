@@ -25,14 +25,19 @@ const lostFoundRoutes = require('./routes/lostFoundRoutes')
 const reportRoutes    = require('./routes/reportRoutes')
 const diseaseRoutes   = require('./routes/diseaseRoutes')
 const donationRoutes  = require('./routes/donationRoutes')
+const reviewRoutes    = require('./routes/reviewRoutes')
+const messageRoutes   = require('./routes/messageRoutes')
 
-app.use('/api/auth',       authRoutes)
-app.use('/api/users',      userRoutes)
-app.use('/api/pets',       petRoutes)
-app.use('/api/lostfound',  lostFoundRoutes)
-app.use('/api/reports',    reportRoutes)
-app.use('/api/diseases',   diseaseRoutes)
-app.use('/api/donations',  donationRoutes)
+app.use('/api/auth',               authRoutes)
+app.use('/api/users',              userRoutes)
+app.use('/api/pets',               petRoutes)
+app.use('/api/pets/:petId/reviews', reviewRoutes)   // nested: /api/pets/:petId/reviews
+app.use('/api/lostfound',          lostFoundRoutes)
+app.use('/api/reports',            reportRoutes)
+app.use('/api/diseases',           diseaseRoutes)
+app.use('/api/donations',          donationRoutes)
+app.use('/api/messages',           messageRoutes)
+app.use('/api/reviews',            reviewRoutes)    // also allow flat: /api/reviews/admin/all
 
 // Test route
 app.get("/", (req, res) => {
