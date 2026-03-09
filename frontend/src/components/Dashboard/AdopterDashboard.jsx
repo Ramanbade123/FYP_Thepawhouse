@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdopterHeader          from '../Adopter/AdopterHeader';
 import AdopterFooter          from '../Adopter/AdopterFooter';
 import BrowseDogsTab          from '../Adopter/tabs/BrowseDogsTab';
@@ -9,9 +9,10 @@ import AdopterSettingsTab     from '../Adopter/tabs/AdopterSettingsTab';
 
 const AdopterDashboard = () => {
   const navigate   = useNavigate();
+  const location   = useLocation();
   const [user, setUser]         = useState(null);
   const [loading, setLoading]   = useState(true);
-  const [activeTab, setActiveTab] = useState('browse');
+  const [activeTab, setActiveTab] = useState(location.state?.tab || 'browse');
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user') || 'null');

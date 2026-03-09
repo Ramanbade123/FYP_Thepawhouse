@@ -4,13 +4,250 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft, Heart, Calendar, MapPin, Scale, Shield, Star,
   Dog, Phone, Mail, CheckCircle, XCircle, PawPrint,
-  Activity, Users, Cat, Baby, Home, Clock
+  Activity, Users, Cat, Baby, Home, Clock, MessageCircle, Send, Trash2
 } from 'lucide-react';
 import AdopterHeader from '../components/Adopter/AdopterHeader';
+
+// ── Inline Reviews component ──────────────────────────────────────────────────
+const StarRating = ({ value, onChange, readOnly = false, size = 'md' }) => {
+  const [hover, setHover] = useState(0);
+  const sz = size === 'sm' ? 'h-4 w-4' : 'h-6 w-6';
+  return (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map(star => (
+        <button key={star} type="button" disabled={readOnly}
+          onClick={() => !readOnly && onChange && onChange(star)}
+          onMouseEnter={() => !readOnly && setHover(star)}
+          onMouseLeave={() => !readOnly && setHover(0)}
+          className={readOnly ? 'cursor-default' : 'cursor-pointer'}>
+          <Star className={`${sz} transition-colors ${
+            star <= (hover || value) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
+          }`} />
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const ReviewsSection = ({ petId, user }) => {
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const [reviews, setReviews]     = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [loading, setLoading]     = useState(true);
+  const [showForm, setShowForm]   = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ rating: 0, title: '', body: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const fetchReviews = async () => {
+    try {
+      const res  = await fetch(`${API}/pets/${petId}/reviews`);
+      const data = await res.json();
+      if (data.success) { setReviews(data.data); setAvgRating(data.avgRating); }
+    } catch {}
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchReviews(); }, [petId]);
+
+  const alreadyReviewed = reviews.some(r => r.reviewer?._id === user?._id || r.reviewer?._id === user?.id);
+
+  const handleSubmit = async () => {
+    setError(''); setSuccess('');
+    if (!form.rating) return setError('Please select a star rating.');
+    if (!form.title.trim()) return setError('Please provide a title.');
+    if (!form.body.trim()) return setError('Please write your review.');
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res  = await fetch(`${API}/pets/${petId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccess('Review submitted!');
+        setForm({ rating: 0, title: '', body: '' });
+        setShowForm(false);
+        fetchReviews();
+      } else { setError(data.error || 'Could not submit review.'); }
+    } catch { setError('Server error.'); }
+    finally { setSubmitting(false); }
+  };
+
+  const handleDelete = async (reviewId) => {
+    if (!confirm('Delete your review?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res  = await fetch(`${API}/pets/${petId}/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) fetchReviews();
+    } catch {}
+  };
+
+  const timeAgo = (dateStr) => {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 60)   return 'just now';
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <h3 className="font-bold text-[#063630] text-lg flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-[#008737]" /> Reviews
+          </h3>
+          {reviews.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              <StarRating value={Math.round(avgRating)} readOnly size="sm" />
+              <span className="text-sm font-semibold text-[#063630]">{avgRating}</span>
+              <span className="text-xs text-gray-400">({reviews.length})</span>
+            </div>
+          )}
+        </div>
+        {user?.role === 'adopter' && !alreadyReviewed && !showForm && (
+          <button onClick={() => setShowForm(true)}
+            className="text-sm font-semibold text-[#008737] hover:underline">
+            + Write a Review
+          </button>
+        )}
+      </div>
+
+      {/* Review form */}
+      {showForm && (
+        <div className="border border-[#008737]/20 bg-green-50/30 rounded-xl p-4 mb-5">
+          <h4 className="font-semibold text-[#063630] mb-3">Your Review</h4>
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-gray-600 mb-1">Rating <span className="text-red-500">*</span></p>
+            <StarRating value={form.rating} onChange={r => setForm(f => ({ ...f, rating: r }))} />
+          </div>
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-gray-600 mb-1">Title <span className="text-red-500">*</span></p>
+            <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              placeholder="e.g. Wonderful experience!" maxLength={100}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#008737]" />
+          </div>
+          <div className="mb-3">
+            <p className="text-xs font-semibold text-gray-600 mb-1">Review <span className="text-red-500">*</span></p>
+            <textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
+              placeholder="Share your experience with this dog..." rows={4} maxLength={1000}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#008737] resize-none" />
+            <p className="text-xs text-gray-400 text-right">{form.body.length}/1000</p>
+          </div>
+          {error   && <p className="text-red-500 text-sm mb-2">{error}</p>}
+          {success && <p className="text-green-600 text-sm mb-2">{success}</p>}
+          <div className="flex gap-2">
+            <button onClick={handleSubmit} disabled={submitting}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl text-sm font-semibold disabled:opacity-60"
+              style={{ color: '#fff' }}>
+              <Send className="h-4 w-4" /> {submitting ? 'Submitting...' : 'Submit Review'}
+            </button>
+            <button onClick={() => { setShowForm(false); setError(''); }}
+              className="px-4 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reviews list */}
+      {loading ? (
+        <p className="text-sm text-gray-400 text-center py-4">Loading reviews...</p>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-8">
+          <Star className="h-10 w-10 text-gray-200 mx-auto mb-2" />
+          <p className="text-gray-400 text-sm">No reviews yet. Be the first to leave one!</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map(review => {
+            const isOwner = review.reviewer?._id === user?._id || review.reviewer?._id === user?.id;
+            return (
+              <div key={review._id} className="border border-gray-100 rounded-xl p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#085558] to-[#008737] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                      {review.reviewer?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-[#063630] text-sm">{review.reviewer?.name || 'Anonymous'}</p>
+                      <div className="flex items-center gap-2">
+                        <StarRating value={review.rating} readOnly size="sm" />
+                        {review.verified && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" /> Verified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{timeAgo(review.createdAt)}</span>
+                    {isOwner && (
+                      <button onClick={() => handleDelete(review._id)}
+                        className="text-gray-300 hover:text-red-400 transition-colors">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <p className="font-semibold text-[#063630] text-sm mb-1">{review.title}</p>
+                <p className="text-gray-600 text-sm leading-relaxed">{review.body}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
 const imgSrc = (url) => { if (!url) return null; return url.startsWith('http') ? url : `${BASE_URL}${url}`; };
+
+// Quick "Message Rehomer" button — starts a conversation and redirects to dashboard messages
+const MessageRehomerButton = ({ petId, petName, user }) => {
+  const navigate   = useNavigate();
+  const API        = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const [loading, setLoading] = useState(false);
+
+  const handleMessage = async () => {
+    if (!user) { navigate('/login'); return; }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res   = await fetch(`${API}/messages/start`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ petId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Store pending conversation so the messages tab can auto-open it
+        localStorage.setItem('openConversation', data.data._id);
+        navigate('/adopter/dashboard', { state: { tab: 'messages' } });
+      }
+    } catch { alert('Could not start conversation. Please try again.'); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <button onClick={handleMessage} disabled={loading}
+      className="mt-3 w-full py-3 border-2 border-[#008737] text-[#008737] rounded-2xl font-semibold text-base hover:bg-[#008737]/5 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+      <MessageCircle className="h-5 w-5" />
+      {loading ? 'Opening chat...' : `Message Rehomer about ${petName}`}
+    </button>
+  );
+};
 
 const DogDetailPage = () => {
   const { id }       = useParams();
@@ -263,7 +500,17 @@ const DogDetailPage = () => {
                 {applying ? 'Submitting...' : user?.role === 'adopter' ? `🐾 Adopt ${pet.name}` : user ? 'Only adopters can apply' : 'Login to Apply'}
               </button>
             )}
+
+            {/* Message Rehomer button */}
+            {user?.role === 'adopter' && (
+              <MessageRehomerButton petId={pet._id} petName={pet.name} user={user} />
+            )}
           </motion.div>
+        </div>
+
+        {/* Reviews — full width below */}
+        <div className="max-w-5xl mx-auto px-4 pb-12">
+          <ReviewsSection petId={pet._id || id} user={user} />
         </div>
       </div>
     </div>
