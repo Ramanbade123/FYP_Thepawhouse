@@ -12,6 +12,7 @@ import AdminPetManagement from '../Admin/AdminPetManagement';
 import AdminCommunityTab  from '../Admin/AdminCommunityTab';
 import AdminMessagesTab   from '../Admin/AdminMessagesTab';
 import AdminAdoptionsTab  from '../Admin/AdminAdoptionsTab';
+import AdminReportsTab    from '../Admin/AdminReportsTab';
 
 const API = 'http://localhost:5000/api';
 
@@ -136,8 +137,9 @@ const AdminDashboard = () => {
           {activeTab === 'community' && <AdminCommunityTab />}
           {activeTab === 'messages'  && <AdminMessagesTab />}
           {activeTab === 'adoptions' && <AdminAdoptionsTab />}
+          {activeTab === 'reports'   && <AdminReportsTab />}
 
-          {!['dashboard','users','pets','adoptions','community','messages'].includes(activeTab) && (
+          {!['dashboard','users','pets','adoptions','community','messages','reports'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 capitalize">{activeTab}</h2>
               <p className="text-gray-500">Coming soon.</p>
