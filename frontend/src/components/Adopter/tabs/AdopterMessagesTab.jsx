@@ -79,12 +79,22 @@ const AdopterMessagesTab = () => {
   useEffect(() => {
     if (loadingConvos) return;
     const pendingId = localStorage.getItem('openConversation');
-    if (pendingId) {
-      localStorage.removeItem('openConversation');
-      const found = conversations.find(c => c._id === pendingId);
-      if (found) openConvo(found);
+    if (!pendingId) return;
+    localStorage.removeItem('openConversation');
+
+    const found = conversations.find(c => c._id === pendingId);
+    if (found) {
+      openConvo(found);
+    } else {
+      // Conversation was just created — refetch list then open
+      apiFetch('GET', '/messages').then(data => {
+        const convos = data.data || [];
+        setConversations(convos);
+        const match = convos.find(c => c._id === pendingId);
+        if (match) openConvo(match);
+      }).catch(() => {});
     }
-  }, [loadingConvos, conversations]);
+  }, [loadingConvos]);
 
   // Poll every 5s when a convo is open
   useEffect(() => {

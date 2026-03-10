@@ -50,14 +50,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Mount routers
-app.use('/api/auth',       require('./routes/authRoutes'));
-app.use('/api/pets',       require('./routes/petRoutes'));
-app.use('/api/users',      require('./routes/userRoutes'));
-app.use('/api/lostfound',  require('./routes/lostFoundRoutes'));
-app.use('/api/reports',    require('./routes/reportRoutes'));
-app.use('/api/diseases',   require('./routes/diseaseRoutes'));
-app.use('/api/donations',  require('./routes/donationRoutes'));
-app.use('/api/contact',    require('./routes/contactRoutes'));
+app.use('/api/auth',                require('./routes/authRoutes'));
+app.use('/api/pets',                require('./routes/petRoutes'));
+app.use('/api/users',               require('./routes/userRoutes'));
+app.use('/api/lostfound',           require('./routes/lostfoundRoutes'));
+app.use('/api/reports',             require('./routes/reportRoutes'));
+app.use('/api/diseases',            require('./routes/diseaseRoutes'));
+app.use('/api/donations',           require('./routes/donationRoutes'));
+app.use('/api/contact',             require('./routes/contactRoutes'));
+app.use('/api/messages',            require('./routes/messageRoutes'));
+app.use('/api/pets/:petId/reviews', require('./routes/reviewRoutes'));
+app.use('/api/reviews',             require('./routes/reviewRoutes'));
 
 // Test route
 app.get('/api/test', (req, res) => {

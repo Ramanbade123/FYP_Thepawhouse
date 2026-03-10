@@ -235,6 +235,8 @@ const MessageRehomerButton = ({ petId, petName, user }) => {
         // Store pending conversation so the messages tab can auto-open it
         localStorage.setItem('openConversation', data.data._id);
         navigate('/adopter/dashboard', { state: { tab: 'messages' } });
+      } else {
+        alert(data.error || 'Could not start conversation. Please try again.');
       }
     } catch { alert('Could not start conversation. Please try again.'); }
     finally { setLoading(false); }
