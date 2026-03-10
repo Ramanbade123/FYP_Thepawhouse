@@ -4,7 +4,7 @@ const router  = express.Router();
 const {
   createPet, getPets, getPet,
   getMyListings, updatePet, deletePet,
-  adminGetAllPets, adminUpdateApproval,
+  adminGetAllPets, adminUpdateApproval, adminGetAllApplications,
   applyForPet, getPetApplications,
   updateApplicationStatus, getMyApplications,
 } = require('../controllers/petController');
@@ -17,6 +17,7 @@ const upload                             = require('../middleware/uploadMiddlewa
 
 // Admin
 router.get('/admin/all',               protect, isAdmin,   adminGetAllPets);
+router.get('/admin/applications',      protect, isAdmin,   adminGetAllApplications);
 router.put('/admin/:id/approval',      protect, isAdmin,   adminUpdateApproval);
 
 // Rehomer named routes (must be before /:id)

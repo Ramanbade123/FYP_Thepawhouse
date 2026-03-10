@@ -77,10 +77,6 @@ const RecentUsersTable = ({ preview = true, onManageUsers }) => {
           </>
         ) : (
           <>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
-              <p className="text-sm text-gray-400 mt-0.5">{total} total users</p>
-            </div>
             <div className="flex items-center gap-3 flex-wrap">
               {/* Search */}
               <div className="relative">

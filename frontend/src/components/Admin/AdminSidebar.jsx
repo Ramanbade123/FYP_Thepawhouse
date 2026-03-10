@@ -114,10 +114,10 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) 
         <div className="p-3 border-t border-white/10 space-y-0.5">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white hover:bg-red-500/10 transition-all duration-200"
           >
-            <LogOut className="h-5 w-5" />
-            <span className="font-medium">Logout</span>
+            <LogOut className="h-5 w-5 text-white" />
+            <span className="text-white">Logout</span>
           </button>
         </div>
       </aside>

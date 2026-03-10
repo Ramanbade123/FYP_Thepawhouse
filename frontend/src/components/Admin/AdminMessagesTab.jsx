@@ -221,18 +221,6 @@ const AdminMessagesTab = () => {
   return (
     <div className="space-y-6">
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#063630] to-[#085558] rounded-xl p-6 text-white flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Contact Messages</h1>
-          <p className="text-white/70 mt-1">Messages sent from the Contact page</p>
-        </div>
-        <button onClick={() => { fetchMessages(); fetchStats(); }}
-          className="flex items-center gap-2 bg-white/15 hover:bg-white/25 transition-colors px-4 py-2 rounded-lg text-sm font-medium">
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[

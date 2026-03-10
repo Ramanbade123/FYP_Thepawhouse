@@ -225,10 +225,7 @@ const UserManagement = ({ preview = false }) => {
       {!preview && (
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
-              <p className="text-gray-600">Manage all users, adopters, and rehomers</p>
-            </div>
+
             <div className="flex items-center space-x-3 mt-4 md:mt-0">
               <button onClick={fetchUsers}
                 className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center">

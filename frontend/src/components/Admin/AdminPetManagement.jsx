@@ -272,17 +272,6 @@ const AdminPetManagement = () => {
         />
       )}
 
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Pet Listings</h2>
-          <p className="text-gray-500 text-sm mt-1">Review and approve rehomer submissions</p>
-        </div>
-        <button onClick={fetchPets}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors text-sm">
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
-      </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
