@@ -1,375 +1,368 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
-  PawPrint,
-  Calendar,
-  MapPin,
-  Heart,
-  Scale,
-  Search,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  Bone,
-  Shield,
-  Home,
-  Star
+  PawPrint, Calendar, MapPin, Heart, Scale,
+  Search, Filter, ChevronLeft, ChevronRight,
+  Bone, Shield, Home, Star, X, SlidersHorizontal
 } from "lucide-react";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE_URL = API.replace("/api", "");
+
+const FILTERS = [
+  { id: "all",        label: "All Dogs" },
+  { id: "puppies",    label: "Puppies (0-1 year)" },
+  { id: "medium",     label: "Medium Size" },
+  { id: "kathmandu",  label: "Kathmandu Valley" },
+  { id: "female",     label: "Female" },
+  { id: "male",       label: "Male" },
+];
+
+const SIZES  = ["", "Small", "Medium", "Large", "Extra Large"];
+const CITIES = ["", "Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Biratnagar", "Chitwan", "Other"];
+
+const PER_PAGE = 6;
+
+// Safely convert any value to a renderable string
+const safeStr = (val) => {
+  if (val === null || val === undefined) return "";
+  if (typeof val === "object") {
+    if (val.value !== undefined) return `${val.value}${val.unit ? " " + val.unit : ""}`;
+    return JSON.stringify(val);
+  }
+  return String(val);
+};
+
+const imgSrc = (pet) => {
+  const img = pet.primaryImage || (pet.images && pet.images[0]);
+  if (!img) return "https://placehold.co/400x300?text=No+Photo";
+  if (img.startsWith("http")) return img;
+  return `${BASE_URL}${img}`;
+};
+
+const ageLabel = (pet) => {
+  if (pet.age && typeof pet.age === "object") {
+    const v = pet.age.value;
+    const u = pet.age.unit || "years";
+    if (v === undefined || v === null) return "Unknown age";
+    return `${v} ${u}`;
+  }
+  return safeStr(pet.age) || "Unknown age";
+};
+
+const isPuppy = (pet) => {
+  if (pet.age && typeof pet.age === "object") {
+    return pet.age.unit === "months" || (pet.age.unit === "years" && pet.age.value <= 1);
+  }
+  return false;
+};
+
+const isKathmandu = (pet) => {
+  const loc = (pet.location?.city || pet.location || "").toLowerCase();
+  return ["kathmandu", "lalitpur", "bhaktapur", "ktm"].some(k => loc.includes(k));
+};
+
 const Pets = () => {
-  const [favorites, setFavorites] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const petsPerPage = 6;
+  const navigate = useNavigate();
+  const [pets,        setPets]        = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [favorites,   setFavorites]   = useState([]);
+  const [page,        setPage]        = useState(1);
+  const [total,       setTotal]       = useState(0);
+  const [search,      setSearch]      = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [activeFilter,setActiveFilter]= useState("all");
+  const [showAdv,     setShowAdv]     = useState(false);
+  const [advSize,     setAdvSize]     = useState("");
+  const [advCity,     setAdvCity]     = useState("");
+  const [advGender,   setAdvGender]   = useState("");
+  const [advVaccinated, setAdvVaccinated] = useState(false);
 
-  const dogs = [
-    {
-      id: 1,
-      name: "Buddy",
-      breed: "Nepali Kukur (Local Breed)",
-      age: "2 years",
-      gender: "male",
-      size: "Medium",
-      weight: "18 kg",
-      location: "Kathmandu",
-      description: "Loyal and protective, great for family homes. Rescued from the streets.",
-      status: "Available",
-      image: "https://images.unsplash.com/photo-1552053831-71594a27632d?w=800&auto=format&fit=crop",
-      vaccinated: true,
-      trained: true
-    },
-    {
-      id: 2,
-      name: "Kali",
-      breed: "Mixed Breed",
-      age: "1.5 years",
-      gender: "female",
-      size: "Medium",
-      weight: "15 kg",
-      location: "Pokhara",
-      description: "Friendly and energetic, loves outdoor activities. Good with children.",
-      status: "Available",
-      image: "https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?w=800&auto=format&fit=crop",
-      vaccinated: true,
-      trained: false
-    },
-    {
-      id: 3,
-      name: "Simba",
-      breed: "Mongrel",
-      age: "3 years",
-      gender: "male",
-      size: "Large",
-      weight: "25 kg",
-      location: "Lalitpur",
-      description: "Gentle giant, requires space to roam. Previously a street dog.",
-      status: "Available",
-      image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&auto=format&fit=crop",
-      vaccinated: true,
-      trained: true
-    },
-    {
-      id: 4,
-      name: "Rani",
-      breed: "Pariah Dog",
-      age: "2.5 years",
-      gender: "female",
-      size: "Small",
-      weight: "12 kg",
-      location: "Bhaktapur",
-      description: "Adaptable and intelligent, perfect for apartment living.",
-      status: "Available",
-      image: "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=800&auto=format&fit=crop",
-      vaccinated: true,
-      trained: false
-    },
-    {
-      id: 5,
-      name: "Bhairav",
-      breed: "Nepali Mountain Dog",
-      age: "4 years",
-      gender: "male",
-      size: "Large",
-      weight: "28 kg",
-      location: "Dharan",
-      description: "Strong and independent, suited for experienced owners.",
-      status: "Available",
-      image: "https://images.unsplash.com/photo-1568572933382-74d440642117?w=800&auto=format&fit=crop",
-      vaccinated: true,
-      trained: true
-    },
-    {
-      id: 6,
-      name: "Maya",
-      breed: "Mixed Breed",
-      age: "1 year",
-      gender: "female",
-      size: "Medium",
-      weight: "14 kg",
-      location: "Butwal",
-      description: "Playful and affectionate, ready for her forever home.",
-      status: "Available",
-      image: "https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=800&auto=format&fit=crop",
-      vaccinated: true,
-      trained: false
+  const fetchPets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page, limit: PER_PAGE, status: "available" });
+      if (search)      params.set("search", search);
+      if (advSize)     params.set("size", advSize);
+      if (advCity)     params.set("city", advCity);
+      if (advGender)   params.set("gender", advGender);
+
+      const res  = await fetch(`${API}/pets?${params}`);
+      const data = await res.json();
+      if (data.success) {
+        let results = data.data || [];
+
+        // Client-side filter chip logic
+        if (activeFilter === "puppies")   results = results.filter(isPuppy);
+        if (activeFilter === "medium")    results = results.filter(p => p.size === "Medium");
+        if (activeFilter === "kathmandu") results = results.filter(isKathmandu);
+        if (activeFilter === "female")    results = results.filter(p => p.gender === "female");
+        if (activeFilter === "male")      results = results.filter(p => p.gender === "male");
+        if (advVaccinated)                results = results.filter(p => p.vaccinated);
+
+        setPets(results);
+        setTotal(activeFilter === "all" && !advVaccinated ? (data.total || results.length) : results.length);
+      }
+    } catch (err) {
+      console.error("Fetch pets error:", err);
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [page, search, activeFilter, advSize, advCity, advGender, advVaccinated]);
 
-  const filters = [
-    { id: "all", label: "All Dogs" },
-    { id: "puppies", label: "Puppies (0-1 year)" },
-    { id: "medium", label: "Medium Size" },
-    { id: "kathmandu", label: "Kathmandu Valley" },
-    { id: "family", label: "Good with Kids" },
-    { id: "vaccinated", label: "Vaccinated" }
-  ];
+  useEffect(() => { fetchPets(); }, [fetchPets]);
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  // Reset to page 1 on filter/search change
+  useEffect(() => { setPage(1); }, [search, activeFilter, advSize, advCity, advGender, advVaccinated]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearch(searchInput);
   };
 
-  const indexOfLastPet = currentPage * petsPerPage;
-  const indexOfFirstPet = indexOfLastPet - petsPerPage;
-  const currentDogs = dogs.slice(indexOfFirstPet, indexOfLastPet);
-  const totalPages = Math.ceil(dogs.length / petsPerPage);
+  const clearFilters = () => {
+    setSearch(""); setSearchInput(""); setActiveFilter("all");
+    setAdvSize(""); setAdvCity(""); setAdvGender(""); setAdvVaccinated(false);
+    setPage(1);
+  };
+
+  const hasActiveFilters = search || activeFilter !== "all" || advSize || advCity || advGender || advVaccinated;
+
+  const totalPages = Math.ceil(total / PER_PAGE);
 
   return (
     <section id="adopt" className="py-16 lg:py-24 bg-[#EDEDED]">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4">
 
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
             className="inline-flex items-center gap-2 bg-[#008737]/10 text-[#008737] px-4 py-2 rounded-full mb-6"
           >
             <Bone className="h-4 w-4" />
             <span className="text-sm font-semibold">Meet Our Friends</span>
           </motion.div>
-
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#063630] mb-4">
             Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#085558]">Perfect Companion</span>
           </h2>
-          <p className="text-lg lg:text-xl text-[#063630]/80 max-w-2xl mx-auto mb-12">
-            Discover loyal dogs from across Nepal waiting for their forever homes. Every adoption saves a life.
+          <p className="text-lg lg:text-xl text-[#063630]/80 max-w-2xl mx-auto">
+            Discover loyal dogs waiting for their forever homes. Every adoption saves a life.
           </p>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-12 lg:mb-16 max-w-3xl mx-auto">
-            <div className="bg-white p-6 lg:p-8 rounded-2xl shadow-lg text-center border border-[#008737]/10">
-              <h3 className="text-3xl lg:text-4xl font-bold text-[#063630] mb-2">250+</h3>
-              <p className="text-[#063630]/70 text-sm lg:text-base">Dogs Rehomed</p>
-            </div>
-            
-            <div className="bg-white p-6 lg:p-8 rounded-2xl shadow-lg text-center border border-[#008737]/10">
-              <h3 className="text-3xl lg:text-4xl font-bold text-[#063630] mb-2">8 Cities</h3>
-              <p className="text-[#063630]/70 text-sm lg:text-base">Across Nepal</p>
-            </div>
-            
-            <div className="bg-white p-6 lg:p-8 rounded-2xl shadow-lg text-center border border-[#008737]/10">
-              <h3 className="text-3xl lg:text-4xl font-bold text-[#063630] mb-2">100%</h3>
-              <p className="text-[#063630]/70 text-sm lg:text-base">Health Verified</p>
-            </div>
-          </div>
         </div>
 
         {/* Search & Filters */}
-        <div className="bg-white rounded-2xl shadow-xl border border-[#008737]/10 p-6 mb-8 lg:mb-12">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-[#008737]/10 p-6 mb-8">
+          <form onSubmit={handleSearch} className="flex flex-col lg:flex-row lg:items-center gap-4 mb-5">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#848AFF]" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
-                placeholder="Search by breed, location, or age..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Search by breed, location, or name..."
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all text-[#063630]"
               />
             </div>
-            <button className="lg:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#008737] to-[#085558] text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
-              <Filter className="h-4 w-4" />
-              <span className="text-white">Advanced Filters</span>
-            </button>
-          </div>
+            <div className="flex gap-2">
+              <button type="submit"
+                className="flex items-center gap-2 bg-gradient-to-r from-[#008737] to-[#085558] text-white px-5 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+                <Search className="h-4 w-4" /> Search
+              </button>
+              <button type="button" onClick={() => setShowAdv(p => !p)}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold border transition-all ${showAdv ? "bg-[#063630] text-white border-[#063630]" : "border-gray-200 text-[#063630] hover:bg-gray-50"}`}>
+                <SlidersHorizontal className="h-4 w-4" /> Filters
+              </button>
+              {hasActiveFilters && (
+                <button type="button" onClick={clearFilters}
+                  className="flex items-center gap-1 px-4 py-3 rounded-xl text-red-500 border border-red-200 hover:bg-red-50 transition-all text-sm font-semibold">
+                  <X className="h-4 w-4" /> Clear
+                </button>
+              )}
+            </div>
+          </form>
 
-          {/* Filter Chips */}
-          <div className="flex flex-wrap gap-3">
-            {filters.map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeFilter === filter.id
+          {/* Advanced filters panel */}
+          {showAdv && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-gray-100 mb-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">Size</label>
+                <select value={advSize} onChange={e => setAdvSize(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#008737]">
+                  <option value="">Any size</option>
+                  {SIZES.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">City</label>
+                <select value={advCity} onChange={e => setAdvCity(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#008737]">
+                  <option value="">Any city</option>
+                  {CITIES.filter(Boolean).map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">Gender</label>
+                <select value={advGender} onChange={e => setAdvGender(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#008737]">
+                  <option value="">Any</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div className="flex items-end pb-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={advVaccinated} onChange={e => setAdvVaccinated(e.target.checked)}
+                    className="w-4 h-4 accent-[#008737]" />
+                  <span className="text-sm font-semibold text-[#063630]">Vaccinated only</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Filter chips */}
+          <div className="flex flex-wrap gap-2">
+            {FILTERS.map(f => (
+              <button key={f.id} onClick={() => setActiveFilter(f.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  activeFilter === f.id
                     ? "bg-gradient-to-r from-[#008737] to-[#085558] text-white shadow-md"
                     : "bg-gray-100 text-[#063630] hover:bg-gray-200"
-                }`}
-              >
-                {filter.label}
+                }`}>
+                {f.label}
               </button>
             ))}
           </div>
         </div>
 
+        {/* Results count */}
+        {!loading && (
+          <p className="text-sm text-gray-500 mb-6">
+            {total > 0 ? `Showing ${pets.length} of ${total} available dog${total !== 1 ? "s" : ""}` : ""}
+          </p>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center py-24">
+            <div className="w-10 h-10 border-2 border-[#008737] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && pets.length === 0 && (
+          <div className="text-center py-24 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <PawPrint className="h-14 w-14 mx-auto mb-4 text-gray-200" />
+            <p className="text-xl font-bold text-[#063630] mb-2">No dogs found</p>
+            <p className="text-gray-400 mb-6">Try adjusting your filters or search terms</p>
+            <button onClick={clearFilters}
+              className="px-6 py-2.5 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-md transition-all">
+              Clear Filters
+            </button>
+          </div>
+        )}
+
         {/* Dogs Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {currentDogs.map((dog, i) => (
-            <motion.div
-              key={dog.id}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -8 }}
-              className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-[#008737]/10 group"
-            >
-              {/* Image Section */}
-              <div className="relative h-64 lg:h-72 overflow-hidden">
-                <img
-                  src={dog.image}
-                  alt={dog.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                
-                {/* Status Badge */}
-                <div className="absolute top-4 left-4">
-                  <span className="inline-block px-3 py-1 bg-[#008737] text-white text-xs font-semibold rounded-full shadow-md">
-                    {dog.status}
-                  </span>
-                </div>
-                
-                {/* Favorite Button */}
-                <button
-                  onClick={() => toggleFavorite(dog.id)}
-                  className="absolute top-4 right-4 bg-white/90 p-2 rounded-full hover:bg-white transition-colors shadow-sm"
-                >
-                  <Heart
-                    className={`h-5 w-5 ${
-                      favorites.includes(dog.id)
-                        ? "text-red-500 fill-red-500"
-                        : "text-gray-400 hover:text-red-400"
-                    }`}
+        {!loading && pets.length > 0 && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {pets.map((dog, i) => (
+              <motion.div key={dog._id}
+                initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07 }} whileHover={{ y: -6 }}
+                className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-[#008737]/10 group cursor-pointer"
+                onClick={() => navigate(`/dogs/${dog._id}`)}
+              >
+                {/* Image */}
+                <div className="relative h-64 lg:h-72 overflow-hidden">
+                  <img src={imgSrc(dog)} alt={dog.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    onError={e => { e.target.src = "https://placehold.co/400x300?text=No+Photo"; }}
                   />
-                </button>
-                
-                {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#063630]/60 via-transparent to-transparent"></div>
-              </div>
-
-              {/* Content Section */}
-              <div className="p-6">
-                {/* Header with Name & Gender */}
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl lg:text-2xl font-bold text-[#063630] mb-1">{dog.name}</h3>
-                    <p className="text-[#008737] font-medium">{dog.breed}</p>
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1 bg-[#008737] text-white text-xs font-semibold rounded-full shadow-md">
+                      Available
+                    </span>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    dog.gender === "female" 
-                      ? "bg-pink-100 text-pink-800" 
-                      : "bg-blue-100 text-blue-800"
-                  }`}>
-                    {dog.gender === "female" ? "♀ Female" : "♂ Male"}
-                  </div>
+                  <button onClick={e => { e.stopPropagation(); setFavorites(p => p.includes(dog._id) ? p.filter(x => x !== dog._id) : [...p, dog._id]); }}
+                    className="absolute top-4 right-4 bg-white/90 p-2 rounded-full hover:bg-white transition-colors shadow-sm">
+                    <Heart className={`h-5 w-5 ${favorites.includes(dog._id) ? "text-red-500 fill-red-500" : "text-gray-400"}`} />
+                  </button>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#063630]/50 via-transparent to-transparent" />
                 </div>
 
-                {/* Description */}
-                <p className="text-[#063630]/80 mb-6 line-clamp-2">{dog.description}</p>
-
-                {/* Details */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center text-[#063630]/70">
-                    <Calendar className="mr-3 text-[#008737] h-5 w-5 flex-shrink-0" />
-                    <span className="text-sm lg:text-base">{dog.age}</span>
-                  </div>
-                  <div className="flex items-center text-[#063630]/70">
-                    <Scale className="mr-3 text-[#008737] h-5 w-5 flex-shrink-0" />
-                    <span className="text-sm lg:text-base">{dog.weight} • {dog.size} size</span>
-                  </div>
-                  <div className="flex items-center text-[#063630]/70">
-                    <MapPin className="mr-3 text-[#008737] h-5 w-5 flex-shrink-0" />
-                    <span className="text-sm lg:text-base">{dog.location}, Nepal</span>
-                  </div>
-                </div>
-
-                {/* Health & Training Badges */}
-                <div className="flex gap-3 mb-6">
-                  {dog.vaccinated && (
-                    <div className="flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
-                      <Shield className="h-3 w-3" />
-                      Vaccinated
+                {/* Content */}
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#063630]">{safeStr(dog.name)}</h3>
+                      <p className="text-[#008737] font-medium text-sm">{safeStr(dog.breed)}</p>
                     </div>
-                  )}
-                  {dog.trained && (
-                    <div className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
-                      <Star className="h-3 w-3" />
-                      Trained
-                    </div>
-                  )}
-                </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${dog.gender === "female" ? "bg-pink-100 text-pink-800" : "bg-blue-100 text-blue-800"}`}>
+                      {dog.gender === "female" ? "♀ Female" : "♂ Male"}
+                    </span>
+                  </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex-1 bg-gradient-to-r from-[#008737] to-[#085558] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                  >
-                    Meet {dog.name}
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 border border-[#008737] text-[#008737] rounded-xl font-semibold hover:bg-[#008737]/5 transition-colors"
-                  >
-                    Details
-                  </motion.button>
+                  <p className="text-[#063630]/70 text-sm mb-4 line-clamp-2">{safeStr(dog.description || dog.personality)}</p>
+
+                  <div className="space-y-2 mb-4 text-sm text-[#063630]/70">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-[#008737] flex-shrink-0" />
+                      {ageLabel(dog)}
+                    </div>
+                    {(dog.size || dog.weight) && (
+                      <div className="flex items-center gap-2">
+                        <Scale className="h-4 w-4 text-[#008737] flex-shrink-0" />
+                        {dog.weight ? `${safeStr(dog.weight)} • ` : ""}{safeStr(dog.size)} size
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-[#008737] flex-shrink-0" />
+                      {typeof dog.location === "object"
+                        ? [dog.location?.city, dog.location?.province].filter(Boolean).join(", ") || "Nepal"
+                        : safeStr(dog.location) || "Nepal"}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-5">
+                    {dog.vaccinated && (
+                      <span className="flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+                        <Shield className="h-3 w-3" /> Vaccinated
+                      </span>
+                    )}
+                    {dog.trained && (
+                      <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-medium">
+                        <Star className="h-3 w-3" /> Trained
+                      </span>
+                    )}
+                  </div>
+
+                  <button onClick={e => { e.stopPropagation(); navigate(`/dogs/${dog._id}`); }}
+                    className="w-full bg-gradient-to-r from-[#008737] to-[#085558] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+                    Meet {safeStr(dog.name)}
+                  </button>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Pagination */}
-        {dogs.length > petsPerPage && (
-          <div className="flex justify-center items-center gap-4 mt-12 lg:mt-16">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
-              className={`p-3 rounded-full transition-colors ${
-                currentPage === 1
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-[#063630] hover:bg-[#008737]/10"
-              }`}
-            >
+        {totalPages > 1 && !loading && (
+          <div className="flex justify-center items-center gap-3 mt-12">
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
+              className={`p-3 rounded-full transition-colors ${page === 1 ? "text-gray-300 cursor-not-allowed" : "text-[#063630] hover:bg-[#008737]/10"}`}>
               <ChevronLeft className="h-5 w-5" />
             </button>
-            
-            <div className="flex items-center gap-2">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-10 h-10 rounded-full font-semibold transition-all duration-200 ${
-                    currentPage === i + 1
-                      ? "bg-gradient-to-r from-[#008737] to-[#085558] text-white shadow-md"
-                      : "text-[#063630] hover:bg-[#008737]/10"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
-              className={`p-3 rounded-full transition-colors ${
-                currentPage === totalPages
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-[#063630] hover:bg-[#008737]/10"
-              }`}
-            >
+            {[...Array(totalPages)].map((_, i) => (
+              <button key={i} onClick={() => setPage(i + 1)}
+                className={`w-10 h-10 rounded-full font-semibold transition-all ${page === i + 1 ? "bg-gradient-to-r from-[#008737] to-[#085558] text-white shadow-md" : "text-[#063630] hover:bg-[#008737]/10"}`}>
+                {i + 1}
+              </button>
+            ))}
+            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}
+              className={`p-3 rounded-full transition-colors ${page === totalPages ? "text-gray-300 cursor-not-allowed" : "text-[#063630] hover:bg-[#008737]/10"}`}>
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>

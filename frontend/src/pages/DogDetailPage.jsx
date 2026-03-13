@@ -7,6 +7,7 @@ import {
   Activity, Users, Cat, Baby, Home, Clock, MessageCircle, Send, Trash2
 } from 'lucide-react';
 import AdopterHeader from '../components/Adopter/AdopterHeader';
+import Navbar from '../components/Navbar';
 
 // ── Inline Reviews component ──────────────────────────────────────────────────
 const StarRating = ({ value, onChange, readOnly = false, size = 'md' }) => {
@@ -318,11 +319,15 @@ const DogDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#EDEDED] to-gray-100">
 
       {/* Adopter Header */}
-      <AdopterHeader
-        user={user}
-        activeTab="browse"
-        setActiveTab={(tab) => navigate('/adopter/dashboard', { state: { tab } })}
-      />
+      {user?.role === 'adopter' ? (
+        <AdopterHeader
+          user={user}
+          activeTab="browse"
+          setActiveTab={(tab) => navigate('/adopter/dashboard', { state: { tab } })}
+        />
+      ) : (
+        <Navbar />
+      )}
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
 
@@ -369,11 +374,20 @@ const DogDetailPage = () => {
                   <div className="w-full py-3 bg-green-50 text-green-700 rounded-xl text-center font-semibold flex items-center justify-center gap-2">
                     <CheckCircle className="h-5 w-5" /> Application Submitted!
                   </div>
+                ) : !user ? (
+                  <button onClick={() => navigate('/login')}
+                    className="w-full py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                    Login to Apply
+                  </button>
+                ) : user.role !== 'adopter' ? (
+                  <div className="w-full py-3 bg-gray-100 text-gray-500 rounded-xl text-center font-semibold">
+                    Only adopters can apply
+                  </div>
                 ) : (
-                  <button onClick={handleApply} disabled={applying || !user || user?.role !== 'adopter'}
+                  <button onClick={handleApply} disabled={applying}
                     className="w-full py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-60"
                     style={{ color: '#ffffff' }}>
-                    {applying ? 'Submitting...' : user?.role === 'adopter' ? `Adopt ${pet.name}` : user ? 'Only adopters can apply' : 'Login to Apply'}
+                    {applying ? 'Submitting...' : `Adopt ${pet.name}`}
                   </button>
                 )}
               </motion.div>
@@ -495,11 +509,20 @@ const DogDetailPage = () => {
               <div className="w-full py-4 bg-green-50 text-green-700 rounded-2xl text-center font-semibold flex items-center justify-center gap-2 text-lg border border-green-200">
                 <CheckCircle className="h-6 w-6" /> Application Submitted!
               </div>
+            ) : !user ? (
+              <button onClick={() => navigate('/login')}
+                className="w-full py-4 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-2xl font-bold text-lg hover:shadow-xl transition-all">
+                Login to Apply
+              </button>
+            ) : user.role !== 'adopter' ? (
+              <div className="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl text-center font-bold text-lg">
+                Only adopters can apply
+              </div>
             ) : (
-              <button onClick={handleApply} disabled={applying || !user || user?.role !== 'adopter'}
+              <button onClick={handleApply} disabled={applying}
                 className="w-full py-4 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-2xl font-bold text-lg hover:shadow-xl transition-all disabled:opacity-60"
                 style={{ color: '#ffffff' }}>
-                {applying ? 'Submitting...' : user?.role === 'adopter' ? `🐾 Adopt ${pet.name}` : user ? 'Only adopters can apply' : 'Login to Apply'}
+                {applying ? 'Submitting...' : `🐾 Adopt ${pet.name}`}
               </button>
             )}
 

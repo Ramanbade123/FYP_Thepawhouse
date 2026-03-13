@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Users, Dog, Home, Settings,
   UserCheck, Calendar, ChevronRight, Clock
@@ -11,8 +12,6 @@ import RecentUsersTable   from '../Admin/RecentUsersTable';
 import AdminPetManagement from '../Admin/AdminPetManagement';
 import AdminCommunityTab  from '../Admin/AdminCommunityTab';
 import AdminMessagesTab   from '../Admin/AdminMessagesTab';
-import AdminAdoptionsTab  from '../Admin/AdminAdoptionsTab';
-import AdminReportsTab    from '../Admin/AdminReportsTab';
 
 const API = 'http://localhost:5000/api';
 
@@ -35,7 +34,9 @@ const DashStatCard = ({ title, value, change, icon: Icon, iconColor, bgColor, bo
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab]     = useState('dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'dashboard';
+  const setActiveTab = (tab) => setSearchParams({ tab });
   const [stats, setStats] = useState({
     totalUsers: 0, totalAdopters: 0, totalRehomers: 0,
     pendingVerifications: 0, pendingPets: 0,
@@ -75,22 +76,29 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+
+      {/* Sidebar */}
       <AdminSidebar
         activeTab={activeTab} setActiveTab={setActiveTab}
         sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}
       />
 
+      {/* Main — takes remaining width */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <main className="flex-1 overflow-y-auto p-6">
 
+          {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <>
+
+              {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                 {statCards.map(card => <DashStatCard key={card.title} {...card} />)}
               </div>
 
+              {/* Activity + Overview */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                   <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h2>
@@ -120,6 +128,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
+              {/* Recent Users */}
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <RecentUsersTable preview={true} onManageUsers={() => setActiveTab('users')} />
               </div>
@@ -133,13 +142,19 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'pets'      && <AdminPetManagement />}
+          {activeTab === 'pets' && <AdminPetManagement />}
+
           {activeTab === 'community' && <AdminCommunityTab />}
           {activeTab === 'messages'  && <AdminMessagesTab />}
-          {activeTab === 'adoptions' && <AdminAdoptionsTab />}
-          {activeTab === 'reports'   && <AdminReportsTab />}
 
-          {!['dashboard','users','pets','adoptions','community','messages','reports'].includes(activeTab) && (
+          {activeTab === 'adoptions' && (
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Adoption Management</h2>
+              <p className="text-gray-500">Coming soon.</p>
+            </div>
+          )}
+
+          {!['dashboard','users','pets','adoptions','community','messages'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 capitalize">{activeTab}</h2>
               <p className="text-gray-500">Coming soon.</p>

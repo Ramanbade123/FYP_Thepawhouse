@@ -7,7 +7,7 @@ const User = require('../models/User');
 exports.createPet = async (req, res) => {
   try {
     req.body.rehomer       = req.user.id;
-    req.body.adminApproval = 'pending'; // always starts pending
+    req.body.adminApproval = 'approved'; // auto-approved on listing
 
     // Handle uploaded image
     if (req.file) {
@@ -310,67 +310,6 @@ exports.updateApplicationStatus = async (req, res) => {
     res.status(200).json({ success: true, data: pet });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
-  }
-};
-
-// ─────────────────────────────────────────────────────────────
-// ADMIN: Get ALL applications across all pets → GET /api/pets/admin/applications
-// ─────────────────────────────────────────────────────────────
-exports.adminGetAllApplications = async (req, res) => {
-  try {
-    const { status, page = 1, limit = 20 } = req.query;
-    const skip = (Number(page) - 1) * Number(limit);
-
-    // Build match for embedded applications
-    const appMatch = status ? { 'applications.status': status } : {};
-
-    const pets = await Pet.find({ 'applications.0': { $exists: true }, ...appMatch })
-      .populate('applications.adopter', 'name email phone profileImage')
-      .populate('rehomer', 'name email')
-      .select('name breed primaryImage status applications rehomer')
-      .sort('-updatedAt');
-
-    // Flatten all applications into one list
-    let all = [];
-    pets.forEach(pet => {
-      pet.applications.forEach(app => {
-        if (!status || app.status === status) {
-          all.push({
-            _id:       app._id,
-            status:    app.status,
-            message:   app.message,
-            appliedAt: app.appliedAt,
-            adopter:   app.adopter,
-            pet: {
-              _id:          pet._id,
-              name:         pet.name,
-              breed:        pet.breed,
-              primaryImage: pet.primaryImage,
-              status:       pet.status,
-            },
-            rehomer: pet.rehomer,
-          });
-        }
-      });
-    });
-
-    // Sort by appliedAt desc
-    all.sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt));
-
-    const total    = all.length;
-    const paginated = all.slice(skip, skip + Number(limit));
-
-    const summary = {
-      total,
-      pending:   all.filter(a => a.status === 'pending').length,
-      reviewing: all.filter(a => a.status === 'reviewing').length,
-      approved:  all.filter(a => a.status === 'approved').length,
-      rejected:  all.filter(a => a.status === 'rejected').length,
-    };
-
-    res.status(200).json({ success: true, total, totalPages: Math.ceil(total / Number(limit)), summary, data: paginated });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
   }
 };
 
