@@ -7,6 +7,7 @@ const {
   adminGetAllPets, adminUpdateApproval,
   applyForPet, getPetApplications,
   updateApplicationStatus, getMyApplications,
+  adminGetAllApplications,
 } = require('../controllers/petController');
 
 const { protect }                        = require('../middleware/authMiddleware');
@@ -18,6 +19,8 @@ const upload                             = require('../middleware/uploadMiddlewa
 // Admin
 router.get('/admin/all',               protect, isAdmin,   adminGetAllPets);
 router.put('/admin/:id/approval',      protect, isAdmin,   adminUpdateApproval);
+router.get('/admin/applications',      protect, isAdmin,   adminGetAllApplications);
+router.put('/admin/applications/:petId/:appId', protect, isAdmin, updateApplicationStatus);
 
 // Rehomer named routes (must be before /:id)
 router.get('/rehomer/my-listings',     protect, isRehomer, getMyListings);
@@ -32,7 +35,7 @@ router.get('/:id', getPet);
 // Rehomer param routes (after named routes)
 router.post('/',      protect, isRehomer, upload.single('primaryImage'), createPet);
 router.put('/:id',   protect, isRehomer, upload.single('primaryImage'), updatePet);
-router.delete('/:id',                      protect, deletePet);
+router.delete('/:id',                      protect, isRehomer, deletePet);
 router.get('/:id/applications',            protect, isRehomer, getPetApplications);
 router.put('/:id/applications/:appId',     protect, isRehomer, updateApplicationStatus);
 

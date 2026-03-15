@@ -7,7 +7,6 @@ import {
   Activity, Users, Cat, Baby, Home, Clock, MessageCircle, Send, Trash2
 } from 'lucide-react';
 import AdopterHeader from '../components/Adopter/AdopterHeader';
-import Navbar from '../components/Navbar';
 
 // ── Inline Reviews component ──────────────────────────────────────────────────
 const StarRating = ({ value, onChange, readOnly = false, size = 'md' }) => {
@@ -236,8 +235,6 @@ const MessageRehomerButton = ({ petId, petName, user }) => {
         // Store pending conversation so the messages tab can auto-open it
         localStorage.setItem('openConversation', data.data._id);
         navigate('/adopter/dashboard', { state: { tab: 'messages' } });
-      } else {
-        alert(data.error || 'Could not start conversation. Please try again.');
       }
     } catch { alert('Could not start conversation. Please try again.'); }
     finally { setLoading(false); }
@@ -245,7 +242,7 @@ const MessageRehomerButton = ({ petId, petName, user }) => {
 
   return (
     <button onClick={handleMessage} disabled={loading}
-      className="mt-3 w-full py-3 border-2 border-[#008737] text-[#008737] rounded-2xl font-semibold text-base hover:bg-[#008737]/5 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+      className="mt-4 w-full py-3 border-2 border-[#008737] text-[#008737] rounded-2xl font-semibold text-base hover:bg-[#008737]/5 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
       <MessageCircle className="h-5 w-5" />
       {loading ? 'Opening chat...' : `Message Rehomer about ${petName}`}
     </button>
@@ -260,6 +257,8 @@ const DogDetailPage = () => {
   const [error, setError]     = useState('');
   const [applying, setApplying] = useState(false);
   const [applied, setApplied]   = useState(false);
+  const [applyMessage, setApplyMessage] = useState('');
+  const [showApplyForm, setShowApplyForm] = useState(false);
   const [favorite, setFavorite] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('user') || 'null');
@@ -286,7 +285,7 @@ const DogDetailPage = () => {
       const res   = await fetch(`${API}/pets/${id}/apply`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body:    JSON.stringify({ message: 'I would love to adopt this dog!' }),
+        body:    JSON.stringify({ message: applyMessage || 'I would love to adopt this dog!' }),
       });
       const data = await res.json();
       if (data.success) setApplied(true);
@@ -319,15 +318,11 @@ const DogDetailPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-[#EDEDED] to-gray-100">
 
       {/* Adopter Header */}
-      {user?.role === 'adopter' ? (
-        <AdopterHeader
-          user={user}
-          activeTab="browse"
-          setActiveTab={(tab) => navigate('/adopter/dashboard', { state: { tab } })}
-        />
-      ) : (
-        <Navbar />
-      )}
+      <AdopterHeader
+        user={user}
+        activeTab="browse"
+        setActiveTab={(tab) => navigate('/adopter/dashboard', { state: { tab } })}
+      />
 
       <div className="container mx-auto px-4 py-8 max-w-5xl">
 
@@ -362,32 +357,28 @@ const DogDetailPage = () => {
                   <Users className="h-5 w-5 text-[#008737]" /> Listed by
                 </h3>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    {pet.rehomer.name?.charAt(0).toUpperCase()}
-                  </div>
+                  {pet.rehomer.profileImage ? (
+                    <img src={imgSrc(pet.rehomer.profileImage)} alt={pet.rehomer.name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-[#008737]/20" />
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {pet.rehomer.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div>
                     <p className="font-semibold text-[#063630]">{pet.rehomer.name}</p>
-                    <p className="text-sm text-gray-500">{pet.rehomer.location?.city || 'Nepal'}</p>
+                    <p className="text-sm text-gray-500">{pet.rehomer.location?.city || pet.rehomer.location?.state || 'Nepal'}</p>
                   </div>
                 </div>
                 {applied ? (
                   <div className="w-full py-3 bg-green-50 text-green-700 rounded-xl text-center font-semibold flex items-center justify-center gap-2">
                     <CheckCircle className="h-5 w-5" /> Application Submitted!
                   </div>
-                ) : !user ? (
-                  <button onClick={() => navigate('/login')}
-                    className="w-full py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-lg transition-all">
-                    Login to Apply
-                  </button>
-                ) : user.role !== 'adopter' ? (
-                  <div className="w-full py-3 bg-gray-100 text-gray-500 rounded-xl text-center font-semibold">
-                    Only adopters can apply
-                  </div>
                 ) : (
-                  <button onClick={handleApply} disabled={applying}
+                  <button onClick={handleApply} disabled={applying || !user || user?.role !== 'adopter'}
                     className="w-full py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-60"
                     style={{ color: '#ffffff' }}>
-                    {applying ? 'Submitting...' : `Adopt ${pet.name}`}
+                    {applying ? 'Submitting...' : user?.role === 'adopter' ? `Adopt ${pet.name}` : user ? 'Only adopters can apply' : 'Login to Apply'}
                   </button>
                 )}
               </motion.div>
@@ -509,32 +500,50 @@ const DogDetailPage = () => {
               <div className="w-full py-4 bg-green-50 text-green-700 rounded-2xl text-center font-semibold flex items-center justify-center gap-2 text-lg border border-green-200">
                 <CheckCircle className="h-6 w-6" /> Application Submitted!
               </div>
-            ) : !user ? (
-              <button onClick={() => navigate('/login')}
-                className="w-full py-4 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-2xl font-bold text-lg hover:shadow-xl transition-all">
-                Login to Apply
-              </button>
-            ) : user.role !== 'adopter' ? (
-              <div className="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl text-center font-bold text-lg">
-                Only adopters can apply
+            ) : showApplyForm && user?.role === 'adopter' ? (
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#008737]/20">
+                <h4 className="font-bold text-[#063630] mb-3">Send Adoption Request</h4>
+                <textarea
+                  value={applyMessage}
+                  onChange={e => setApplyMessage(e.target.value)}
+                  placeholder={`Tell the rehomer why you'd be a great match for ${pet.name}...`}
+                  rows={4}
+                  maxLength={500}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#008737] resize-none mb-1"
+                />
+                <p className="text-xs text-gray-400 text-right mb-3">{applyMessage.length}/500</p>
+                <div className="flex gap-3">
+                  <button onClick={handleApply} disabled={applying}
+                    className="flex-1 py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-60"
+                    style={{ color: '#ffffff' }}>
+                    {applying ? 'Submitting...' : `Submit Application`}
+                  </button>
+                  <button onClick={() => setShowApplyForm(false)}
+                    className="px-4 py-3 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50">
+                    Cancel
+                  </button>
+                </div>
               </div>
             ) : (
-              <button onClick={handleApply} disabled={applying}
+              <button onClick={() => user?.role === 'adopter' ? setShowApplyForm(true) : null}
+                disabled={!user || user?.role !== 'adopter'}
                 className="w-full py-4 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-2xl font-bold text-lg hover:shadow-xl transition-all disabled:opacity-60"
                 style={{ color: '#ffffff' }}>
-                {applying ? 'Submitting...' : `🐾 Adopt ${pet.name}`}
+                {user?.role === 'adopter' ? `Adopt ${pet.name}` : user ? 'Only adopters can apply' : 'Login to Apply'}
               </button>
             )}
 
             {/* Message Rehomer button */}
             {user?.role === 'adopter' && (
-              <MessageRehomerButton petId={pet._id} petName={pet.name} user={user} />
+              <div className="mt-4">
+                <MessageRehomerButton petId={pet._id} petName={pet.name} user={user} />
+              </div>
             )}
           </motion.div>
         </div>
 
         {/* Reviews — full width below */}
-        <div className="max-w-5xl mx-auto px-4 pb-12">
+        <div className="max-w-5xl mx-auto px-4 pb-12 mt-10">
           <ReviewsSection petId={pet._id || id} user={user} />
         </div>
       </div>

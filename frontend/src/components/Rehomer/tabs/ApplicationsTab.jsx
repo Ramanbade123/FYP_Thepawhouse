@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Dog, RefreshCw, CheckCircle, XCircle, Eye, Clock, User } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+const imgSrc = (url) => { if (!url) return null; return url.startsWith('http') ? url : `${BASE_URL}${url}`; };
 
 const statusColor = {
   pending:   'bg-yellow-100 text-yellow-800',
@@ -25,13 +27,23 @@ const AppDetailModal = ({ app, petId, onClose, onAction }) => {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center">
-            <User className="h-5 w-5 text-white" />
-          </div>
+        <div className="flex items-center gap-4 mb-5">
+          {app.adopter?.profileImage ? (
+            <img src={imgSrc(app.adopter.profileImage)} alt={app.adopter.name}
+              className="w-14 h-14 rounded-full object-cover border-2 border-[#008737]/20 flex-shrink-0" />
+          ) : (
+            <div className="w-14 h-14 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-xl">
+                {app.adopter?.name?.charAt(0)?.toUpperCase() || '?'}
+              </span>
+            </div>
+          )}
           <div>
-            <h3 className="font-bold text-[#063630]">{app.adopter?.name}</h3>
-            <p className="text-sm text-gray-500">{app.adopter?.email}</p>
+            <h3 className="font-bold text-[#063630] text-lg">{app.adopter?.name || 'Unknown Applicant'}</h3>
+            <p className="text-sm text-gray-500">{app.adopter?.email || 'No email provided'}</p>
+            {app.adopter?.location?.city && (
+              <p className="text-xs text-gray-400">{app.adopter.location.city}, Nepal</p>
+            )}
           </div>
         </div>
 
@@ -206,9 +218,14 @@ const ApplicationsTab = () => {
                   className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                        {app.adopter?.name?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
+                      {app.adopter?.profileImage ? (
+                        <img src={imgSrc(app.adopter.profileImage)} alt={app.adopter.name}
+                          className="w-8 h-8 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {app.adopter?.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
                       <div>
                         <p className="font-semibold text-gray-800">{app.adopter?.name || 'Unknown'}</p>
                         <p className="text-gray-400 text-xs">{app.adopter?.email || ''}</p>

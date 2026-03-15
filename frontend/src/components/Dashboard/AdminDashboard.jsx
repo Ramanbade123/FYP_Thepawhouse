@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import {
   Users, Dog, Home, Settings,
   UserCheck, Calendar, ChevronRight, Clock
@@ -12,6 +11,8 @@ import RecentUsersTable   from '../Admin/RecentUsersTable';
 import AdminPetManagement from '../Admin/AdminPetManagement';
 import AdminCommunityTab  from '../Admin/AdminCommunityTab';
 import AdminMessagesTab   from '../Admin/AdminMessagesTab';
+import AdminAdoptionsTab  from '../Admin/AdminAdoptionsTab';
+import AdminSettingsTab   from '../Admin/AdminSettingsTab';
 
 const API = 'http://localhost:5000/api';
 
@@ -34,9 +35,7 @@ const DashStatCard = ({ title, value, change, icon: Icon, iconColor, bgColor, bo
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'dashboard';
-  const setActiveTab = (tab) => setSearchParams({ tab });
+  const [activeTab, setActiveTab]     = useState('dashboard');
   const [stats, setStats] = useState({
     totalUsers: 0, totalAdopters: 0, totalRehomers: 0,
     pendingVerifications: 0, pendingPets: 0,
@@ -85,13 +84,35 @@ const AdminDashboard = () => {
 
       {/* Main — takes remaining width */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} setActiveTab={setActiveTab} />
 
         <main className="flex-1 overflow-y-auto p-6">
 
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <>
+              {/* Welcome */}
+              <div className="bg-gradient-to-r from-[#063630] to-[#085558] rounded-xl p-6 mb-6 text-white">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <h1 className="text-2xl font-bold">Welcome back, Admin! 👋</h1>
+                    <p className="text-white/70 mt-1">Here's what's happening with The Paw House today.</p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {stats.pendingPets > 0 && (
+                      <button onClick={() => setActiveTab('pets')}
+                        className="flex items-center gap-2 bg-yellow-400 text-[#063630] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-yellow-300 transition-colors">
+                        <Clock className="h-4 w-4" />
+                        {stats.pendingPets} pet{stats.pendingPets !== 1 ? 's' : ''} awaiting review
+                      </button>
+                    )}
+                    <div className="bg-white/10 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4" />
+                      {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -147,14 +168,11 @@ const AdminDashboard = () => {
           {activeTab === 'community' && <AdminCommunityTab />}
           {activeTab === 'messages'  && <AdminMessagesTab />}
 
-          {activeTab === 'adoptions' && (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Adoption Management</h2>
-              <p className="text-gray-500">Coming soon.</p>
-            </div>
-          )}
+          {activeTab === 'adoptions' && <AdminAdoptionsTab />}
 
-          {!['dashboard','users','pets','adoptions','community','messages'].includes(activeTab) && (
+          {activeTab === 'settings' && <AdminSettingsTab />}
+
+          {!['dashboard','users','pets','adoptions','community','messages','settings'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 capitalize">{activeTab}</h2>
               <p className="text-gray-500">Coming soon.</p>

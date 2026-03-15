@@ -7,7 +7,7 @@ const User = require('../models/User');
 exports.createPet = async (req, res) => {
   try {
     req.body.rehomer       = req.user.id;
-    req.body.adminApproval = 'approved'; // auto-approved on listing
+    req.body.adminApproval = 'pending'; // always starts pending
 
     // Handle uploaded image
     if (req.file) {
@@ -45,6 +45,13 @@ exports.getPets = async (req, res) => {
     if (req.query.size)          filter.size           = req.query.size;
     if (req.query.city)          filter['location.city'] = new RegExp(req.query.city, 'i');
     if (req.query.activityLevel) filter.activityLevel  = req.query.activityLevel;
+    if (req.query.vaccinated)    filter.vaccinated     = req.query.vaccinated === 'true';
+    if (req.query.goodWithKids)  filter.goodWithKids   = req.query.goodWithKids === 'true';
+    // Generic search: match breed OR city
+    if (req.query.search) {
+      const rx = new RegExp(req.query.search, 'i');
+      filter.$or = [{ breed: rx }, { 'location.city': rx }, { name: rx }];
+    }
 
     const page  = parseInt(req.query.page,  10) || 1;
     const limit = parseInt(req.query.limit, 10) || 12;
@@ -66,7 +73,7 @@ exports.getPets = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.getPet = async (req, res) => {
   try {
-    const pet = await Pet.findById(req.params.id).populate('rehomer', 'name phone email location');
+    const pet = await Pet.findById(req.params.id).populate('rehomer', 'name phone email location profileImage');
     if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
     // Increment views silently — don't let a save failure block the response
     Pet.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {});
@@ -84,7 +91,8 @@ exports.getPet = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.getMyListings = async (req, res) => {
   try {
-    const pets = await Pet.find({ rehomer: req.user.id }).sort('-createdAt');
+    const pets = await Pet.find({ rehomer: req.user.id }).sort('-createdAt')
+      .populate('applications.adopter', 'name email phone profileImage location');
 
     const stats = {
       total:             pets.length,
@@ -334,6 +342,58 @@ exports.getMyApplications = async (req, res) => {
 
     res.status(200).json({ success: true, count: myApplications.length, data: myApplications });
   } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+// ─────────────────────────────────────────────────────────────
+// ADMIN: Get ALL applications across all pets → GET /api/pets/admin/applications
+// ─────────────────────────────────────────────────────────────
+exports.adminGetAllApplications = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const filter = {};
+    if (status) filter['applications.status'] = status;
+
+    const pets = await Pet.find({ 'applications.0': { $exists: true } })
+      .populate('rehomer', 'name email')
+      .populate('applications.adopter', 'name email phone profileImage location')
+      .sort('-createdAt');
+
+    // Flatten all applications
+    let allApplications = [];
+    pets.forEach(pet => {
+      pet.applications.forEach(app => {
+        if (!status || app.status === status) {
+          allApplications.push({
+            _id:       app._id,
+            status:    app.status,
+            message:   app.message,
+            appliedAt: app.appliedAt,
+            adopter:   app.adopter,
+            pet: {
+              _id:          pet._id,
+              name:         pet.name,
+              breed:        pet.breed,
+              primaryImage: pet.primaryImage,
+              status:       pet.status,
+            },
+            rehomer: pet.rehomer,
+          });
+        }
+      });
+    });
+
+    // Sort by newest first
+    allApplications.sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt));
+
+    const total = allApplications.length;
+    const paginated = allApplications.slice(skip, skip + parseInt(limit));
+
+    res.status(200).json({ success: true, total, totalPages: Math.ceil(total / parseInt(limit)), data: paginated });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };

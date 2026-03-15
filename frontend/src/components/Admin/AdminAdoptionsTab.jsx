@@ -1,72 +1,83 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Dog, User, CheckCircle, XCircle, Clock, Eye,
-  Search, Filter, RefreshCw, ChevronLeft, ChevronRight,
-  Mail, Phone, Calendar, MessageSquare
+  Heart, RefreshCw, Eye, CheckCircle, XCircle, Clock,
+  User, Dog, Phone, Mail, MapPin, MessageSquare, Calendar,
+  TrendingUp, X
 } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const BASE_URL = API.replace('/api', '');
-const token = () => localStorage.getItem('token');
-
-const apiFetch = async (method, url, body = null) => {
-  const res = await fetch(`${API}${url}`, {
-    method,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
-};
-
-const imgSrc = (url) => (!url ? null : url.startsWith('http') ? url : `${BASE_URL}${url}`);
-
-const timeAgo = (dateStr) => {
-  if (!dateStr) return '—';
-  const diff = (Date.now() - new Date(dateStr)) / 1000;
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-};
+const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+const imgSrc   = (url) => { if (!url) return null; return url.startsWith('http') ? url : `${BASE_URL}${url}`; };
 
 const STATUS_STYLES = {
-  pending:   { bg: 'bg-yellow-100', text: 'text-yellow-700', dot: 'bg-yellow-400' },
-  reviewing: { bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-400'   },
-  approved:  { bg: 'bg-green-100',  text: 'text-green-700',  dot: 'bg-green-500'  },
-  rejected:  { bg: 'bg-red-100',    text: 'text-red-700',    dot: 'bg-red-400'    },
+  pending:   'bg-yellow-100 text-yellow-800 border border-yellow-200',
+  reviewing: 'bg-blue-100   text-blue-800   border border-blue-200',
+  approved:  'bg-green-100  text-green-800  border border-green-200',
+  rejected:  'bg-red-100    text-red-800    border border-red-200',
 };
 
-const StatusBadge = ({ status }) => {
-  const s = STATUS_STYLES[status] || STATUS_STYLES.pending;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${s.bg} ${s.text}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-      {status?.charAt(0).toUpperCase() + status?.slice(1)}
-    </span>
-  );
+const timeAgo = (dateStr) => {
+  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(dateStr).toLocaleDateString();
 };
 
-// ── Detail Modal ───────────────────────────────────────────────────────────────
-const ApplicationModal = ({ app, onClose, onStatusChange, updating }) => {
-  if (!app) return null;
-  const adopter = app.adopter || {};
-  const pet     = app.pet     || {};
+// ── Detail Modal ──────────────────────────────────────────────
+const ApplicationModal = ({ app, onClose, onAction }) => {
+  const [loading, setLoading] = useState(false);
+  const [note, setNote]       = useState('');
+
+  const act = async (status) => {
+    setLoading(true);
+    await onAction(app.pet._id, app._id, status);
+    setLoading(false);
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
-          <h3 className="text-lg font-bold text-[#063630]">Application Details</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        <div className="bg-gradient-to-r from-[#063630] to-[#085558] p-5 flex items-center justify-between">
+          <h3 className="text-white font-bold text-lg">Application Details</h3>
+          <button onClick={onClose} className="text-white/70 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+
+          {/* Adopter */}
+          <div className="flex items-center gap-4">
+            {app.adopter?.profileImage ? (
+              <img src={imgSrc(app.adopter.profileImage)} alt={app.adopter.name}
+                className="w-14 h-14 rounded-full object-cover border-2 border-[#008737]/20 flex-shrink-0" />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#085558] to-[#008737] flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                {app.adopter?.name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+            )}
+            <div>
+              <p className="font-bold text-[#063630] text-lg">{app.adopter?.name || 'Unknown'}</p>
+              <p className="text-sm text-gray-500 flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{app.adopter?.email || '—'}</p>
+              <p className="text-sm text-gray-500 flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{app.adopter?.phone || '—'}</p>
+              {app.adopter?.location?.city && (
+                <p className="text-sm text-gray-500 flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{app.adopter.location.city}, Nepal</p>
+              )}
+            </div>
+          </div>
+
+          <hr className="border-gray-100" />
+
           {/* Pet info */}
-          <div className="flex items-center gap-4 bg-[#008737]/5 rounded-xl p-4">
-            {imgSrc(pet.primaryImage) ? (
-              <img src={imgSrc(pet.primaryImage)} alt={pet.name}
+          <div className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
+            {imgSrc(app.pet?.primaryImage) ? (
+              <img src={imgSrc(app.pet.primaryImage)} alt={app.pet.name}
                 className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
             ) : (
               <div className="w-16 h-16 rounded-xl bg-[#008737]/10 flex items-center justify-center flex-shrink-0">
@@ -74,145 +85,115 @@ const ApplicationModal = ({ app, onClose, onStatusChange, updating }) => {
               </div>
             )}
             <div>
-              <p className="font-bold text-[#063630] text-lg">{pet.name || '—'}</p>
-              <p className="text-[#008737] font-medium text-sm">{pet.breed}</p>
-              <StatusBadge status={pet.status} />
+              <p className="font-bold text-[#063630]">{app.pet?.name}</p>
+              <p className="text-sm text-[#008737]">{app.pet?.breed}</p>
+              <p className="text-xs text-gray-500">Rehomer: {app.rehomer?.name || '—'}</p>
             </div>
           </div>
 
-          {/* Adopter info */}
-          <div className="bg-gray-50 rounded-xl p-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Applicant</p>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#085558] to-[#008737] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                {adopter.name?.charAt(0)?.toUpperCase() || '?'}
-              </div>
-              <div>
-                <p className="font-semibold text-[#063630]">{adopter.name || '—'}</p>
-              </div>
+          {/* Meta */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Applied</p>
+              <p className="font-semibold text-[#063630] flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-[#008737]" />
+                {new Date(app.appliedAt).toLocaleDateString()}
+              </p>
             </div>
-            <div className="space-y-2">
-              {adopter.email && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  <span>{adopter.email}</span>
-                </div>
-              )}
-              {adopter.phone && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  <span>{adopter.phone}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <span>Applied {new Date(app.appliedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-              </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Status</p>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[app.status]}`}>
+                {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}
+              </span>
             </div>
           </div>
-
-          {/* Rehomer info */}
-          {app.rehomer && (
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Listed By (Rehomer)</p>
-              <p className="font-semibold text-[#063630]">{app.rehomer.name}</p>
-              <p className="text-sm text-gray-500">{app.rehomer.email}</p>
-            </div>
-          )}
 
           {/* Message */}
           {app.message && (
-            <div className="bg-gray-50 rounded-xl p-4">
+            <div>
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
                 <MessageSquare className="h-3.5 w-3.5" /> Message from Applicant
               </p>
-              <p className="text-sm text-gray-700 leading-relaxed">{app.message}</p>
+              <p className="text-sm text-gray-700 bg-blue-50 rounded-xl p-3 italic border border-blue-100">
+                "{app.message}"
+              </p>
             </div>
           )}
-
-          {/* Current status */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500 font-medium">Current Status:</span>
-            <StatusBadge status={app.status} />
-          </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="p-6 border-t border-gray-100 flex flex-wrap gap-2 justify-end sticky bottom-0 bg-white rounded-b-2xl">
-          {app.status !== 'reviewing' && (
-            <button onClick={() => onStatusChange(app.pet._id, app._id, 'reviewing')} disabled={updating}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-sm font-semibold hover:bg-blue-100 transition-colors disabled:opacity-50">
-              <Clock className="h-4 w-4" /> Mark Reviewing
-            </button>
-          )}
-          {app.status !== 'approved' && (
-            <button onClick={() => onStatusChange(app.pet._id, app._id, 'approved')} disabled={updating}
-              className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-sm font-semibold hover:bg-green-100 transition-colors disabled:opacity-50">
-              <CheckCircle className="h-4 w-4" /> Approve
-            </button>
-          )}
-          {app.status !== 'rejected' && (
-            <button onClick={() => onStatusChange(app.pet._id, app._id, 'rejected')} disabled={updating}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl text-sm font-semibold hover:bg-red-100 transition-colors disabled:opacity-50">
-              <XCircle className="h-4 w-4" /> Reject
-            </button>
-          )}
+        {/* Actions */}
+        <div className="p-5 border-t border-gray-100 flex gap-3">
           <button onClick={onClose}
-            className="px-4 py-2 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+            className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50">
             Close
           </button>
+          {(app.status === 'pending' || app.status === 'reviewing') && (
+            <>
+              <button onClick={() => act('rejected')} disabled={loading}
+                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-60 flex items-center justify-center gap-1"
+                style={{ color: '#fff' }}>
+                <XCircle className="h-4 w-4" /> Reject
+              </button>
+              <button onClick={() => act('approved')} disabled={loading}
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-medium hover:shadow-md disabled:opacity-60 flex items-center justify-center gap-1"
+                style={{ color: '#fff' }}>
+                <CheckCircle className="h-4 w-4" /> Approve
+              </button>
+            </>
+          )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// ── Main Tab ──────────────────────────────────────────────────
 const AdminAdoptionsTab = () => {
   const [applications, setApplications] = useState([]);
-  const [summary,      setSummary]      = useState({ total: 0, pending: 0, reviewing: 0, approved: 0, rejected: 0 });
-  const [loading,      setLoading]      = useState(true);
-  const [updating,     setUpdating]     = useState(false);
-  const [page,         setPage]         = useState(1);
-  const [totalPages,   setTotalPages]   = useState(1);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [search,       setSearch]       = useState('');
-  const [selected,     setSelected]     = useState(null);
-  const [flash,        setFlash]        = useState('');
-  const LIMIT = 15;
+  const [loading, setLoading]           = useState(true);
+  const [filter, setFilter]             = useState('all');
+  const [selected, setSelected]         = useState(null);
+  const [total, setTotal]               = useState(0);
+  const [search, setSearch]             = useState('');
 
-  const fetchApplications = useCallback(async () => {
+  const fetchApplications = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, limit: LIMIT });
-      if (statusFilter) params.set('status', statusFilter);
-      const data = await apiFetch('GET', `/pets/admin/applications?${params}`);
-      setApplications(data.data || []);
-      setSummary(data.summary || {});
-      setTotalPages(data.totalPages || 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, statusFilter]);
+      const token  = localStorage.getItem('token');
+      const params = new URLSearchParams({ limit: 100 });
+      if (filter !== 'all') params.set('status', filter);
+      const res  = await fetch(`${API}/pets/admin/applications?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setApplications(data.data);
+        setTotal(data.total);
+      }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
 
-  useEffect(() => { fetchApplications(); }, [fetchApplications]);
+  useEffect(() => { fetchApplications(); }, [filter]);
 
-  const showFlash = (msg) => { setFlash(msg); setTimeout(() => setFlash(''), 3000); };
-
-  const handleStatusChange = async (petId, appId, status) => {
-    setUpdating(true);
+  const handleAction = async (petId, appId, status) => {
     try {
-      await apiFetch('PUT', `/pets/${petId}/applications/${appId}`, { status });
-      showFlash(`Application ${status}.`);
-      setSelected(null);
+      const token = localStorage.getItem('token');
+      await fetch(`${API}/pets/admin/applications/${petId}/${appId}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ status }),
+      });
       fetchApplications();
-    } catch (e) {
-      showFlash(`Error: ${e.message}`);
-    } finally {
-      setUpdating(false);
-    }
+    } catch (err) { console.error(err); }
+  };
+
+  const counts = {
+    all:       applications.length,
+    pending:   applications.filter(a => a.status === 'pending').length,
+    reviewing: applications.filter(a => a.status === 'reviewing').length,
+    approved:  applications.filter(a => a.status === 'approved').length,
+    rejected:  applications.filter(a => a.status === 'rejected').length,
   };
 
   const filtered = applications.filter(app => {
@@ -227,194 +208,149 @@ const AdminAdoptionsTab = () => {
   });
 
   const statCards = [
-    { label: 'Total',     value: summary.total,     color: 'border-gray-200   bg-gray-50    text-gray-700'   },
-    { label: 'Pending',   value: summary.pending,   color: 'border-yellow-200 bg-yellow-50  text-yellow-700' },
-    { label: 'Reviewing', value: summary.reviewing, color: 'border-blue-200   bg-blue-50    text-blue-700'   },
-    { label: 'Approved',  value: summary.approved,  color: 'border-green-200  bg-green-50   text-green-700'  },
-    { label: 'Rejected',  value: summary.rejected,  color: 'border-red-200    bg-red-50     text-red-700'    },
+    { label: 'Total Applications', value: total,          icon: Heart,       iconColor: 'text-[#008737]', bg: 'bg-white', border: 'border-gray-100', textColor: 'text-[#063630]', subColor: 'text-gray-400' },
+    { label: 'Pending',            value: counts.pending,  icon: Clock,       iconColor: 'text-amber-500', bg: 'bg-white', border: 'border-gray-100', textColor: 'text-[#063630]', subColor: 'text-gray-400' },
+    { label: 'Approved',           value: counts.approved, icon: CheckCircle, iconColor: 'text-[#008737]', bg: 'bg-white', border: 'border-gray-100', textColor: 'text-[#063630]', subColor: 'text-gray-400' },
+    { label: 'Rejected',           value: counts.rejected, icon: XCircle,     iconColor: 'text-red-400',   bg: 'bg-white', border: 'border-gray-100', textColor: 'text-[#063630]', subColor: 'text-gray-400' },
   ];
 
   return (
     <div>
-      {/* Flash */}
-      {flash && (
-        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-medium">
-          {flash}
-        </div>
-      )}
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-        {statCards.map(s => (
-          <button key={s.label}
-            onClick={() => { setStatusFilter(s.label === 'Total' ? '' : s.label.toLowerCase()); setPage(1); }}
-            className={`rounded-xl p-4 border text-left transition-all hover:shadow-sm ${s.color} ${
-              (statusFilter === s.label.toLowerCase() || (s.label === 'Total' && !statusFilter))
-                ? 'ring-2 ring-[#008737]' : ''
-            }`}>
-            <p className="text-2xl font-bold">{s.value ?? 0}</p>
-            <p className="text-xs font-semibold mt-1">{s.label}</p>
-          </button>
-        ))}
-      </div>
-
-      {/* Search & Filter */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4 flex flex-wrap gap-3 items-center">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px] border border-gray-200 rounded-xl px-3 py-2">
-          <Search className="h-4 w-4 text-gray-400 flex-shrink-0" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by adopter, pet name, breed..."
-            className="flex-1 text-sm outline-none bg-transparent" />
-        </div>
-        <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2">
-          <Filter className="h-4 w-4 text-gray-400" />
-          <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-            className="text-sm outline-none bg-transparent">
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="reviewing">Reviewing</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-8 h-8 border-2 border-[#008737] border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-24 text-gray-400">
-            <Dog className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p className="font-medium">No applications found</p>
-            <p className="text-sm mt-1">Try changing your filters</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/60">
-                  {['Pet', 'Applicant', 'Rehomer', 'Message', 'Status', 'Applied', 'Actions'].map(h => (
-                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtered.map(app => (
-                  <tr key={app._id} className="hover:bg-gray-50/50 transition-colors">
-                    {/* Pet */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        {imgSrc(app.pet?.primaryImage) ? (
-                          <img src={imgSrc(app.pet.primaryImage)} alt={app.pet.name}
-                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-[#008737]/10 flex items-center justify-center flex-shrink-0">
-                            <Dog className="h-5 w-5 text-[#008737]" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-semibold text-[#063630]">{app.pet?.name || '—'}</p>
-                          <p className="text-xs text-gray-400">{app.pet?.breed}</p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Adopter */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#085558] to-[#008737] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                          {app.adopter?.name?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div>
-                          <p className="font-medium text-[#063630]">{app.adopter?.name || '—'}</p>
-                          <p className="text-xs text-gray-400">{app.adopter?.email}</p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Rehomer */}
-                    <td className="px-5 py-4">
-                      <p className="font-medium text-[#063630] text-sm">{app.rehomer?.name || '—'}</p>
-                      <p className="text-xs text-gray-400">{app.rehomer?.email}</p>
-                    </td>
-
-                    {/* Message */}
-                    <td className="px-5 py-4 max-w-[160px]">
-                      <p className="text-xs text-gray-500 truncate">{app.message || <span className="italic text-gray-300">No message</span>}</p>
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-5 py-4">
-                      <StatusBadge status={app.status} />
-                    </td>
-
-                    {/* Applied */}
-                    <td className="px-5 py-4 text-xs text-gray-400 whitespace-nowrap">
-                      {timeAgo(app.appliedAt)}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setSelected(app)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-[#008737] hover:bg-green-50 transition-colors"
-                          title="View details">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {app.status !== 'approved' && (
-                          <button onClick={() => handleStatusChange(app.pet._id, app._id, 'approved')}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
-                            title="Approve">
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                        {app.status !== 'rejected' && (
-                          <button onClick={() => handleStatusChange(app.pet._id, app._id, 'rejected')}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                            title="Reject">
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
-            <p className="text-sm text-gray-500">
-              Page {page} of {totalPages}
-            </p>
-            <div className="flex gap-2">
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
-                className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-40 hover:bg-gray-50 transition-colors">
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </button>
-              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}
-                className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-40 hover:bg-gray-50 transition-colors">
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Detail Modal */}
       {selected && (
         <ApplicationModal
           app={selected}
           onClose={() => setSelected(null)}
-          onStatusChange={handleStatusChange}
-          updating={updating}
+          onAction={handleAction}
         />
+      )}
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {statCards.map(({ label, value, icon: Icon, iconColor, bg, border, textColor, subColor }) => (
+          <div key={label} className={`${bg} border ${border} rounded-xl p-5 shadow-sm`}>
+            <div className="flex items-center justify-between mb-3">
+              <p className={`text-sm font-medium ${subColor}`}>{label}</p>
+              <div className="w-9 h-9 bg-[#008737]/8 rounded-lg flex items-center justify-center">
+                <Icon className={`h-5 w-5 ${iconColor}`} />
+              </div>
+            </div>
+            <p className={`text-3xl font-bold ${textColor}`}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Search + Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <input
+          type="text" value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search by adopter name, email, or dog..."
+          className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#008737]"
+        />
+        <div className="flex flex-wrap gap-2">
+          {['all','pending','reviewing','approved','rejected'].map(key => (
+            <button key={key} onClick={() => setFilter(key)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${
+                filter === key
+                  ? 'bg-gradient-to-r from-[#085558] to-[#008737] text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-[#085558]'
+              }`}>
+              {key} {key !== 'all' && <span className="opacity-70">({counts[key]})</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-10 h-10 border-4 border-[#008737] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100">
+          <Heart className="h-14 w-14 text-gray-200 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-400 mb-2">No applications found</h3>
+          <p className="text-gray-400 text-sm">Try adjusting your filters or search terms.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Applicant</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Dog</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Rehomer</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Applied</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Status</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {filtered.map((app, i) => (
+                <motion.tr key={app._id}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                  className="hover:bg-gray-50 transition-colors">
+
+                  {/* Applicant */}
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      {app.adopter?.profileImage ? (
+                        <img src={imgSrc(app.adopter.profileImage)} alt={app.adopter.name}
+                          className="w-8 h-8 rounded-full object-cover border border-gray-200 flex-shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#085558] to-[#008737] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {app.adopter?.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-gray-800">{app.adopter?.name || 'Unknown'}</p>
+                        <p className="text-gray-400 text-xs">{app.adopter?.email || ''}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Dog */}
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      {imgSrc(app.pet?.primaryImage) ? (
+                        <img src={imgSrc(app.pet.primaryImage)} alt={app.pet.name}
+                          className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-[#008737]/10 flex items-center justify-center flex-shrink-0">
+                          <Dog className="h-4 w-4 text-[#008737]" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-medium text-[#063630]">{app.pet?.name}</p>
+                        <p className="text-xs text-gray-400">{app.pet?.breed}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Rehomer */}
+                  <td className="px-5 py-3 text-gray-600 text-sm">{app.rehomer?.name || '—'}</td>
+
+                  {/* Date */}
+                  <td className="px-5 py-3 text-gray-400 text-xs">{timeAgo(app.appliedAt)}</td>
+
+                  {/* Status */}
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[app.status]}`}>
+                      {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}
+                    </span>
+                  </td>
+
+                  {/* Action */}
+                  <td className="px-5 py-3">
+                    <button onClick={() => setSelected(app)}
+                      className="flex items-center gap-1 px-3 py-1.5 text-[#085558] border border-[#085558]/30 rounded-lg hover:bg-[#085558]/10 transition-colors text-xs font-medium">
+                      <Eye className="h-3.5 w-3.5" /> View
+                    </button>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

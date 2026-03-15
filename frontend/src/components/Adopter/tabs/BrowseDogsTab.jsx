@@ -24,7 +24,7 @@ const quickFilters = [
   { id: 'vaccinated', label: 'Vaccinated'         },
 ];
 
-const EMPTY_FILTERS = { breed: '', gender: '', size: '', city: '', activityLevel: '' };
+const EMPTY_FILTERS = { breed: '', gender: '', size: '', city: '', activityLevel: '', vaccinated: '', goodWithKids: '', minAge: '', maxAge: '', ageUnit: '' };
 
 const BrowseDogsTab = () => {
   const navigate = useNavigate();
@@ -45,12 +45,15 @@ const BrowseDogsTab = () => {
   const buildParams = (page, overrides = {}) => {
     const p = new URLSearchParams({ page, limit: 6 });
     const f = { ...advFilters, ...overrides };
-    if (search)          p.set('breed',         search);
+    // Search bar: treat input as breed or city search
+    if (search && !f.breed) p.set('breed', search);
     if (f.breed)         p.set('breed',         f.breed);
     if (f.gender)        p.set('gender',        f.gender);
     if (f.size)          p.set('size',          f.size);
     if (f.city)          p.set('city',          f.city);
     if (f.activityLevel) p.set('activityLevel', f.activityLevel);
+    if (f.vaccinated)    p.set('vaccinated',    f.vaccinated);
+    if (f.goodWithKids)  p.set('goodWithKids',  f.goodWithKids);
     return p;
   };
 
@@ -83,11 +86,11 @@ const BrowseDogsTab = () => {
     setSearch('');
     setAdvFilters(EMPTY_FILTERS);
     if (f.id === 'all')        { fetchDogs(1, {}); return; }
-    if (f.id === 'puppies')    { fetchDogs(1, {}); return; } // client-side filter below
+    if (f.id === 'puppies')    { fetchDogs(1, { maxAge: '12', ageUnit: 'months' }); return; }
     if (f.id === 'medium')     { fetchDogs(1, { size: 'medium' }); return; }
     if (f.id === 'kathmandu')  { fetchDogs(1, { city: 'Kathmandu' }); return; }
-    if (f.id === 'kids')       { fetchDogs(1, {}); return; }
-    if (f.id === 'vaccinated') { fetchDogs(1, {}); return; }
+    if (f.id === 'kids')       { fetchDogs(1, { goodWithKids: 'true' }); return; }
+    if (f.id === 'vaccinated') { fetchDogs(1, { vaccinated: 'true' }); return; }
   };
 
   const handleAdvancedSearch = (e) => {
@@ -144,12 +147,12 @@ const BrowseDogsTab = () => {
           <button type="button" onClick={() => setShowAdvanced(p => !p)}
             className={`lg:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 ${
               showAdvanced
-                ? 'bg-[#063630] text-white'
-                : 'bg-gradient-to-r from-[#008737] to-[#085558] text-white'
+                ? 'bg-[#063630]'
+                : 'bg-gradient-to-r from-[#008737] to-[#085558]'
             }`}
-            style={{ color: '#ffffff' }}>
+            style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>
             <SlidersHorizontal className="h-4 w-4" style={{ color: '#ffffff' }} />
-            <span>Advanced Filters</span>
+            <span style={{ color: '#ffffff' }}>Advanced Filters</span>
             {hasActiveFilters && <span className="w-2 h-2 bg-yellow-400 rounded-full" />}
           </button>
         </form>
@@ -246,6 +249,30 @@ const BrowseDogsTab = () => {
                         <option value="low">Low — Calm & relaxed</option>
                         <option value="medium">Medium — Moderate walks</option>
                         <option value="high">High — Very energetic</option>
+                      </select>
+                    </div>
+
+                    {/* Vaccinated */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Health</label>
+                      <select value={advFilters.vaccinated}
+                        onChange={e => setAdvFilters(p => ({ ...p, vaccinated: e.target.value }))}
+                        className={selectClass}>
+                        <option value="">Any</option>
+                        <option value="true">Vaccinated</option>
+                        <option value="false">Not Vaccinated</option>
+                      </select>
+                    </div>
+
+                    {/* Good with Kids */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Good With Kids</label>
+                      <select value={advFilters.goodWithKids}
+                        onChange={e => setAdvFilters(p => ({ ...p, goodWithKids: e.target.value }))}
+                        className={selectClass}>
+                        <option value="">Any</option>
+                        <option value="true">Yes — Kid friendly</option>
+                        <option value="false">No</option>
                       </select>
                     </div>
 
