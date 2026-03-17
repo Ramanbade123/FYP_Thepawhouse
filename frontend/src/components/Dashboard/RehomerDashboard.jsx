@@ -6,6 +6,8 @@ import ListedDogs      from '../Rehomer/ListedDogs';
 import ApplicationsTab from '../Rehomer/tabs/ApplicationsTab';
 import MessagesTab     from '../Rehomer/tabs/MessagesTab';
 import SettingsTab     from '../Rehomer/tabs/SettingsTab';
+import NearbyClinics   from '../Shared/NearbyClinics';
+import HelpAndSupport  from '../Shared/HelpAndSupport';
 
 const RehomerDashboard = () => {
   const [user, setUser]           = useState(null);
@@ -36,8 +38,10 @@ const RehomerDashboard = () => {
       <div className="container mx-auto px-4 py-8 flex-1">
         {(activeTab === 'dashboard' || activeTab === 'my-dogs') && <ListedDogs />}
         {activeTab === 'applications' && <ApplicationsTab />}
+        {activeTab === 'vets'         && <NearbyClinics />}
         {activeTab === 'messages'     && <MessagesTab user={user} />}
         {activeTab === 'settings'     && <SettingsTab user={user} onProfileUpdate={setUser} />}
+        {activeTab === 'help'         && <HelpAndSupport role="rehomer" />}
       </div>
 
       <RehomerFooter />

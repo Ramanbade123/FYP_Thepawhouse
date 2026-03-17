@@ -6,6 +6,9 @@ import {
   Shield, MessageSquare, Search, PawPrint, BarChart3
 } from 'lucide-react';
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = API.replace('/api', '');
+
 const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
 
@@ -74,7 +77,17 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) 
         {/* User Profile */}
         <div className="px-4 py-4 border-b border-white/10">
           <div className="flex items-center gap-3 bg-white/5 rounded-xl px-3 py-3">
-            <div className="h-10 w-10 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full flex items-center justify-center flex-shrink-0">
+            {user.profileImage && user.profileImage !== 'default-profile.jpg' ? (
+              <img
+                src={user.profileImage.startsWith('http') ? user.profileImage : `${BASE_URL}${user.profileImage}`}
+                alt={user.name}
+                className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }}
+              />
+            ) : null}
+            <div 
+              className={`h-10 w-10 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full flex items-center justify-center flex-shrink-0 ${user.profileImage && user.profileImage !== 'default-profile.jpg' ? 'hidden' : ''}`}
+            >
               <span className="text-sm font-bold text-white">{initials}</span>
             </div>
             <div className="min-w-0">

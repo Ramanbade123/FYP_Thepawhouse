@@ -61,6 +61,7 @@ app.use('/api/contact',             require('./routes/contactRoutes'));
 app.use('/api/messages',            require('./routes/messageRoutes'));
 app.use('/api/pets/:petId/reviews', require('./routes/reviewRoutes'));
 app.use('/api/reviews',             require('./routes/reviewRoutes'));
+app.use('/api/notifications',       require('./routes/notificationRoutes'));
 
 // Test route
 app.get('/api/test', (req, res) => {

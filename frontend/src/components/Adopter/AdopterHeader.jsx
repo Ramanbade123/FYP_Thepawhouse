@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PawPrint, Bell, Search, FileText, MessageSquare, Settings, ChevronDown, User, LogOut } from 'lucide-react';
+import { PawPrint, Bell, Search, FileText, MessageSquare, Settings, ChevronDown, User, LogOut, Stethoscope, HelpCircle } from 'lucide-react';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -14,6 +14,7 @@ const imgSrc   = (url, updatedAt) => {
 const tabs = [
   { id: 'browse',       label: 'Browse Dogs',  icon: Search        },
   { id: 'applications', label: 'Applications', icon: FileText      },
+  { id: 'vets',         label: 'Veterinary Care', icon: Stethoscope},
   { id: 'messages',     label: 'Messages',     icon: MessageSquare },
   { id: 'settings',     label: 'Settings',     icon: Settings      },
 ];
@@ -104,6 +105,10 @@ const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
                     <button onClick={() => { setActiveTab('settings'); setShowMenu(false); }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
                       <Settings className="h-4 w-4" /> Settings
+                    </button>
+                    <button onClick={() => { setActiveTab('help'); setShowMenu(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
+                      <HelpCircle className="h-4 w-4" /> Help & Support
                     </button>
                   </div>
                   <div className="p-2 border-t border-gray-100">

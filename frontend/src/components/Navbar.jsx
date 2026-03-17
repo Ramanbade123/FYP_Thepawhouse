@@ -79,7 +79,7 @@ const Navbar = () => {
       label: 'Browse Dogs',
       description: 'Find your perfect canine companion',
       count: '50+ available',
-      path: '/adopt'
+      path: '/login?type=adopter'
     },
     {
       icon: Heart,
@@ -101,7 +101,7 @@ const Navbar = () => {
       icon: Home,
       label: 'Rehome a Dog',
       description: 'Find a loving home for your dog',
-      path: '/rehome'
+      path: '/login?type=rehomer'
     },
     {
       icon: BookOpen,
@@ -140,6 +140,13 @@ const Navbar = () => {
       description: '25+ common dog diseases explained',
       path: '/disease-awareness',
       color: '#0077b6'
+    },
+    {
+      icon: Stethoscope,
+      label: 'Veterinarians',
+      description: 'Find a nearby clinic',
+      path: '/veterinarians',
+      color: '#023e8a'
     },
     {
       icon: AlertTriangle,
@@ -304,7 +311,6 @@ const Navbar = () => {
               </AnimatePresence>
             </div>
 
-            {/* Rehome Dropdown (Dogs Only) */}
             <div 
               ref={rehomeRef} 
               className="relative"
@@ -312,11 +318,11 @@ const Navbar = () => {
               onMouseLeave={() => handleRehomeHover(false)}
             >
               <button
-                className="flex items-center gap-1 font-medium text-[#063630] hover:text-[#085558] transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-gray-50 group"
+                className="flex items-center gap-1 font-medium text-[#063630] hover:text-[#008737] transition-colors duration-300 px-4 py-2 rounded-lg hover:bg-gray-50 group"
               >
                 Rehome a Dog
                 <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isRehomeDropdownOpen ? 'rotate-180' : ''}`} />
-                <span className="absolute -bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-[#085558] to-[#008737] scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                <span className="absolute -bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-[#008737] to-[#085558] scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
               </button>
 
               <AnimatePresence>
@@ -329,7 +335,7 @@ const Navbar = () => {
                     className="absolute left-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
                   >
                     <div className="p-1">
-                      <div className="p-3 bg-gradient-to-r from-[#085558]/5 to-[#008737]/5 rounded-lg mb-2">
+                      <div className="p-3 bg-gradient-to-r from-[#008737]/5 to-[#085558]/5 rounded-lg mb-2">
                         <h3 className="font-bold text-[#063630] text-lg">Dog Rehoming</h3>
                         <p className="text-sm text-gray-600">Find a loving home for your dog</p>
                       </div>
@@ -342,11 +348,11 @@ const Navbar = () => {
                           className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
                           onClick={() => setIsRehomeDropdownOpen(false)}
                         >
-                          <div className="w-10 h-10 bg-[#085558]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <item.icon className="h-5 w-5 text-[#085558]" />
+                          <div className="w-10 h-10 bg-[#008737]/15 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <item.icon className="h-5 w-5 text-[#008737]" strokeWidth={2} />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-[#063630] group-hover:text-[#085558]">
+                            <h4 className="font-semibold text-[#063630] group-hover:text-[#008737]">
                               {item.label}
                             </h4>
                             <p className="text-sm text-gray-500 mt-0.5">
@@ -543,10 +549,10 @@ const Navbar = () => {
                 <div className="mb-2">
                   <button
                     onClick={handleMobileRehomeClick}
-                    className="w-full flex items-center justify-between text-left font-medium text-[#063630] hover:text-[#085558] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between text-left font-medium text-[#063630] hover:text-[#008737] py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <Home className="h-5 w-5" />
+                       <Home className="h-5 w-5" />
                       <span>Rehome a Dog</span>
                     </div>
                     <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isRehomeDropdownOpen ? 'rotate-180' : ''}`} />
@@ -569,7 +575,7 @@ const Navbar = () => {
                               onClick={() => setIsMobileMenuOpen(false)}
                               className="w-full flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50"
                             >
-                              <item.icon className="h-4 w-4 text-[#085558]" />
+                              <item.icon className="h-4 w-4 text-[#008737]" />
                               <div className="flex-1">
                                 <p className="font-medium text-[#063630]">{item.label}</p>
                                 <p className="text-xs text-gray-600">{item.description}</p>

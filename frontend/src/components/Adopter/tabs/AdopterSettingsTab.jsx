@@ -104,10 +104,7 @@ const AdopterSettingsTab = ({ user, onProfileUpdate }) => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-[#063630]">Settings</h2>
-        <p className="text-gray-500 mt-1">Manage your account preferences.</p>
-      </div>
+
 
       {saved && (
         <div className="fixed top-6 right-6 z-50 bg-[#063630] text-white px-5 py-3 rounded-xl shadow-xl text-sm font-medium flex items-center gap-2">

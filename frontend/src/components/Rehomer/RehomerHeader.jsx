@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PawPrint, Bell, Home, Dog, FileText, MessageSquare, Settings, ChevronDown, LogOut, User } from 'lucide-react';
+import { PawPrint, Bell, Home, Dog, FileText, MessageSquare, Settings, ChevronDown, LogOut, User, Stethoscope, HelpCircle } from 'lucide-react';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -11,24 +11,67 @@ const imgSrc   = (url, updatedAt) => {
   return bust ? `${base}?t=${bust}` : base;
 };
 
+const apiFetch = async (method, url, body = null) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API}${url}`, {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(token && { Authorization: `Bearer ${token}` }) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+};
+
 const tabs = [
   { id: 'dashboard',    label: 'Dashboard',    icon: Home          },
   { id: 'my-dogs',      label: 'My Dogs',      icon: Dog           },
   { id: 'applications', label: 'Applications', icon: FileText      },
+  { id: 'vets',         label: 'Veterinary Care', icon: Stethoscope},
   { id: 'messages',     label: 'Messages',     icon: MessageSquare },
   { id: 'settings',     label: 'Settings',     icon: Settings      },
 ];
 
 const RehomerHeader = ({ user, activeTab, setActiveTab }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
+  const notifRef = useRef(null);
   const navigate = useNavigate();
 
-  // Close dropdown when clicking outside
+  const [notifications, setNotifications] = useState([]);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await apiFetch('GET', '/notifications');
+      setNotifications(data.data || []);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  const handleMarkAsRead = async (id, link) => {
+    try {
+      await apiFetch('PUT', `/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+      setShowNotifications(false);
+      if (link) navigate(link);
+    } catch {}
+  };
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -81,15 +124,65 @@ const RehomerHeader = ({ user, activeTab, setActiveTab }) => {
 
           {/* Right — Bell + User dropdown */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            <button className="p-2 text-gray-500 hover:text-[#085558] relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
+            {/* Notifications */}
+            <div className="relative" ref={notifRef}>
+              <button 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setShowDropdown(false);
+                }}
+                className="p-2 text-gray-500 hover:text-[#085558] relative"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
+
+              {/* Notifications Dropdown menu */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <p className="font-semibold text-[#063630] text-sm">Notifications</p>
+                    {unreadCount > 0 && (
+                      <span className="text-xs bg-[#008737]/10 text-[#008737] px-2 py-0.5 rounded-full font-medium">
+                        {unreadCount} New
+                      </span>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-gray-500">No notifications yet.</div>
+                    ) : (
+                      notifications.map(n => (
+                        <div 
+                          key={n._id} 
+                          onClick={() => handleMarkAsRead(n._id, n.link)}
+                          className={`p-3 border-b border-gray-50 hover:bg-gray-50 flex gap-3 text-sm transition-colors cursor-pointer ${!n.read ? 'bg-[#008737]/5' : ''}`}
+                        >
+                          {!n.read && <div className="w-2 h-2 rounded-full bg-[#008737] mt-1.5 flex-shrink-0" />}
+                          <div className={n.read ? 'pl-5' : ''}>
+                            <p className="font-semibold text-gray-800 text-xs mb-0.5">{n.title || n.type}</p>
+                            <p className={`text-gray-600 ${!n.read ? 'font-medium text-gray-800' : ''}`}>{n.message || n.text}</p>
+                            <span className="text-xs text-gray-400 mt-1 block">
+                              {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : n.time}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User dropdown */}
-            <div className="relative" ref={dropdownRef}>
+             <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => setShowDropdown(v => !v)}
+                onClick={() => {
+                  setShowDropdown(v => !v);
+                  setShowNotifications(false);
+                }}
                 className="flex items-center gap-2 p-1 rounded-xl hover:bg-gray-100 transition-colors"
               >
                 <div className="text-right hidden md:block">
@@ -126,6 +219,12 @@ const RehomerHeader = ({ user, activeTab, setActiveTab }) => {
                       className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                     >
                       <Settings className="h-4 w-4 text-gray-400" /> Settings
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('help'); setShowDropdown(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <HelpCircle className="h-4 w-4 text-gray-400" /> Help & Support
                     </button>
                   </div>
 

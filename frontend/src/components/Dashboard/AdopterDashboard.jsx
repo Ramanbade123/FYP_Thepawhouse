@@ -6,6 +6,8 @@ import BrowseDogsTab          from '../Adopter/tabs/BrowseDogsTab';
 import AdopterApplicationsTab from '../Adopter/tabs/AdopterApplicationsTab';
 import AdopterMessagesTab     from '../Adopter/tabs/AdopterMessagesTab';
 import AdopterSettingsTab     from '../Adopter/tabs/AdopterSettingsTab';
+import NearbyClinics          from '../Shared/NearbyClinics';
+import HelpAndSupport         from '../Shared/HelpAndSupport';
 
 const AdopterDashboard = () => {
   const navigate   = useNavigate();
@@ -37,8 +39,10 @@ const AdopterDashboard = () => {
       <div className="container mx-auto px-4 py-8 flex-1">
         {activeTab === 'browse'       && <BrowseDogsTab />}
         {activeTab === 'applications' && <AdopterApplicationsTab />}
+        {activeTab === 'vets'         && <NearbyClinics />}
         {activeTab === 'messages'     && <AdopterMessagesTab />}
         {activeTab === 'settings'     && <AdopterSettingsTab user={user} onProfileUpdate={setUser} />}
+        {activeTab === 'help'         && <HelpAndSupport role="adopter" />}
       </div>
 
       <AdopterFooter />

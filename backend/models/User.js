@@ -225,16 +225,11 @@ userSchema.index({ isVerified: 1 });
 userSchema.index({ isActive: 1 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre('save', async function() {
+  if (!this.isModified('password')) return;
   
-  try {
-    const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Compare password method
@@ -244,8 +239,8 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 
 // Generate and hash password token
 userSchema.methods.getResetPasswordToken = function() {
-  // Generate token
-  const resetToken = crypto.randomBytes(20).toString('hex');
+  // Generate 6-digit OTP
+  const resetToken = crypto.randomInt(100000, 999999).toString();
 
   // Hash token and set to resetPasswordToken field
   this.resetPasswordToken = crypto

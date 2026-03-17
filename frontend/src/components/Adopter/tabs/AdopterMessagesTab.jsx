@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageSquare, Send, ChevronLeft, Dog, Clock, CheckCheck } from 'lucide-react';
+import { MessageSquare, Send, ChevronLeft, Dog, Clock, CheckCheck, Trash2 } from 'lucide-react';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -52,6 +52,7 @@ const AdopterMessagesTab = () => {
   const [loadingMsgs,   setLoadingMsgs]  = useState(false);
   const [sending,       setSending]       = useState(false);
   const [mobileView,    setMobileView]    = useState('list');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const bottomRef = useRef(null);
   const pollRef   = useRef(null);
 
@@ -136,6 +137,24 @@ const AdopterMessagesTab = () => {
     finally { setSending(false); }
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!activeConvo) return;
+    try {
+      await apiFetch('DELETE', `/messages/${activeConvo._id}`);
+      setActiveConvo(null);
+      setMessages([]);
+      setMobileView('list');
+      setShowDeleteConfirm(false);
+      fetchConversations();
+    } catch (err) {
+      alert(err.message || 'Failed to delete conversation');
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
@@ -143,10 +162,6 @@ const AdopterMessagesTab = () => {
   if (!loadingConvos && conversations.length === 0) {
     return (
       <div>
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-[#063630]">Messages</h2>
-          <p className="text-gray-500 mt-1">Chat with rehomers about dogs you're interested in.</p>
-        </div>
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
           <div className="w-16 h-16 bg-[#008737]/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <MessageSquare className="h-8 w-8 text-[#008737]" />
@@ -160,11 +175,6 @@ const AdopterMessagesTab = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-[#063630]">Messages</h2>
-        <p className="text-gray-500 mt-1">Chat with rehomers about dogs you're interested in.</p>
-      </div>
-
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: '70vh', minHeight: 480 }}>
         <div className="flex h-full">
 
@@ -222,19 +232,24 @@ const AdopterMessagesTab = () => {
             ) : (
               <>
                 {/* Header */}
-                <div className="p-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
-                  <button onClick={() => setMobileView('list')} className="md:hidden p-1 text-gray-500">
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <Avatar name={activeConvo.rehomer?.name} url={activeConvo.rehomer?.profileImage} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[#063630] text-sm">{activeConvo.rehomer?.name}</p>
-                    {activeConvo.pet && (
-                      <p className="text-xs text-[#008737] font-medium truncate">
-                        About: {activeConvo.pet.name}{activeConvo.pet.breed ? ` · ${activeConvo.pet.breed}` : ''}
-                      </p>
-                    )}
+                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <button onClick={() => setMobileView('list')} className="md:hidden p-1 text-gray-500">
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <Avatar name={activeConvo.rehomer?.name} url={activeConvo.rehomer?.profileImage} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[#063630] text-sm">{activeConvo.rehomer?.name}</p>
+                      {activeConvo.pet && (
+                        <p className="text-xs text-[#008737] font-medium truncate">
+                          About: {activeConvo.pet.name}{activeConvo.pet.breed ? ` · ${activeConvo.pet.breed}` : ''}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <button onClick={handleDeleteClick} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors ml-2" title="Delete conversation">
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
 
                 {/* Messages */}
@@ -289,6 +304,37 @@ const AdopterMessagesTab = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="h-8 w-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Conversation?</h3>
+              <p className="text-gray-500 text-sm">
+                This action cannot be undone. All messages in this conversation will be permanently removed for both you and the rehomer.
+              </p>
+            </div>
+            <div className="flex border-t border-gray-100">
+              <button 
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-4 text-gray-600 font-medium hover:bg-gray-50 transition-colors border-r border-gray-100"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleConfirmDelete}
+                className="flex-1 py-4 text-red-600 font-bold hover:bg-red-50 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

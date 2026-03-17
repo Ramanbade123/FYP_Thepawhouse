@@ -149,7 +149,7 @@ const ListedDogs = ({ onStatsChange }) => {
                         {dog.status?.charAt(0).toUpperCase() + dog.status?.slice(1)}
                       </span>
                       <p className="text-xs text-gray-500 mt-1">
-                        {dog.applications?.length || 0} application{dog.applications?.length !== 1 ? 's' : ''}
+                        {dog.applications?.filter(a => a.status === 'pending' || a.status === 'reviewing').length || 0} active application{dog.applications?.filter(a => a.status === 'pending' || a.status === 'reviewing').length !== 1 ? 's' : ''}
                       </p>
                     </div>
                     <div className="flex gap-1">

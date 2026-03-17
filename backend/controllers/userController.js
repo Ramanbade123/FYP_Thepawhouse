@@ -177,6 +177,7 @@ exports.getDashboardStats = async (req, res) => {
       stats.totalAdopters = totalAdopters;
       stats.totalRehomers = totalRehomers;
       stats.totalAdmins = await User.countDocuments({ role: 'admin' });
+      stats.pendingVerifications = await User.countDocuments({ verificationStatus: 'pending', verificationDocuments: { $not: { $size: 0 } } });
       
       // Recent activity
       const recentUsers = await User.find()

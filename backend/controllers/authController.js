@@ -277,15 +277,15 @@ exports.forgotPassword = async (req, res) => {
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 
-    // Create reset URL
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    // Create reset URL (not needed for OTP, but keeping variable for fallback)
+    // const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     try {
       // Send email
       await sendEmail({
         email: user.email,
-        subject: emailTemplates.passwordReset(resetUrl).subject,
-        html: emailTemplates.passwordReset(resetUrl).html,
+        subject: emailTemplates.otpReset(resetToken).subject,
+        html: emailTemplates.otpReset(resetToken).html,
       });
 
       res.status(200).json({
@@ -315,17 +315,24 @@ exports.forgotPassword = async (req, res) => {
 };
 
 // @desc    Reset password
-// @route   PUT /api/auth/resetpassword/:resettoken
+// @route   POST /api/auth/resetpassword
 // @access  Public
 exports.resetPassword = async (req, res) => {
   try {
+    const { otp, password, confirmPassword } = req.body;
+
+    if (!otp) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide the OTP sent to your email',
+      });
+    }
+
     // Get hashed token
     const resetPasswordToken = crypto
       .createHash('sha256')
-      .update(req.params.resettoken)
+      .update(otp)
       .digest('hex');
-
-    const { password, confirmPassword } = req.body;
 
     if (!password || !confirmPassword) {
       return res.status(400).json({

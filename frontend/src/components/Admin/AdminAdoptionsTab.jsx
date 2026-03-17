@@ -265,9 +265,14 @@ const AdminAdoptionsTab = () => {
         <div className="flex justify-center py-20">
           <div className="w-10 h-10 border-4 border-[#008737] border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : applications.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100">
           <Heart className="h-14 w-14 text-gray-200 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-400 mb-2">No applications yet</h3>
+          <p className="text-gray-400 text-sm">Adoption applications will appear here once submitted.</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm p-16 text-center border border-gray-100">
           <h3 className="text-lg font-bold text-gray-400 mb-2">No applications found</h3>
           <p className="text-gray-400 text-sm">Try adjusting your filters or search terms.</p>
         </div>

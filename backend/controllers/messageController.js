@@ -180,3 +180,29 @@ exports.deleteMessage = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+// DELETE a conversation
+exports.deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user._id;
+
+    const convo = await Conversation.findById(conversationId);
+    if (!convo) return res.status(404).json({ success: false, error: 'Conversation not found' });
+
+    const isParticipant =
+      convo.adopter.toString() === userId.toString() ||
+      convo.rehomer.toString() === userId.toString();
+
+    if (!isParticipant) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    await Message.deleteMany({ conversation: conversationId });
+    await convo.deleteOne();
+
+    res.status(200).json({ success: true, data: {} });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

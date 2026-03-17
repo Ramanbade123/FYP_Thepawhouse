@@ -391,7 +391,11 @@ const DogDetailPage = () => {
             {/* Status + Name */}
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <span className="px-3 py-1 bg-[#008737] text-white text-xs font-semibold rounded-full">Available</span>
+                {pet.status === 'pending' ? (
+                  <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full">Pending Adoption</span>
+                ) : (
+                  <span className="px-3 py-1 bg-[#008737] text-white text-xs font-semibold rounded-full">Available</span>
+                )}
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${pet.gender === 'female' ? 'bg-pink-100 text-pink-800' : 'bg-blue-100 text-blue-800'}`}>
                   {pet.gender === 'female' ? '♀ Female' : '♂ Male'}
                 </span>

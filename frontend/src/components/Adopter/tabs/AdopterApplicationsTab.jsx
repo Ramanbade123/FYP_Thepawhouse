@@ -3,6 +3,12 @@ import { motion } from 'framer-motion';
 import { FileText, Clock, CheckCircle, XCircle, Dog } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = API.replace('/api', '');
+
+const imgSrc = (url) => {
+  if (!url || url === 'default-profile.jpg') return null;
+  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+};
 
 const statusStyle = {
   pending:   { cls: 'bg-yellow-100 text-yellow-800', icon: Clock,         label: 'Pending'  },
@@ -45,10 +51,6 @@ const AdopterApplicationsTab = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-[#063630]">My Applications</h2>
-        <p className="text-gray-500 mt-1">Track the status of your adoption applications.</p>
-      </div>
 
       {applications.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
@@ -70,7 +72,7 @@ const AdopterApplicationsTab = () => {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-[#085558]/20 to-[#008737]/20 flex-shrink-0 flex items-center justify-center">
                     {app.pet?.primaryImage
-                      ? <img src={app.pet.primaryImage} alt={app.pet.name} crossOrigin="anonymous" className="w-full h-full object-cover" />
+                      ? <img src={imgSrc(app.pet.primaryImage)} alt={app.pet.name} crossOrigin="anonymous" className="w-full h-full object-cover" />
                       : <Dog className="h-7 w-7 text-[#085558]/40" />}
                   </div>
                   <div>

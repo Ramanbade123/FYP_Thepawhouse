@@ -12,6 +12,8 @@ import AdminPetManagement from '../Admin/AdminPetManagement';
 import AdminCommunityTab  from '../Admin/AdminCommunityTab';
 import AdminMessagesTab   from '../Admin/AdminMessagesTab';
 import AdminAdoptionsTab  from '../Admin/AdminAdoptionsTab';
+import AdminReportsTab    from '../Admin/AdminReportsTab';
+import AdminVerificationsTab from '../Admin/AdminVerificationsTab';
 import AdminSettingsTab   from '../Admin/AdminSettingsTab';
 
 const API = 'http://localhost:5000/api';
@@ -57,6 +59,7 @@ const AdminDashboard = () => {
             totalUsers:    userData.data.totalUsers    || 0,
             totalAdopters: userData.data.totalAdopters || 0,
             totalRehomers: userData.data.totalRehomers || 0,
+            pendingVerifications: userData.data.pendingVerifications || 0,
           } : {}),
           ...(petData.success ? { pendingPets: petData.summary?.pending || 0 } : {}),
         }));
@@ -91,28 +94,7 @@ const AdminDashboard = () => {
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <>
-              {/* Welcome */}
-              <div className="bg-gradient-to-r from-[#063630] to-[#085558] rounded-xl p-6 mb-6 text-white">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div>
-                    <h1 className="text-2xl font-bold">Welcome back, Admin! 👋</h1>
-                    <p className="text-white/70 mt-1">Here's what's happening with The Paw House today.</p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {stats.pendingPets > 0 && (
-                      <button onClick={() => setActiveTab('pets')}
-                        className="flex items-center gap-2 bg-yellow-400 text-[#063630] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-yellow-300 transition-colors">
-                        <Clock className="h-4 w-4" />
-                        {stats.pendingPets} pet{stats.pendingPets !== 1 ? 's' : ''} awaiting review
-                      </button>
-                    )}
-                    <div className="bg-white/10 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4" />
-                      {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                    </div>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -170,9 +152,13 @@ const AdminDashboard = () => {
 
           {activeTab === 'adoptions' && <AdminAdoptionsTab />}
 
+          {activeTab === 'reports' && <AdminReportsTab />}
+
+          {activeTab === 'verifications' && <AdminVerificationsTab />}
+
           {activeTab === 'settings' && <AdminSettingsTab />}
 
-          {!['dashboard','users','pets','adoptions','community','messages','settings'].includes(activeTab) && (
+          {!['dashboard','users','pets','adoptions','community','messages','reports','verifications','settings'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 capitalize">{activeTab}</h2>
               <p className="text-gray-500">Coming soon.</p>

@@ -26,7 +26,6 @@ import Footer from './components/Footer'
 import Login from './components/Auth/Login'
 import Register from './components/Auth/Register'
 import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
 
 // Dashboards
 import AdminDashboard from './components/Dashboard/AdminDashboard'
@@ -103,7 +102,6 @@ function App() {
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-        <Route path="/reset-password/:resettoken" element={<ResetPassword />} />
 
         {/* Protected dashboard routes */}
         <Route
