@@ -15,24 +15,23 @@ const imgSrc = (url) => {
   return url.startsWith('http') ? url : `${BASE_URL}${url}`;
 };
 
-const quickFilters = [
-  { id: 'all',        label: 'All Dogs'          },
-  { id: 'puppies',    label: 'Puppies (0-1 year)' },
-  { id: 'medium',     label: 'Medium Size'        },
-  { id: 'kathmandu',  label: 'Kathmandu Valley'   },
-  { id: 'kids',       label: 'Good with Kids'     },
-  { id: 'vaccinated', label: 'Vaccinated'         },
-];
+
 
 const EMPTY_FILTERS = { breed: '', gender: '', size: '', city: '', activityLevel: '', vaccinated: '', goodWithKids: '', minAge: '', maxAge: '', ageUnit: '' };
 
 const BrowseDogsTab = () => {
   const navigate = useNavigate();
+  
+  const [userCity] = useState(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user?.address?.city || user?.city || '';
+  });
+
   const [dogs, setDogs]                 = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
   const [search, setSearch]             = useState('');
-  const [activeQuick, setActiveQuick]   = useState('all');
+  const [activeQuick, setActiveQuick]   = useState(userCity ? 'nearby' : 'all');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [advFilters, setAdvFilters]     = useState(EMPTY_FILTERS);
   const [favorites, setFavorites]       = useState([]);
@@ -40,7 +39,19 @@ const BrowseDogsTab = () => {
   const [totalPages, setTotalPages]     = useState(1);
   const [total, setTotal]               = useState(0);
 
-  useEffect(() => { fetchDogs(1); }, []);
+  const quickFilters = [
+    { id: 'all',        label: 'All Dogs'          },
+    ...(userCity ? [{ id: 'nearby', label: `Nearby (${userCity})` }] : []),
+  ];
+
+  useEffect(() => {
+    if (userCity) {
+      fetchDogs(1, { city: userCity });
+    } else {
+      fetchDogs(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const buildParams = (page, overrides = {}) => {
     const p = new URLSearchParams({ page, limit: 6 });
@@ -86,11 +97,7 @@ const BrowseDogsTab = () => {
     setSearch('');
     setAdvFilters(EMPTY_FILTERS);
     if (f.id === 'all')        { fetchDogs(1, {}); return; }
-    if (f.id === 'puppies')    { fetchDogs(1, { maxAge: '12', ageUnit: 'months' }); return; }
-    if (f.id === 'medium')     { fetchDogs(1, { size: 'medium' }); return; }
-    if (f.id === 'kathmandu')  { fetchDogs(1, { city: 'Kathmandu' }); return; }
-    if (f.id === 'kids')       { fetchDogs(1, { goodWithKids: 'true' }); return; }
-    if (f.id === 'vaccinated') { fetchDogs(1, { vaccinated: 'true' }); return; }
+    if (f.id === 'nearby')     { fetchDogs(1, { city: userCity }); return; }
   };
 
   const handleAdvancedSearch = (e) => {

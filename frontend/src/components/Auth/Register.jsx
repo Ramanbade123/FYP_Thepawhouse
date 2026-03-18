@@ -14,10 +14,12 @@ const Register = () => {
     role: 'adopter',
     userType: 'individual',
     address: {
-      street: '',
       city: '',
       state: '',
-      zipCode: '',
+    },
+    adoptionPreferences: {
+      experienceLevel: 'first-time',
+      hasOtherPets: false,
     }
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +30,7 @@ const Register = () => {
   const [step, setStep] = useState(1); // 1 = Role Selection, 2 = Personal Info, 3 = Password
   const navigate = useNavigate();
 
-  const { name, email, phone, password, confirmPassword, role, address } = formData;
+  const { name, email, phone, password, confirmPassword, role, address, adoptionPreferences } = formData;
 
   const onChange = (e) => {
     if (e.target.name.startsWith('address.')) {
@@ -36,6 +38,13 @@ const Register = () => {
       setFormData({
         ...formData,
         address: { ...address, [field]: e.target.value }
+      });
+    } else if (e.target.name.startsWith('adoptionPreferences.')) {
+      const field = e.target.name.split('.')[1];
+      const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+      setFormData({
+        ...formData,
+        adoptionPreferences: { ...formData.adoptionPreferences, [field]: value }
       });
     } else {
       setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,7 +57,7 @@ const Register = () => {
   };
 
   const validateStep2 = () => {
-    if (!name || !email || !phone) {
+    if (!name || !email || !phone || !address.city || !address.state) {
       setError('Please fill in all required fields');
       return false;
     }
@@ -145,7 +154,8 @@ const Register = () => {
         address: {
           ...address,
           country: 'Nepal'
-        }
+        },
+        ...(role === 'adopter' && { adoptionPreferences })
       };
 
       const response = await axios.post(
@@ -382,49 +392,97 @@ const Register = () => {
               </div>
             </div>
 
+            {/* Adopter Experience (Only if Adopter) */}
+            {role === 'adopter' && (
+              <div className="space-y-4 pb-2">
+                <h3 className="text-lg font-semibold text-[#063630] flex items-center gap-2">
+                  <PawPrint className="h-5 w-5 text-[#085558]" />
+                  Pet Experience
+                </h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-[#063630] mb-2">
+                    What is your experience level with dogs? *
+                  </label>
+                  <select
+                    name="adoptionPreferences.experienceLevel"
+                    value={adoptionPreferences.experienceLevel}
+                    onChange={onChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630] bg-white appearance-none"
+                    required
+                  >
+                    <option value="first-time">First-time Owner</option>
+                    <option value="experienced">Experienced</option>
+                    <option value="expert">Expert</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <input
+                    type="checkbox"
+                    id="hasOtherPets"
+                    name="adoptionPreferences.hasOtherPets"
+                    checked={adoptionPreferences.hasOtherPets}
+                    onChange={onChange}
+                    className="w-5 h-5 rounded border-gray-300 text-[#008737] focus:ring-[#008737]"
+                  />
+                  <label htmlFor="hasOtherPets" className="text-sm font-medium text-[#063630]">
+                    I currently have other pets at home
+                  </label>
+                </div>
+              </div>
+            )}
+
             {/* Address Fields */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-[#063630] flex items-center gap-2">
                 <Home className="h-5 w-5 text-[#085558]" />
-                Address (Optional)
+                Location *
               </h3>
               
-              <input
-                type="text"
-                name="address.street"
-                value={address.street}
-                onChange={onChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                placeholder="Street Address"
-              />
-              
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  name="address.city"
-                  value={address.city}
-                  onChange={onChange}
-                  className="px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                  placeholder="City"
-                />
-                <input
-                  type="text"
+                <select
                   name="address.state"
                   value={address.state}
                   onChange={onChange}
-                  className="px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                  placeholder="State"
-                />
+                  className="px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630] bg-white appearance-none"
+                  required
+                >
+                  <option value="">Select Province *</option>
+                  <option value="Koshi">Koshi</option>
+                  <option value="Madhesh">Madhesh</option>
+                  <option value="Bagmati">Bagmati</option>
+                  <option value="Gandaki">Gandaki</option>
+                  <option value="Lumbini">Lumbini</option>
+                  <option value="Karnali">Karnali</option>
+                  <option value="Sudurpashchim">Sudurpashchim</option>
+                </select>
+
+                <select
+                  name="address.city"
+                  value={address.city}
+                  onChange={onChange}
+                  className="px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630] bg-white appearance-none"
+                  required
+                >
+                  <option value="">Select City *</option>
+                  <option value="Kathmandu">Kathmandu</option>
+                  <option value="Lalitpur">Lalitpur</option>
+                  <option value="Bhaktapur">Bhaktapur</option>
+                  <option value="Pokhara">Pokhara</option>
+                  <option value="Biratnagar">Biratnagar</option>
+                  <option value="Birgunj">Birgunj</option>
+                  <option value="Bharatpur">Bharatpur</option>
+                  <option value="Butwal">Butwal</option>
+                  <option value="Hetauda">Hetauda</option>
+                  <option value="Dharan">Dharan</option>
+                  <option value="Itahari">Itahari</option>
+                  <option value="Nepalgunj">Nepalgunj</option>
+                  <option value="Dhangadhi">Dhangadhi</option>
+                  <option value="Janakpur">Janakpur</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
-              
-              <input
-                type="text"
-                name="address.zipCode"
-                value={address.zipCode}
-                onChange={onChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                placeholder="Zip Code"
-              />
             </div>
           </div>
         );
