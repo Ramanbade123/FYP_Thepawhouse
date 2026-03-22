@@ -129,6 +129,45 @@ const emailTemplates = {
     `,
   }),
 
+  emailVerification: (otp) => ({
+    subject: 'Verify Your Email - The Paw House',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Verification</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+          .header { background: linear-gradient(to right, #008737, #085558); padding: 20px; text-align: center; }
+          .header h1 { color: white; margin: 0; }
+          .content { padding: 30px; background-color: #f9f9f9; text-align: center; }
+          .otp-code { background: #eee; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #008737; padding: 15px 30px; border-radius: 8px; display: inline-block; margin: 20px 0; }
+          .footer { padding: 20px; text-align: center; background-color: #f0f0f0; font-size: 12px; color: #666; }
+          .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 5px; margin: 15px 0; text-align: left; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Verify Your Email</h1>
+        </div>
+        <div class="content">
+          <h2>Almost there!</h2>
+          <p>Please enter the following 6-digit verification code to complete your registration:</p>
+          <div class="otp-code">${otp}</div>
+          <div class="warning">
+            <p><strong>Note:</strong> This code will expire in 10 minutes.</p>
+          </div>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} The Paw House. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
   // Add more templates as needed
   accountVerification: (verificationUrl, name) => ({
     subject: 'Verify Your Account - The Paw House',

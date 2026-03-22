@@ -6,7 +6,12 @@ const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
 const imgSrc   = (url, updatedAt) => {
   if (!url || url === 'default-profile.jpg') return null;
-  const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  // url can be a full URL, a /path, or a bare filename (e.g. "user_123.jpg") from multer
+  const base = url.startsWith('http')
+    ? url
+    : url.startsWith('/')
+      ? `${BASE_URL}${url}`
+      : `${BASE_URL}/uploads/users/${url}`;
   const bust  = updatedAt ? new Date(updatedAt).getTime() : '';
   return bust ? `${base}?t=${bust}` : base;
 };

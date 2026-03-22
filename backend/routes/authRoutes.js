@@ -3,6 +3,8 @@ const router = express.Router();
 const {
   register,
   login,
+  verifyEmail,
+  resendVerification,
   getMe,
   updateDetails,
   updatePassword,
@@ -12,9 +14,12 @@ const {
   refreshToken,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // Public routes
-router.post('/register', register);
+router.post('/register', upload.single('profileImage'), register);
+router.post('/verify-email', verifyEmail);
+router.post('/resend-verification', resendVerification);
 router.post('/login', login);
 router.post('/forgotpassword', forgotPassword);
 router.post('/resetpassword', resetPassword);

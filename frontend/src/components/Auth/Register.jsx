@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Lock, Home, Eye, EyeOff, AlertCircle, CheckCircle, Heart, PawPrint, Shield, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, Lock, Home, Eye, EyeOff, AlertCircle, CheckCircle, Heart, PawPrint, Shield, ArrowLeft, Camera, Upload, X, KeyRound, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 
 const Register = () => {
@@ -27,7 +27,12 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [step, setStep] = useState(1); // 1 = Role Selection, 2 = Personal Info, 3 = Password
+  const [step, setStep] = useState(1); // 1=Role, 2=PersonalInfo, 3=Password, 4=Photo, 5=OTP
+  const [profileImage, setProfileImage] = useState(null);
+  const [profilePreview, setProfilePreview] = useState(null);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
 
   const { name, email, phone, password, confirmPassword, role, address, adoptionPreferences } = formData;
@@ -114,69 +119,56 @@ const Register = () => {
     setError('');
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setProfileImage(file);
+    setProfilePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    setProfileImage(null);
+    setProfilePreview(null);
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
-    
-    if (step === 1) {
-      nextStep();
-      return;
-    }
 
-    if (step === 2) {
-      nextStep();
-      return;
-    }
+    if (step === 1) { nextStep(); return; }
+    if (step === 2) { nextStep(); return; }
 
-    if (!validateStep3()) {
-      return;
-    }
-
+    // Step 3 — final submit
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-
-      // ✅ FIX: confirmPassword is now included in the request body
-      const userData = {
-        name,
-        email,
-        phone,
-        password,
-        confirmPassword, // <-- THIS WAS THE MISSING FIELD
-        role,
-        userType: formData.userType,
-        address: {
-          ...address,
-          country: 'Nepal'
-        },
-        ...(role === 'adopter' && { adoptionPreferences })
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', name);
+      formDataToSend.append('email', email);
+      formDataToSend.append('phone', phone);
+      formDataToSend.append('password', password);
+      formDataToSend.append('confirmPassword', confirmPassword);
+      formDataToSend.append('role', role);
+      formDataToSend.append('userType', formData.userType);
+      formDataToSend.append('address', JSON.stringify({ ...address, country: 'Nepal' }));
+      if (role === 'adopter') {
+        formDataToSend.append('adoptionPreferences', JSON.stringify(adoptionPreferences));
+      }
+      if (profileImage) {
+        formDataToSend.append('profileImage', profileImage);
+      }
 
       const response = await axios.post(
         'http://localhost:5000/api/auth/register',
-        userData,
-        config
+        formDataToSend,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
 
-      if (response.data.success) {
-        setSuccess('Registration successful! You will be redirected to login...');
-        
-        // Store token if returned
-        if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-        }
-        
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+      if (response.data.success || response.data.requiresEmailVerification) {
+        setRegisteredEmail(response.data.email || email);
+        setSuccess('');
+        setStep(5); // Go to OTP verification step
       }
     } catch (err) {
       setError(
@@ -186,6 +178,41 @@ const Register = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyEmail = async (e) => {
+    e.preventDefault();
+    if (!otp || otp.length !== 6) { setError('Please enter the 6-digit code from your email'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/verify-email', {
+        email: registeredEmail,
+        otp,
+      });
+      if (res.data.success) {
+        setSuccess('Email verified! Redirecting to login...');
+        setTimeout(() => navigate('/login'), 2000);
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Invalid or expired code. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setResending(true);
+    setError('');
+    try {
+      await axios.post('http://localhost:5000/api/auth/resend-verification', { email: registeredEmail });
+      setSuccess('A new code has been sent to your email!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Could not resend code. Please try again.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -484,6 +511,39 @@ const Register = () => {
                 </select>
               </div>
             </div>
+
+            {/* Profile Photo (optional) */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-[#063630] flex items-center gap-2">
+                <Camera className="h-4 w-4 text-[#085558]" />
+                Profile Photo <span className="text-gray-400 font-normal">(optional)</span>
+              </h3>
+              <div className="flex items-center gap-5">
+                <div className="relative flex-shrink-0">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#008737]/30 bg-gradient-to-br from-[#008737]/10 to-[#085558]/10 flex items-center justify-center">
+                    {profilePreview ? (
+                      <img src={profilePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="h-8 w-8 text-[#008737]/40" />
+                    )}
+                  </div>
+                  {profilePreview && (
+                    <button type="button" onClick={clearImage}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md">
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+                <label className="cursor-pointer">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-dashed border-[#008737]/40 hover:border-[#008737] bg-[#008737]/5 hover:bg-[#008737]/10 transition-all duration-200">
+                    <Upload className="h-4 w-4 text-[#008737]" />
+                    <span className="text-[#008737] font-semibold text-sm">{profilePreview ? 'Change Photo' : 'Upload Photo'}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG or WebP · Max 5MB</p>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} className="hidden" />
+                </label>
+              </div>
+            </div>
           </div>
         );
 
@@ -583,6 +643,43 @@ const Register = () => {
           </div>
         );
 
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-center">
+              <div className="w-16 h-16 bg-[#008737]/10 rounded-full flex items-center justify-center">
+                <KeyRound className="h-8 w-8 text-[#008737]" />
+              </div>
+            </div>
+            <p className="text-gray-600 text-center">
+              We sent a 6-digit code to{' '}
+              <span className="font-semibold text-[#008737]">{registeredEmail}</span>.<br />
+              Enter it below to verify your account.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-[#063630] mb-2">Verification Code</label>
+              <input
+                type="text"
+                maxLength={6}
+                value={otp}
+                onChange={e => { setOtp(e.target.value.replace(/\D/g, '')); setError(''); }}
+                placeholder="000000"
+                className="w-full text-center tracking-[0.5em] font-mono text-2xl py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleResendOTP}
+              disabled={resending}
+              className="w-full flex items-center justify-center gap-2 text-sm text-[#008737] hover:text-[#085558] font-medium py-2 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${resending ? 'animate-spin' : ''}`} />
+              {resending ? 'Sending...' : "Didn't get it? Resend code"}
+            </button>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -623,7 +720,8 @@ const Register = () => {
           </Link>
         </div>
 
-        {/* Progress Steps */}
+        {/* Progress Steps — hide on OTP step */}
+        {step < 4 && (
         <div className="flex items-center justify-between mb-8 max-w-md mx-auto">
           <div className="flex items-center">
             {[1, 2, 3].map((stepNum) => (
@@ -636,7 +734,7 @@ const Register = () => {
                   {step > stepNum ? <CheckCircle className="h-6 w-6" /> : stepNum}
                 </div>
                 {stepNum < 3 && (
-                  <div className={`h-1 w-12 ${step > stepNum ? 'bg-gradient-to-r from-[#008737] to-[#085558]' : 'bg-gray-200'}`}></div>
+                  <div className={`h-1 w-16 ${step > stepNum ? 'bg-gradient-to-r from-[#008737] to-[#085558]' : 'bg-gray-200'}`}></div>
                 )}
               </React.Fragment>
             ))}
@@ -645,6 +743,7 @@ const Register = () => {
             Step {step} of 3
           </span>
         </div>
+        )}
 
         {/* Form Card */}
         <motion.div
@@ -654,9 +753,10 @@ const Register = () => {
           className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
         >
           <h2 className="text-2xl font-bold text-[#063630] mb-6 text-center">
-            {step === 1 ? 'Choose Your Role' : 
-             step === 2 ? 'Personal Information' : 
-             'Account Security'}
+            {step === 1 ? 'Choose Your Role' :
+             step === 2 ? 'Personal Information' :
+             step === 3 ? 'Account Security' :
+             'Verify Your Email'}
           </h2>
 
           {/* Error Message */}
@@ -683,12 +783,12 @@ const Register = () => {
             </motion.div>
           )}
 
-          <form onSubmit={onSubmit}>
+      <form onSubmit={step === 4 ? handleVerifyEmail : onSubmit}>
             {renderStepContent()}
 
             {/* Navigation Buttons */}
             <div className="mt-8 flex gap-4">
-              {step > 1 && (
+              {step > 1 && step < 4 && (
                 <button
                   type="button"
                   onClick={prevStep}
@@ -716,7 +816,13 @@ const Register = () => {
                     <span style={{ color: '#ffffff' }}>Creating Account...</span>
                   </>
                 ) : (
-                  <span style={{ color: '#ffffff' }}>{step === 3 ? 'Create Account' : 'Continue'}</span>
+                  <span style={{ color: '#ffffff' }}>
+                    {step === 3
+                      ? 'Create Account'
+                      : step === 4
+                      ? (loading ? 'Verifying...' : 'Verify Email')
+                      : 'Continue'}
+                  </span>
                 )}
               </motion.button>
             </div>

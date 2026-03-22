@@ -43,16 +43,34 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Check for user on mount
+  // Helper to build full profile image URL from bare filename or full path
+  const getProfileImageUrl = (profileImage) => {
+    if (!profileImage || profileImage === 'default-profile.jpg') return null
+    if (profileImage.startsWith('http')) return profileImage
+    if (profileImage.startsWith('/')) return `http://localhost:5000${profileImage}`
+    return `http://localhost:5000/uploads/users/${profileImage}`
+  }
+
+  // Check for user on mount and re-sync on profile updates
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        console.error('Error parsing user data:', error)
+    const loadUser = () => {
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch (error) {
+          console.error('Error parsing user data:', error)
+        }
+      } else {
+        setUser(null)
       }
     }
+
+    loadUser()
+
+    // Keep avatar in sync when profile is updated elsewhere (e.g. settings)
+    window.addEventListener('userUpdated', loadUser)
+    return () => window.removeEventListener('userUpdated', loadUser)
   }, [])
 
   // Close dropdowns when clicking outside
@@ -443,8 +461,20 @@ const Navbar = () => {
                   to="/dashboard"
                   className="flex items-center gap-2 text-[#008737] hover:text-[#085558] font-semibold"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-[#008737] to-[#085558] rounded-full flex items-center justify-center text-white text-sm">
-                    {user.name?.charAt(0).toUpperCase()}
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-r from-[#008737] to-[#085558] flex items-center justify-center text-white text-sm">
+                    {getProfileImageUrl(user.profileImage) ? (
+                      <img
+                        src={getProfileImageUrl(user.profileImage)}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.parentElement.innerText = user.name?.charAt(0).toUpperCase()
+                        }}
+                      />
+                    ) : (
+                      user.name?.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <span className="hidden md:inline">{user.name?.split(' ')[0]}</span>
                 </Link>

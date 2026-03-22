@@ -8,7 +8,11 @@ const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
 const imgSrc   = (url) => {
   if (!url || url === 'default-profile.jpg') return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  return url.startsWith('http')
+    ? url
+    : url.startsWith('/')
+      ? `${BASE_URL}${url}`
+      : `${BASE_URL}/uploads/users/${url}`;
 };
 
 const AdminHeader = ({ sidebarOpen, setSidebarOpen, setActiveTab }) => {

@@ -157,6 +157,12 @@ const userSchema = new mongoose.Schema(
     // Password reset fields
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: String,
+    emailVerificationExpire: Date,
     // Verification fields
     isVerified: {
       type: Boolean,
@@ -264,6 +270,17 @@ userSchema.methods.clearResetToken = function() {
   this.resetPasswordToken = undefined;
   this.resetPasswordExpire = undefined;
   return this.save({ validateBeforeSave: false });
+};
+
+// Generate and hash email verification token
+userSchema.methods.getEmailVerificationOTP = function() {
+  const otp = crypto.randomInt(100000, 999999).toString();
+  this.emailVerificationToken = crypto
+    .createHash('sha256')
+    .update(otp)
+    .digest('hex');
+  this.emailVerificationExpire = Date.now() + 10 * 60 * 1000;
+  return otp;
 };
 
 // Method to check if user has specific role

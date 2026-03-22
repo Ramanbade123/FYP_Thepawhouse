@@ -17,13 +17,19 @@ exports.register = async (req, res) => {
       password, 
       confirmPassword,
       role, 
-      userType,
-      address,
-      // Adopter specific fields
-      adoptionPreferences,
-      // Rehomer specific fields
-      rehomingInfo,
+      userType
     } = req.body;
+
+    let { address, adoptionPreferences, rehomingInfo } = req.body;
+
+    // Parse stringified JSON fields from FormData
+    try {
+      if (typeof address === 'string' && address) address = JSON.parse(address);
+      if (typeof adoptionPreferences === 'string' && adoptionPreferences) adoptionPreferences = JSON.parse(adoptionPreferences);
+      if (typeof rehomingInfo === 'string' && rehomingInfo) rehomingInfo = JSON.parse(rehomingInfo);
+    } catch (e) {
+      console.warn("Could not parse nested JSON fields:", e);
+    }
 
     // Validation
     const requiredFields = ['name', 'email', 'phone', 'password', 'confirmPassword'];
@@ -131,6 +137,10 @@ exports.register = async (req, res) => {
       address: address || {},
     };
 
+    if (req.file) {
+      userData.profileImage = req.file.filename;
+    }
+
     // Add role-specific data
     if (userRole === 'adopter' && adoptionPreferences) {
       userData.adoptionPreferences = {
@@ -152,20 +162,31 @@ exports.register = async (req, res) => {
 
     const user = await User.create(userData);
 
-    // Send welcome email
+    // Generate OTP
+    const otp = user.getEmailVerificationOTP();
+    await user.save({ validateBeforeSave: false });
+
+    // Send verification email
     try {
       await sendEmail({
         email: user.email,
-        subject: emailTemplates.welcome(user.name).subject,
-        html: emailTemplates.welcome(user.name).html,
+        subject: emailTemplates.emailVerification(otp).subject,
+        html: emailTemplates.emailVerification(otp).html,
+      });
+
+      return res.status(201).json({
+        success: true,
+        requiresEmailVerification: true,
+        email: user.email,
+        message: 'Verification code sent',
       });
     } catch (emailError) {
-      console.error('Welcome email error:', emailError);
-      // Don't fail registration if email fails
+      console.error('Verification email error:', emailError);
+      return res.status(500).json({
+        success: false,
+        error: 'Email could not be sent. Please check configuration.',
+      });
     }
-
-    // Send token response
-    sendTokenResponse(user, 201, res);
   } catch (error) {
     console.error('Registration error:', error);
     
@@ -633,5 +654,84 @@ exports.refreshToken = async (req, res) => {
   } catch (error) {
     // jwt.verify throws on invalid/expired token — return 401, not 500
     return res.status(401).json({ success: false, error: 'Invalid or expired refresh token' });
+  }
+};
+
+// @desc    Verify Email OTP
+// @route   POST /api/auth/verify-email
+// @access  Public
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, error: 'Please provide email and OTP code' });
+    }
+
+    const emailVerificationToken = crypto.createHash('sha256').update(otp).digest('hex');
+    const user = await User.findOne({ 
+      email, 
+      emailVerificationToken,
+      emailVerificationExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired verification code' });
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpire = undefined;
+    await user.save();
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: emailTemplates.welcome(user.name).subject,
+        html: emailTemplates.welcome(user.name).html,
+      });
+    } catch (emailError) {}
+
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    console.error('Verify email error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+// @desc    Resend Verification OTP
+// @route   POST /api/auth/resend-verification
+// @access  Public
+exports.resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Please provide email' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'User not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ success: false, error: 'Email is already verified' });
+    }
+
+    const otp = user.getEmailVerificationOTP();
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: emailTemplates.emailVerification(otp).subject,
+        html: emailTemplates.emailVerification(otp).html,
+      });
+      return res.status(200).json({ success: true, message: 'Verification code resent' });
+    } catch (emailError) {
+      return res.status(500).json({ success: false, error: 'Email could not be sent' });
+    }
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
   }
 };
