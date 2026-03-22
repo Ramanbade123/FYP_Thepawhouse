@@ -17,6 +17,7 @@ import ReportAbusePage from './pages/ReportAbusePage';
 import DiseaseAwarenessPage from './pages/DiseaseAwarenessPage';
 import DonatePage from './pages/DonatePage';
 import DogDetailPage from './pages/DogDetailPage';
+import KhaltiCallback from './pages/KhaltiCallback';
 
 // Components
 import Navbar from './components/Navbar'
@@ -162,6 +163,7 @@ function App() {
         <Route path="/disease-awareness" element={<MainLayout><DiseaseAwarenessPage /></MainLayout>} />
         <Route path="/donate" element={<MainLayout><DonatePage /></MainLayout>} />
         <Route path="/dogs/:id" element={<DogDetailPage />} />
+        <Route path="/payment/khalti/verify" element={<PrivateRoute allowedRoles={['adopter']}><KhaltiCallback /></PrivateRoute>} />
         
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

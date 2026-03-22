@@ -8,6 +8,8 @@ const {
   applyForPet, getPetApplications,
   updateApplicationStatus, getMyApplications,
   adminGetAllApplications,
+  initiateKhaltiPayment, verifyKhaltiAndApply,
+  deleteApplication
 } = require('../controllers/petController');
 
 const { protect }                        = require('../middleware/authMiddleware');
@@ -38,8 +40,11 @@ router.put('/:id',   protect, isRehomer, upload.single('primaryImage'), updatePe
 router.delete('/:id',                      protect, isRehomer, deletePet);
 router.get('/:id/applications',            protect, isRehomer, getPetApplications);
 router.put('/:id/applications/:appId',     protect, isRehomer, updateApplicationStatus);
+router.delete('/:id/applications/:appId',  protect, isRehomer, deleteApplication);
 
 // Adopter param routes
 router.post('/:id/apply',                  protect, isAdopter, applyForPet);
+router.post('/:id/apply/initiate',         protect, isAdopter, initiateKhaltiPayment);
+router.post('/:id/apply/verify',           protect, isAdopter, verifyKhaltiAndApply);
 
 module.exports = router;

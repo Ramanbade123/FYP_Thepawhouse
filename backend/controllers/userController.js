@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Pet = require('../models/Pet');
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -377,6 +378,46 @@ exports.deleteUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error',
+    });
+  }
+};
+
+// @desc    Toggle favorite status for a pet
+// @route   POST /api/users/favorites/:petId
+// @access  Private (Adopter)
+exports.toggleFavorite = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const petId = req.params.petId;
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const isFavorite = user.favorites.some(id => id.toString() === petId.toString());
+
+    if (isFavorite) {
+      user.favorites = user.favorites.filter(id => id.toString() !== petId.toString());
+      // Optionally decrement pet's favoriteCount (if tracked)
+      await Pet.findByIdAndUpdate(petId, { $inc: { favoritesCount: -1 } });
+    } else {
+      user.favorites.push(petId);
+      // Optionally increment pet's favoriteCount (if tracked)
+      await Pet.findByIdAndUpdate(petId, { $inc: { favoritesCount: 1 } });
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: user.favorites,
+      isFavorite: !isFavorite
+    });
+  } catch (error) {
+    console.error('Toggle favorite error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error',

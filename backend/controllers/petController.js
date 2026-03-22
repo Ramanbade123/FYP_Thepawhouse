@@ -1,5 +1,7 @@
 const Pet  = require('../models/Pet');
 const User = require('../models/User');
+const axios = require('axios'); // Add axios for Khalti HTTP requests
+const { sendEmail, emailTemplates } = require('../utils/sendEmail');
 
 // ─────────────────────────────────────────────────────────────
 // REHOMER: Create listing  →  POST /api/pets
@@ -268,6 +270,118 @@ exports.applyForPet = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
+// ADOPTER: Initiate Khalti Payment  →  POST /api/pets/:id/apply/initiate
+// ─────────────────────────────────────────────────────────────
+exports.initiateKhaltiPayment = async (req, res) => {
+  try {
+    const pet = await Pet.findById(req.params.id);
+    if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
+
+    if (pet.adminApproval !== 'approved') {
+      return res.status(400).json({ success: false, error: 'This pet is not available for adoption' });
+    }
+
+    const alreadyApplied = pet.applications.some(a => a.adopter.toString() === req.user.id);
+    if (alreadyApplied) {
+      return res.status(400).json({ success: false, error: 'You have already applied for this pet' });
+    }
+
+    // Amount calculation. If no rehomingFee, charge minimum 10 NPR for spam protection.
+    let amountNPR = pet.rehomingFee || 10;
+    let amountPaisa = amountNPR * 100;
+    
+    // Purchase Order details
+    const purchase_order_id = `pet_${pet._id}_user_${req.user.id}`;
+    const purchase_order_name = `Adoption Application: ${pet.name}`;
+    const return_url = `${process.env.FRONTEND_URL}/payment/khalti/verify?petId=${pet._id}&message=${encodeURIComponent(req.body.message || '')}`;
+
+    const khaltiPayload = {
+        return_url,
+        website_url: process.env.FRONTEND_URL,
+        amount: amountPaisa,
+        purchase_order_id,
+        purchase_order_name,
+        customer_info: {
+            name: req.user.name || 'Adopter',
+            email: req.user.email || 'adopter@example.com',
+            phone: req.user.phone || '9800000000'
+        }
+    };
+
+    const khaltiResponse = await axios.post(
+        'https://a.khalti.com/api/v2/epayment/initiate/',
+        khaltiPayload,
+        {
+            headers: {
+                'Authorization': `Key ${process.env.KHALTI_SECRET_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        }
+    );
+
+    if (khaltiResponse.data && khaltiResponse.data.payment_url) {
+        res.status(200).json({ 
+            success: true, 
+            payment_url: khaltiResponse.data.payment_url,
+            pidx: khaltiResponse.data.pidx
+        });
+    } else {
+        res.status(500).json({ success: false, error: 'Failed to initiate Khalti payment' });
+    }
+  } catch (error) {
+    console.error('Khalti initiate error:', error.response ? error.response.data : error.message);
+    res.status(500).json({ success: false, error: 'Server error while initiating payment' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// ADOPTER: Verify Khalti Payment & Apply  →  POST /api/pets/:id/apply/verify
+// ─────────────────────────────────────────────────────────────
+exports.verifyKhaltiAndApply = async (req, res) => {
+  try {
+    const { pidx, message } = req.body;
+    if (!pidx) return res.status(400).json({ success: false, error: 'Missing pidx' });
+
+    // Verify payment status with Khalti
+    const khaltiResponse = await axios.post(
+        'https://a.khalti.com/api/v2/epayment/lookup/',
+        { pidx },
+        {
+            headers: {
+                'Authorization': `Key ${process.env.KHALTI_SECRET_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        }
+    );
+
+    if (khaltiResponse.data && khaltiResponse.data.status === 'Completed') {
+        const pet = await Pet.findById(req.params.id);
+        if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
+
+        const alreadyApplied = pet.applications.some(a => a.adopter.toString() === req.user.id);
+        if (alreadyApplied) {
+            return res.status(400).json({ success: false, error: 'You have already applied for this pet' });
+        }
+
+        pet.applications.push({ adopter: req.user.id, message: message || '', status: 'pending' });
+        pet.status = 'pending';
+        await pet.save();
+
+        await User.findByIdAndUpdate(req.user.id, {
+          $push: { petsAdopted: { petId: pet._id, petName: pet.name, status: 'pending' } },
+        });
+
+        res.status(200).json({ success: true, message: 'Application submitted successfully via Khalti', data: pet });
+    } else {
+        res.status(400).json({ success: false, error: 'Payment verification failed or payment not completed' });
+    }
+  } catch (error) {
+    console.error('Khalti verify error:', error.response ? error.response.data : error.message);
+    res.status(500).json({ success: false, error: 'Server error while verifying payment' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
 // REHOMER: Get applications for their pet → GET /api/pets/:id/applications
 // ─────────────────────────────────────────────────────────────
 exports.getPetApplications = async (req, res) => {
@@ -293,7 +407,8 @@ exports.getPetApplications = async (req, res) => {
 exports.updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const pet = await Pet.findById(req.params.id);
+    const pet = await Pet.findById(req.params.id)
+      .populate('applications.adopter', 'name email');
     if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
 
     if (pet.rehomer.toString() !== req.user.id && req.user.role !== 'admin') {
@@ -305,17 +420,82 @@ exports.updateApplicationStatus = async (req, res) => {
 
     application.status = status;
 
+    // Collect adopters whose status changed to 'rejected' so we can email them
+    const toNotifyRejected = [];
+
     if (status === 'approved') {
       pet.status      = 'adopted';
-      pet.adoptedBy   = application.adopter;
+      pet.adoptedBy   = application.adopter._id || application.adopter;
       pet.adoptedDate = new Date();
       pet.applications.forEach(a => {
-        if (a._id.toString() !== req.params.appId) a.status = 'rejected';
+        if (a._id.toString() !== req.params.appId) {
+          a.status = 'rejected';
+          if (a.adopter && a.adopter.email) toNotifyRejected.push(a.adopter);
+        }
       });
     }
 
     await pet.save();
+
+    // ── Send notification emails (non-blocking) ──────────────────────────────
+    const adopter  = application.adopter;
+    const petName  = pet.name;
+
+    if (adopter && adopter.email) {
+      if (status === 'approved') {
+        const tmpl = emailTemplates.adoptionApproval(petName, adopter.name || 'Adopter');
+        sendEmail({ email: adopter.email, ...tmpl }).catch(err => console.error('Approval email error:', err));
+      } else if (status === 'rejected') {
+        const tmpl = emailTemplates.adoptionRejection(petName, adopter.name || 'Adopter');
+        sendEmail({ email: adopter.email, ...tmpl }).catch(err => console.error('Rejection email error:', err));
+      }
+    }
+
+    // Also email auto-rejected adopters when someone else is approved
+    toNotifyRejected.forEach(otherAdopter => {
+      const tmpl = emailTemplates.adoptionRejection(petName, otherAdopter.name || 'Adopter');
+      sendEmail({ email: otherAdopter.email, ...tmpl }).catch(err => console.error('Auto-rejection email error:', err));
+    });
+    // ─────────────────────────────────────────────────────────────────────────
+
     res.status(200).json({ success: true, data: pet });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// REHOMER: Delete an application → DELETE /api/pets/:id/applications/:appId
+// ─────────────────────────────────────────────────────────────
+exports.deleteApplication = async (req, res) => {
+  try {
+    const pet = await Pet.findById(req.params.id);
+    if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
+
+    if (pet.rehomer.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    const applicationIndex = pet.applications.findIndex(a => a._id.toString() === req.params.appId);
+    if (applicationIndex === -1) return res.status(404).json({ success: false, error: 'Application not found' });
+
+    // Remove the application
+    pet.applications.splice(applicationIndex, 1);
+    
+    // Check if the removed application was the one that adopted the pet
+    // If so, we might want to revert the pet status to available, but usually deleting an app is for rejected or pending ones.
+    // Let's just blindly delete it. If they delete an approved app, maybe pet goes back to available?
+    if (pet.status === 'adopted') {
+        const hasApprovedApp = pet.applications.some(a => a.status === 'approved');
+        if (!hasApprovedApp) {
+            pet.status = 'available';
+            pet.adoptedBy = null;
+            pet.adoptedDate = null;
+        }
+    }
+
+    await pet.save();
+    res.status(200).json({ success: true, message: 'Application deleted', data: pet });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
   }

@@ -209,6 +209,57 @@ const emailTemplates = {
     `,
   }),
 
+  adoptionRejection: (petName, adopterName) => ({
+    subject: `Update on Your Adoption Application for ${petName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Adoption Application Update</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+          .header { background: linear-gradient(to right, #008737, #085558); padding: 20px; text-align: center; }
+          .header h1 { color: white; margin: 0; }
+          .content { padding: 30px; background-color: #f9f9f9; }
+          .button { background: #008737; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
+          .footer { padding: 20px; text-align: center; background-color: #f0f0f0; font-size: 12px; color: #666; }
+          .notice { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 4px; margin: 15px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Adoption Application Update 🐾</h1>
+        </div>
+        <div class="content">
+          <h2>Hello ${adopterName},</h2>
+          <div class="notice">
+            <p>Thank you for your interest in adopting <strong>${petName}</strong>. After careful consideration, the rehomer has decided to proceed with another applicant at this time.</p>
+          </div>
+          <p>We understand this may be disappointing, but please don't give up! There are many wonderful dogs waiting for a loving home just like yours.</p>
+          <p>Here's what you can do next:</p>
+          <ul>
+            <li>Browse other available dogs on our platform</li>
+            <li>Save your favourite dogs to keep track of them</li>
+            <li>Keep checking back as new dogs are listed regularly</li>
+          </ul>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL}/dashboard" class="button">
+              Browse More Dogs
+            </a>
+          </div>
+          <p>Thank you for caring about animals. We hope to help you find your perfect companion soon!</p>
+          <p>Best regards,<br>The Paw House Team 🐾</p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} The Paw House. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
   adoptionApproval: (petName, adopterName) => ({
     subject: `Adoption Approved for ${petName}! 🎉`,
     html: `

@@ -3,6 +3,7 @@ import {
   AlertTriangle, Eye, Trash2, RefreshCw, Search, Filter,
   CheckCircle, Clock, XCircle, MapPin, Phone, Mail, User, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import ConfirmDeleteModal from '../Shared/ConfirmDeleteModal';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -220,6 +221,7 @@ const AdminReportsTab = () => {
   const [search,       setSearch]       = useState('');
   const [selected,     setSelected]     = useState(null);
   const [flash,        setFlash]        = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const LIMIT = 15;
 
   // Summary counts
@@ -263,16 +265,16 @@ const AdminReportsTab = () => {
     finally { setUpdating(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Permanently delete this report?')) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     setUpdating(true);
     try {
-      await apiFetch('DELETE', `/reports/${id}`);
+      await apiFetch('DELETE', `/reports/${deleteTarget}`);
       showFlash('Report deleted.');
       setSelected(null);
       fetchReports();
     } catch (e) { showFlash(`Error: ${e.message}`); }
-    finally { setUpdating(false); }
+    finally { setUpdating(false); setDeleteTarget(null); }
   };
 
   const filtered = reports.filter(r => {
@@ -301,6 +303,14 @@ const AdminReportsTab = () => {
           {flash}
         </div>
       )}
+
+      <ConfirmDeleteModal 
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Report?"
+        message="This action cannot be undone. Are you sure you want to permanently delete this report?"
+      />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
@@ -434,7 +444,7 @@ const AdminReportsTab = () => {
                           title="View & Edit">
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleDelete(report._id)}
+                        <button onClick={() => setDeleteTarget(report._id)}
                           className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                           title="Delete">
                           <Trash2 className="h-4 w-4" />
@@ -472,7 +482,7 @@ const AdminReportsTab = () => {
           report={selected}
           onClose={() => setSelected(null)}
           onUpdate={handleUpdate}
-          onDelete={handleDelete}
+          onDelete={(id) => setDeleteTarget(id)}
           updating={updating}
         />
       )}

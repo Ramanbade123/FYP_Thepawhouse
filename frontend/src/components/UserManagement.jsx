@@ -3,8 +3,9 @@ import {
   Search, Filter, Download, Eye, 
   Edit, Trash2, MoreVertical, User,
   Mail, Phone, Calendar, CheckCircle,
-  XCircle, Clock, UserCheck, UserX, RefreshCw
+  XCircle, Clock, UserCheck, UserX, RefreshCw, Shield
 } from 'lucide-react';
+import ConfirmDeleteModal from './Shared/ConfirmDeleteModal';
 
 const UserManagement = ({ preview = false }) => {
   const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -21,6 +22,7 @@ const UserManagement = ({ preview = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -123,22 +125,23 @@ const UserManagement = ({ preview = false }) => {
   // If preview mode, show only 5 users
   const displayUsers = preview ? filteredUsers.slice(0, 5) : filteredUsers;
 
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        const response = await fetch(`/api/users/${userId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const data = await response.json();
-        if (data.success) {
-          setUsers(users.filter(user => user._id !== userId));
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      const response = await fetch(`${API}/users/${deleteTarget}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
-      } catch (error) {
-        console.error('Error deleting user:', error);
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUsers(users.filter(user => user._id !== deleteTarget));
       }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -222,6 +225,14 @@ const UserManagement = ({ preview = false }) => {
 
   return (
     <div>
+      <ConfirmDeleteModal 
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete User?"
+        message="This action cannot be undone. Are you sure you want to remove this user?"
+      />
+
       {!preview && (
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
@@ -424,7 +435,7 @@ const UserManagement = ({ preview = false }) => {
                             {user.status === 'active' ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                           </button>
                           <button
-                            onClick={() => handleDeleteUser(user._id)}
+                            onClick={() => setDeleteTarget(user._id)}
                             title="Delete User"
                             className="p-1 text-red-600 hover:text-red-800"
                           >

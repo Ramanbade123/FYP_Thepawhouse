@@ -7,7 +7,7 @@ const {
 } = require('../controllers/authController');
 
 const {
-  getProfile, updateProfile, updatePreferences,
+  getProfile, updateProfile, updatePreferences, toggleFavorite,
   getDashboardStats, getUsers, getUserById, updateUser, deleteUser,
 } = require('../controllers/userController');
 
@@ -29,6 +29,7 @@ router.get('/logout',          protect, logout);
 router.get('/profile',         protect, getProfile);
 router.put('/profile',         protect, upload.single('profileImage'), updateProfile);
 router.put('/preferences/:type', protect, updatePreferences);
+router.post('/favorites/:petId', protect, toggleFavorite);
 router.get('/dashboard/stats', protect, getDashboardStats);
 
 // ── Admin only ────────────────────────────────────────────────

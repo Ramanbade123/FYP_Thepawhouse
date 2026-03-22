@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Dog, RefreshCw, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-
+import ConfirmDeleteModal from '../Shared/ConfirmDeleteModal';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -25,6 +25,7 @@ const ListedDogs = ({ onStatsChange }) => {
   const [dogs, setDogs]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const fetchMyDogs = async () => {
     setLoading(true); setError('');
@@ -44,21 +45,29 @@ const ListedDogs = ({ onStatsChange }) => {
 
   useEffect(() => { fetchMyDogs(); }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Remove this listing permanently?')) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
       const token = localStorage.getItem('token');
-      const res   = await fetch(`${API}/pets/${id}`, {
+      const res   = await fetch(`${API}/pets/${deleteTarget}`, {
         method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
-      setDogs(prev => prev.filter(d => d._id !== id));
-    } catch (err) { alert(err.message); }
+      setDogs(prev => prev.filter(d => d._id !== deleteTarget));
+    } catch (err) { alert(err.message); } finally { setDeleteTarget(null); }
   };
 
   return (
     <>
+      <ConfirmDeleteModal 
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Listing?"
+        message="This action cannot be undone. Are you sure you want to permanently remove this dog listing?"
+      />
+
       <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-100">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-[#063630]">Your Listed Dogs</h2>
@@ -157,7 +166,7 @@ const ListedDogs = ({ onStatsChange }) => {
                         className="p-2 text-gray-400 hover:text-[#085558] rounded-lg hover:bg-[#085558]/10 transition-colors">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button onClick={() => handleDelete(dog._id)}
+                      <button onClick={() => setDeleteTarget(dog._id)}
                         className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>

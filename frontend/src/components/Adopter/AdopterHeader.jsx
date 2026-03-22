@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PawPrint, Bell, Search, FileText, MessageSquare, Settings, ChevronDown, User, LogOut, Stethoscope, HelpCircle } from 'lucide-react';
+import { PawPrint, Bell, Search, FileText, MessageSquare, Settings, ChevronDown, User, LogOut, Stethoscope, HelpCircle, Heart } from 'lucide-react';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -106,6 +106,10 @@ const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
                     <button onClick={() => { setActiveTab('settings'); setShowMenu(false); }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
                       <User className="h-4 w-4" /> My Profile
+                    </button>
+                    <button onClick={() => { setActiveTab('favourites'); setShowMenu(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
+                      <Heart className="h-4 w-4" /> Favourites
                     </button>
                     <button onClick={() => { setActiveTab('settings'); setShowMenu(false); }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Dog, RefreshCw, CheckCircle, XCircle, Eye, Clock, User } from 'lucide-react';
+import { Dog, RefreshCw, CheckCircle, XCircle, Eye, Clock, User, Trash2 } from 'lucide-react';
+import ConfirmDeleteModal from '../../Shared/ConfirmDeleteModal';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
@@ -97,6 +98,7 @@ const ApplicationsTab = () => {
   const [loading, setLoading]   = useState(true);
   const [selected, setSelected] = useState(null); // { app, petId, petName }
   const [filter, setFilter]     = useState('all');
+  const [deleteTarget, setDeleteTarget] = useState(null); // { petId, appId }
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -134,6 +136,20 @@ const ApplicationsTab = () => {
     } catch {}
   };
 
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API}/pets/${deleteTarget.petId}/applications/${deleteTarget.appId}`, {
+        method:  'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchApplications();
+    } catch {} finally {
+      setDeleteTarget(null);
+    }
+  };
+
   // Flatten all apps for filtering
   const allApps = pets.flatMap(p => p.apps);
   const filtered = filter === 'all' ? allApps : allApps.filter(a => a.status === filter);
@@ -148,6 +164,14 @@ const ApplicationsTab = () => {
 
   return (
     <div>
+      <ConfirmDeleteModal 
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Application?"
+        message="This action cannot be undone. Are you sure you want to remove this application permanently?"
+      />
+
       {selected && (
         <AppDetailModal
           app={selected.app}
@@ -248,12 +272,21 @@ const ApplicationsTab = () => {
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <button
-                      onClick={() => setSelected({ app, petId: app.petId })}
-                      className="flex items-center gap-1 px-3 py-1.5 text-[#085558] border border-[#085558]/30 rounded-lg hover:bg-[#085558]/10 transition-colors text-xs font-medium"
-                    >
-                      <Eye className="h-3.5 w-3.5" /> View
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelected({ app, petId: app.petId })}
+                        className="flex items-center gap-1 px-3 py-1.5 text-[#085558] border border-[#085558]/30 rounded-lg hover:bg-[#085558]/10 transition-colors text-xs font-medium"
+                      >
+                        <Eye className="h-3.5 w-3.5" /> View
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget({ petId: app.petId, appId: app._id })}
+                        className="flex items-center gap-1 px-3 py-1.5 text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium"
+                        title="Delete Application"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </button>
+                    </div>
                   </td>
                 </motion.tr>
               ))}

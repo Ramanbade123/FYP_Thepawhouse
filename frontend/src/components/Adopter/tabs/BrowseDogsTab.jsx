@@ -34,7 +34,10 @@ const BrowseDogsTab = () => {
   const [activeQuick, setActiveQuick]   = useState(userCity ? 'nearby' : 'all');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [advFilters, setAdvFilters]     = useState(EMPTY_FILTERS);
-  const [favorites, setFavorites]       = useState([]);
+  const [favorites, setFavorites]       = useState(() => {
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    return u?.favorites || [];
+  });
   const [currentPage, setCurrentPage]   = useState(1);
   const [totalPages, setTotalPages]     = useState(1);
   const [total, setTotal]               = useState(0);
@@ -116,9 +119,28 @@ const BrowseDogsTab = () => {
 
   const hasActiveFilters = Object.values(advFilters).some(Boolean) || search;
 
-  const toggleFavorite = (id) => setFavorites(prev =>
-    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-  );
+  const toggleFavorite = async (id, e) => {
+    e.stopPropagation();
+    const token = localStorage.getItem('token');
+    if (!token) return alert("Please login to save favorites!");
+    
+    // Optimistic update
+    setFavorites(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+    try {
+      const res = await fetch(`${API}/users/favorites/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFavorites(data.data);
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        u.favorites = data.data;
+        localStorage.setItem('user', JSON.stringify(u));
+      }
+    } catch (error) { console.error('Favorite toggle failed', error); }
+  };
 
   const selectClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#063630] focus:outline-none focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/10 transition-all";
   const inputClass  = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#063630] placeholder-gray-400 focus:outline-none focus:bg-white focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/10 transition-all";
@@ -350,8 +372,8 @@ const BrowseDogsTab = () => {
                   <div className="absolute top-4 left-4">
                     <span className="inline-block px-3 py-1 bg-[#008737] text-white text-xs font-semibold rounded-full shadow-md">Available</span>
                   </div>
-                  <button onClick={() => toggleFavorite(dog._id)}
-                    className="absolute top-4 right-4 bg-white/90 p-2 rounded-full hover:bg-white transition-colors shadow-sm">
+                  <button onClick={(e) => toggleFavorite(dog._id, e)}
+                    className="absolute top-4 right-4 bg-white/90 p-2 rounded-full hover:bg-white transition-colors shadow-sm z-10">
                     <Heart className={`h-5 w-5 ${favorites.includes(dog._id) ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-400'}`} />
                   </button>
                   <div className="absolute inset-0 bg-gradient-to-t from-[#063630]/60 via-transparent to-transparent" />

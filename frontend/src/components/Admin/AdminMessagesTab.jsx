@@ -5,6 +5,7 @@ import {
   Search, MessageSquare, Clock, CheckCircle,
   AlertCircle, ChevronLeft, ChevronRight, Reply
 } from 'lucide-react';
+import ConfirmDeleteModal from '../Shared/ConfirmDeleteModal';
 
 const API = 'http://localhost:5000/api';
 const token = () => localStorage.getItem('token');
@@ -151,6 +152,7 @@ const AdminMessagesTab = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal]           = useState(0);
   const [stats, setStats]           = useState({ total: 0, unread: 0, read: 0, replied: 0 });
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const fetchMessages = useCallback(async () => {
     setLoading(true); setError('');
@@ -200,14 +202,14 @@ const AdminMessagesTab = () => {
     } catch (err) { alert(err.message); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this message permanently?')) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await apiFetch('DELETE', `/contact/${id}`);
+      await apiFetch('DELETE', `/contact/${deleteTarget}`);
       setSelected(null);
       fetchMessages();
       fetchStats();
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert(err.message); } finally { setDeleteTarget(null); }
   };
 
   const filtered = messages.filter(m => {
@@ -220,6 +222,13 @@ const AdminMessagesTab = () => {
 
   return (
     <div className="space-y-6">
+      <ConfirmDeleteModal 
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Message?"
+        message="This action cannot be undone. Are you sure you want to permanently delete this message?"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -326,7 +335,7 @@ const AdminMessagesTab = () => {
                       className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#063630]/5 hover:bg-[#063630]/10 text-[#063630] transition-colors">
                       <Eye className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleDelete(msg._id)}
+                    <button onClick={() => setDeleteTarget(msg._id)}
                       className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 text-red-500 transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -363,7 +372,7 @@ const AdminMessagesTab = () => {
           msg={selected}
           onClose={() => setSelected(null)}
           onStatusChange={handleStatusChange}
-          onDelete={handleDelete}
+          onDelete={(id) => setDeleteTarget(id)}
         />
       )}
     </div>

@@ -181,10 +181,15 @@ exports.register = async (req, res) => {
         message: 'Verification code sent',
       });
     } catch (emailError) {
-      console.error('Verification email error:', emailError);
-      return res.status(500).json({
-        success: false,
-        error: 'Email could not be sent. Please check configuration.',
+      // User was created but email failed. Let them proceed to OTP screen;
+      // they can use 'Resend code' to get a new OTP.
+      console.error('Verification email error (user still created):', emailError);
+      return res.status(201).json({
+        success: true,
+        requiresEmailVerification: true,
+        email: user.email,
+        message: 'Account created. If you did not receive a verification email, please use the resend option.',
+        emailError: true,
       });
     }
   } catch (error) {

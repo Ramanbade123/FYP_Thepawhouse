@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, ChevronRight, Trash2, ChevronLeft, Search } from 'lucide-react';
+import ConfirmDeleteModal from '../Shared/ConfirmDeleteModal';
 
 const API      = 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -31,6 +32,7 @@ const RecentUsersTable = ({ preview = true, onManageUsers }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal]         = useState(0);
   const [deleting, setDeleting]   = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, name }
 
   const fetchUsers = async (p = 1, s = search, r = roleFilter) => {
     setLoading(true); setError('');
@@ -55,21 +57,29 @@ const RecentUsersTable = ({ preview = true, onManageUsers }) => {
 
   useEffect(() => { fetchUsers(); }, []);
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete user "${name}"? This cannot be undone.`)) return;
-    setDeleting(id);
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(deleteTarget.id);
     try {
       const token = localStorage.getItem('token');
-      const res   = await fetch(`${API}/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const res   = await fetch(`${API}/users/${deleteTarget.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       const data  = await res.json();
       if (!data.success) throw new Error(data.error);
       fetchUsers(page);
     } catch (err) { alert(err.message); }
-    finally { setDeleting(null); }
+    finally { setDeleting(null); setDeleteTarget(null); }
   };
 
   return (
     <div>
+      <ConfirmDeleteModal 
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete User?"
+        message={`This action cannot be undone. Are you sure you want to permanently delete user "${deleteTarget?.name}"?`}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         {preview ? (
@@ -153,7 +163,7 @@ const RecentUsersTable = ({ preview = true, onManageUsers }) => {
                   </td>
                   {!preview && (
                     <td className="py-3">
-                      <button onClick={() => handleDelete(u._id, u.name)} disabled={deleting === u._id}
+                      <button onClick={() => setDeleteTarget({ id: u._id, name: u.name })} disabled={deleting === u._id}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40">
                         {deleting === u._id ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                       </button>

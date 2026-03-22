@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, Clock, CheckCircle, XCircle, Dog } from 'lucide-react';
+import { FileText, Clock, CheckCircle, XCircle, Dog, MessageCircle } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -18,9 +19,11 @@ const statusStyle = {
 };
 
 const AdopterApplicationsTab = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
+  const [startingChat, setStartingChat] = useState(false);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -38,6 +41,32 @@ const AdopterApplicationsTab = () => {
     };
     fetchApplications();
   }, []);
+
+  const handleChat = async (petId) => {
+    setStartingChat(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/messages/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ petId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('openConversation', data.data._id);
+        navigate('/adopter/dashboard', { state: { tab: 'messages' } });
+      } else {
+        alert(data.error || 'Could not start conversation.');
+      }
+    } catch {
+      alert('Error starting conversation.');
+    } finally {
+      setStartingChat(false);
+    }
+  };
 
   if (loading) return (
     <div className="flex justify-center py-20">
@@ -81,9 +110,22 @@ const AdopterApplicationsTab = () => {
                     <p className="text-gray-400 text-xs mt-0.5">Applied {new Date(app.appliedAt).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${s.cls}`}>
-                  <Icon className="h-3.5 w-3.5" /> {s.label}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${s.cls}`}>
+                    <Icon className="h-3.5 w-3.5" /> {s.label}
+                  </span>
+                  {app.status === 'approved' && (
+                    <button 
+                      onClick={() => handleChat(app.pet._id)}
+                      disabled={startingChat}
+                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#008737] to-[#085558] rounded-xl hover:shadow-md transition-all disabled:opacity-60"
+                      title="Chat with Rehomer"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" /> 
+                      {startingChat ? 'Starting...' : 'Chat'}
+                    </button>
+                  )}
+                </div>
               </motion.div>
             );
           })}

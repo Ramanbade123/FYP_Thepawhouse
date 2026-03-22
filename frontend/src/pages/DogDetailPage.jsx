@@ -282,16 +282,25 @@ const DogDetailPage = () => {
     setApplying(true);
     try {
       const token = localStorage.getItem('token');
-      const res   = await fetch(`${API}/pets/${id}/apply`, {
+      // Call the new Khalti initiate endpoint
+      const res   = await fetch(`${API}/pets/${id}/apply/initiate`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body:    JSON.stringify({ message: applyMessage || 'I would love to adopt this dog!' }),
       });
       const data = await res.json();
-      if (data.success) setApplied(true);
-      else alert(data.error || 'Could not submit application.');
-    } catch { alert('Server error. Please try again.'); }
-    finally { setApplying(false); }
+      if (data.success && data.payment_url) {
+        // Redirect to Khalti checkout page
+        window.location.href = data.payment_url;
+      } else {
+        alert(data.error || 'Could not initiate payment.');
+        setApplying(false);
+      }
+    } catch { 
+      alert('Server error. Please try again.'); 
+      setApplying(false);
+    }
+    // Note: Do not set applying to false immediately on success as we are redirecting away
   };
 
   if (loading) return (
@@ -520,7 +529,7 @@ const DogDetailPage = () => {
                   <button onClick={handleApply} disabled={applying}
                     className="flex-1 py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-60"
                     style={{ color: '#ffffff' }}>
-                    {applying ? 'Submitting...' : `Submit Application`}
+                    {applying ? 'Redirecting...' : `Proceed to Payment`}
                   </button>
                   <button onClick={() => setShowApplyForm(false)}
                     className="px-4 py-3 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50">

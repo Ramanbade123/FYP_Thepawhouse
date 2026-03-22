@@ -5,6 +5,7 @@ import {
   RefreshCw, Search, Filter, ChevronDown, X,
   AlertTriangle, MapPin, User
 } from 'lucide-react';
+import ConfirmDeleteModal from '../Shared/ConfirmDeleteModal';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -183,6 +184,7 @@ const AdminPetManagement = () => {
   const [page, setPage]             = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [toast, setToast]           = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -229,19 +231,19 @@ const AdminPetManagement = () => {
     }
   };
 
-  const handleDelete = async (petId) => {
-    if (!window.confirm('Permanently delete this listing?')) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API}/pets/${petId}`, {
+      const res = await fetch(`${API}/pets/${deleteTarget}`, {
         method:  'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!res.ok) { showToast(data.error || 'Delete failed'); return; }
-      setPets(prev => prev.filter(p => p._id !== petId));
+      setPets(prev => prev.filter(p => p._id !== deleteTarget));
       showToast('Listing deleted');
-    } catch { showToast('Delete failed'); }
+    } catch { showToast('Delete failed'); } finally { setDeleteTarget(null); }
   };
 
   const filteredPets = pets.filter(p =>
@@ -264,6 +266,14 @@ const AdminPetManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDeleteModal 
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Listing?"
+        message="This action cannot be undone. Are you sure you want to permanently delete this listing?"
+      />
 
       {/* Detail modal */}
       {selectedPet && (
@@ -406,7 +416,7 @@ const AdminPetManagement = () => {
                           </button>
                         </>
                       )}
-                      <button onClick={() => handleDelete(pet._id)}
+                      <button onClick={() => setDeleteTarget(pet._id)}
                         title="Delete listing"
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                         <Trash2 className="h-4 w-4" />

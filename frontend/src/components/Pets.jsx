@@ -67,7 +67,10 @@ const Pets = () => {
   const navigate = useNavigate();
   const [pets,        setPets]        = useState([]);
   const [loading,     setLoading]     = useState(true);
-  const [favorites,   setFavorites]   = useState([]);
+  const [favorites,   setFavorites]   = useState(() => {
+    const u = JSON.parse(localStorage.getItem('user') || '{}');
+    return u?.favorites || [];
+  });
   const [page,        setPage]        = useState(1);
   const [total,       setTotal]       = useState(0);
   const [search,      setSearch]      = useState("");
@@ -128,6 +131,28 @@ const Pets = () => {
   };
 
   const hasActiveFilters = search || activeFilter !== "all" || advSize || advCity || advGender || advVaccinated;
+
+  const toggleFavorite = async (id, e) => {
+    e.stopPropagation();
+    const token = localStorage.getItem('token');
+    if (!token) return alert("Please login to save favorites!");
+    
+    setFavorites(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+    try {
+      const res = await fetch(`${API}/users/favorites/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFavorites(data.data);
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        u.favorites = data.data;
+        localStorage.setItem('user', JSON.stringify(u));
+      }
+    } catch (error) { console.error('Favorite toggle failed', error); }
+  };
 
   const totalPages = Math.ceil(total / PER_PAGE);
 
@@ -285,8 +310,8 @@ const Pets = () => {
                       Available
                     </span>
                   </div>
-                  <button onClick={e => { e.stopPropagation(); setFavorites(p => p.includes(dog._id) ? p.filter(x => x !== dog._id) : [...p, dog._id]); }}
-                    className="absolute top-4 right-4 bg-white/90 p-2 rounded-full hover:bg-white transition-colors shadow-sm">
+                  <button onClick={(e) => toggleFavorite(dog._id, e)}
+                    className="absolute top-4 right-4 bg-white/90 p-2 rounded-full hover:bg-white transition-colors shadow-sm z-10">
                     <Heart className={`h-5 w-5 ${favorites.includes(dog._id) ? "text-red-500 fill-red-500" : "text-gray-400"}`} />
                   </button>
                   <div className="absolute inset-0 bg-gradient-to-t from-[#063630]/50 via-transparent to-transparent" />

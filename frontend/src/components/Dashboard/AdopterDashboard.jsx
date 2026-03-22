@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import AdopterHeader          from '../Adopter/AdopterHeader';
 import AdopterFooter          from '../Adopter/AdopterFooter';
 import BrowseDogsTab          from '../Adopter/tabs/BrowseDogsTab';
+import FavouritesTab          from '../Adopter/tabs/FavouritesTab';
 import AdopterApplicationsTab from '../Adopter/tabs/AdopterApplicationsTab';
 import AdopterMessagesTab     from '../Adopter/tabs/AdopterMessagesTab';
 import AdopterSettingsTab     from '../Adopter/tabs/AdopterSettingsTab';
@@ -15,6 +16,12 @@ const AdopterDashboard = () => {
   const [user, setUser]         = useState(null);
   const [loading, setLoading]   = useState(true);
   const [activeTab, setActiveTab] = useState(location.state?.tab || 'browse');
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
@@ -38,6 +45,7 @@ const AdopterDashboard = () => {
 
       <div className="container mx-auto px-4 py-8 flex-1">
         {activeTab === 'browse'       && <BrowseDogsTab />}
+        {activeTab === 'favourites'   && <FavouritesTab />}
         {activeTab === 'applications' && <AdopterApplicationsTab />}
         {activeTab === 'vets'         && <NearbyClinics />}
         {activeTab === 'messages'     && <AdopterMessagesTab />}

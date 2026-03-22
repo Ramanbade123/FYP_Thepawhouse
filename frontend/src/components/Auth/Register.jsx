@@ -105,12 +105,11 @@ const Register = () => {
   };
 
   const nextStep = () => {
+    setError('');
     if (step === 1 && validateStep1()) {
       setStep(2);
-      setError('');
     } else if (step === 2 && validateStep2()) {
       setStep(3);
-      setError('');
     }
   };
 
@@ -168,7 +167,7 @@ const Register = () => {
       if (response.data.success || response.data.requiresEmailVerification) {
         setRegisteredEmail(response.data.email || email);
         setSuccess('');
-        setStep(5); // Go to OTP verification step
+        setStep(4); // Go to OTP verification step
       }
     } catch (err) {
       setError(
