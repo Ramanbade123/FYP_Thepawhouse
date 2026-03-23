@@ -12,7 +12,11 @@ const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').r
 
 const imgSrc = (url) => {
   if (!url) return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  let fullUrl = url;
+  if (!url.startsWith('http') && !url.startsWith('/')) {
+    fullUrl = `/uploads/pets/${url}`; 
+  }
+  return fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`;
 };
 
 

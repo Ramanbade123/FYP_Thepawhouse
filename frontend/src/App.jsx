@@ -15,9 +15,11 @@ import EditDogPage from './pages/EditDogPage';
 import LostFoundPage from './pages/LostFoundPage';
 import ReportAbusePage from './pages/ReportAbusePage';
 import DiseaseAwarenessPage from './pages/DiseaseAwarenessPage';
+import VeterinariansPage from './pages/VeterinariansPage';
 import DonatePage from './pages/DonatePage';
 import DogDetailPage from './pages/DogDetailPage';
 import KhaltiCallback from './pages/KhaltiCallback';
+import KhaltiDonationVerify from './pages/KhaltiDonationVerify';
 
 // Components
 import Navbar from './components/Navbar'
@@ -161,9 +163,11 @@ function App() {
         <Route path="/lost-found" element={<MainLayout><LostFoundPage /></MainLayout>} />
         <Route path="/report" element={<MainLayout><ReportAbusePage /></MainLayout>} />
         <Route path="/disease-awareness" element={<MainLayout><DiseaseAwarenessPage /></MainLayout>} />
+        <Route path="/veterinarians" element={<MainLayout><VeterinariansPage /></MainLayout>} />
         <Route path="/donate" element={<MainLayout><DonatePage /></MainLayout>} />
         <Route path="/dogs/:id" element={<DogDetailPage />} />
         <Route path="/payment/khalti/verify" element={<PrivateRoute allowedRoles={['adopter']}><KhaltiCallback /></PrivateRoute>} />
+        <Route path="/donate/verify" element={<KhaltiDonationVerify />} />
         
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

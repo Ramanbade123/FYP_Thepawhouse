@@ -37,8 +37,12 @@ const safeStr = (val) => {
 const imgSrc = (pet) => {
   const img = pet.primaryImage || (pet.images && pet.images[0]);
   if (!img) return "https://placehold.co/400x300?text=No+Photo";
-  if (img.startsWith("http")) return img;
-  return `${BASE_URL}${img}`;
+  let fullUrl = img;
+  if (!img.startsWith('http') && !img.startsWith('/')) {
+    fullUrl = `/uploads/pets/${img}`;
+  }
+  if (fullUrl.startsWith("http")) return fullUrl;
+  return `${BASE_URL}${fullUrl}`;
 };
 
 const ageLabel = (pet) => {

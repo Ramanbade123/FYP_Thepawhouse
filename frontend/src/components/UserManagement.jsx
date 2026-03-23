@@ -12,7 +12,11 @@ const UserManagement = ({ preview = false }) => {
   const BASE_URL = API.replace('/api', '');
   const imgSrc   = (url, updatedAt) => {
     if (!url || url === 'default-profile.jpg') return null;
-    const base = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+    let fullUrl = url;
+    if (!url.startsWith('http') && !url.startsWith('/')) {
+      fullUrl = `/uploads/users/${url}`;
+    }
+    const base = fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`;
     // Use updatedAt as stable cache-buster so image refreshes when user data changes
     const bust = updatedAt ? new Date(updatedAt).getTime() : '';
     return bust ? `${base}?t=${bust}` : base;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Dog, PawPrint, CheckCircle, ArrowLeft,
-  Heart, Shield, Upload, Info, ImagePlus, X
+  Heart, Shield, Upload, Info, ImagePlus, X, Plus
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -17,8 +17,8 @@ const INITIAL = {
   reason: '', rehomingFee: 0, urgency: 'medium',
   'location.city': '', 'location.state': '',
   primaryImage: '',
-  imageFile: null,
-  imagePreview: '',
+  imageFiles: [],
+  imagePreviews: [],
 };
 
 const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/10 transition-all";
@@ -69,18 +69,35 @@ const ListDogPage = () => {
 
   const set = (e) => {
     const { name, value, type, checked, files } = e.target;
-    if (type === 'file' && files && files[0]) {
-      const file = files[0];
-      const preview = URL.createObjectURL(file);
-      setForm(prev => ({ ...prev, imageFile: file, imagePreview: preview }));
+    if (type === 'file' && files && files.length > 0) {
+      const newFiles = Array.from(files);
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setForm(prev => {
+        const total = (prev.imageFiles?.length || 0) + newFiles.length;
+        if (total > 5) {
+          alert('You can only upload a maximum of 5 images.');
+          return prev;
+        }
+        return {
+          ...prev,
+          imageFiles: [...(prev.imageFiles || []), ...newFiles],
+          imagePreviews: [...(prev.imagePreviews || []), ...newPreviews]
+        };
+      });
     } else {
       setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     }
   };
 
-  const clearImage = () => {
-    if (form.imagePreview) URL.revokeObjectURL(form.imagePreview);
-    setForm(prev => ({ ...prev, imageFile: null, imagePreview: '' }));
+  const removeImage = (index) => {
+    setForm(prev => {
+      const newFiles = [...prev.imageFiles];
+      const newPreviews = [...prev.imagePreviews];
+      URL.revokeObjectURL(newPreviews[index]);
+      newFiles.splice(index, 1);
+      newPreviews.splice(index, 1);
+      return { ...prev, imageFiles: newFiles, imagePreviews: newPreviews };
+    });
   };
 
   const submit = async (e) => {
@@ -112,7 +129,11 @@ const ListDogPage = () => {
       formData.append('urgency',       form.urgency);
       formData.append('location[city]',  form['location.city']);
       formData.append('location[state]', form['location.state']);
-      if (form.imageFile) formData.append('primaryImage', form.imageFile);
+      if (form.imageFiles && form.imageFiles.length > 0) {
+        form.imageFiles.forEach(file => {
+          formData.append('images', file);
+        });
+      }
 
       const res = await fetch(`${API}/pets`, {
         method:  'POST',
@@ -403,34 +424,46 @@ const ListDogPage = () => {
                     className={inputClass} placeholder="e.g. Bagmati" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className={labelClass}>Dog's Photo</label>
-                  {!form.imagePreview ? (
+                  <label className={labelClass}>Dog's Photos (Max 5)</label>
+                  {!form.imagePreviews || form.imagePreviews.length === 0 ? (
                     <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer bg-gray-50 hover:bg-white hover:border-[#008737] transition-all duration-200 group">
-                      <input type="file" accept="image/*" onChange={set} className="hidden" />
+                      <input type="file" multiple accept="image/*" onChange={set} className="hidden" />
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-14 h-14 bg-gradient-to-br from-[#085558]/10 to-[#008737]/10 rounded-2xl flex items-center justify-center group-hover:from-[#085558]/20 group-hover:to-[#008737]/20 transition-all">
                           <ImagePlus className="h-7 w-7 text-[#085558]" />
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-semibold text-[#063630]">Click to upload a photo</p>
-                          <p className="text-xs text-gray-400 mt-1">JPG, PNG or WEBP — max 10MB</p>
+                          <p className="text-sm font-semibold text-[#063630]">Click to upload photos</p>
+                          <p className="text-xs text-gray-400 mt-1">JPG, PNG or WEBP — max 5 images</p>
                         </div>
                       </div>
                     </label>
                   ) : (
-                    <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
-                      <img src={form.imagePreview} alt="Preview"
-                        className="h-56 w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                      <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-white" />
-                          <span className="text-xs text-white font-medium">{form.imageFile?.name}</span>
-                        </div>
-                        <button type="button" onClick={clearImage}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-xs font-medium rounded-lg transition-all">
-                          <X className="h-3 w-3" /> Remove
-                        </button>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {form.imagePreviews.map((preview, idx) => (
+                          <div key={idx} className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm aspect-square group">
+                            <img src={preview} alt={`Preview ${idx + 1}`} className="h-full w-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button type="button" onClick={() => removeImage(idx)}
+                                className="px-3 py-1.5 bg-red-500/90 hover:bg-red-600 backdrop-blur-sm text-white text-xs font-bold rounded-lg transition-colors shadow-lg flex items-center gap-1.5">
+                                <X className="h-3 w-3" /> Remove
+                              </button>
+                            </div>
+                            {idx === 0 && (
+                              <div className="absolute top-2 left-2 bg-gradient-to-r from-[#085558] to-[#008737] text-white text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-md shadow-md">
+                                Primary
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {form.imagePreviews.length < 5 && (
+                          <label className="flex flex-col items-center justify-center h-full aspect-square border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer bg-gray-50 hover:bg-white hover:border-[#008737] transition-all duration-200 group">
+                            <input type="file" multiple accept="image/*" onChange={set} className="hidden" />
+                            <Plus className="h-6 w-6 text-[#085558] mb-1 group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#063630]">Add More</span>
+                          </label>
+                        )}
                       </div>
                     </div>
                   )}

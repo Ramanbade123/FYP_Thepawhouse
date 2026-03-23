@@ -70,6 +70,49 @@ exports.getOrCreateConversation = async (req, res) => {
   }
 };
 
+// POST start or get existing conversation (rehomer initiates with an adopter about a pet)
+exports.startConversationAsRehomer = async (req, res) => {
+  try {
+    const { petId, adopterId } = req.body;
+    const rehomerId = req.user._id;
+
+    const pet = await Pet.findById(petId);
+    if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
+    if (pet.rehomer.toString() !== rehomerId.toString()) {
+      return res.status(403).json({ success: false, error: 'You do not own this pet listing' });
+    }
+
+    const adopter = await User.findById(adopterId);
+    if (!adopter) return res.status(404).json({ success: false, error: 'Adopter not found' });
+
+    let convo = await Conversation.findOne({
+      pet: petId,
+      adopter: adopterId,
+      rehomer: rehomerId,
+    })
+      .populate('pet',     'name breed primaryImage status')
+      .populate('adopter', 'name profileImage')
+      .populate('rehomer', 'name profileImage');
+
+    if (!convo) {
+      convo = await Conversation.create({
+        pet: petId,
+        adopter: adopterId,
+        rehomer: rehomerId,
+      });
+      await convo.populate([
+        { path: 'pet',     select: 'name breed primaryImage status' },
+        { path: 'adopter', select: 'name profileImage' },
+        { path: 'rehomer', select: 'name profileImage' },
+      ]);
+    }
+
+    res.status(200).json({ success: true, data: convo });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 // ── MESSAGES ──────────────────────────────────────────────────────────────────
 
 // GET messages in a conversation

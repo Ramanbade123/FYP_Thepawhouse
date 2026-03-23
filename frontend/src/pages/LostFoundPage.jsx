@@ -21,7 +21,11 @@ const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').r
 
 const imgSrc = (url) => {
   if (!url) return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  let fullUrl = url;
+  if (!url.startsWith('http') && !url.startsWith('/')) {
+    fullUrl = `/uploads/${url}`; // Assuming these go to a general uploads folder or similar, /uploads/users for users
+  }
+  return fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`;
 };
 
 const CITIES = ['Kathmandu', 'Lalitpur', 'Bhaktapur', 'Pokhara', 'Biratnagar', 'Chitwan', 'Other'];

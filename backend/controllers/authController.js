@@ -138,7 +138,7 @@ exports.register = async (req, res) => {
     };
 
     if (req.file) {
-      userData.profileImage = req.file.filename;
+      userData.profileImage = `/uploads/users/${req.file.filename}`;
     }
 
     // Add role-specific data
@@ -225,18 +225,42 @@ exports.register = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, identifier, password } = req.body;
+    const loginString = identifier || email;
 
     // Validate email & password
-    if (!email || !password) {
+    if (!loginString || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Please provide email and password',
+        error: 'Please provide email/phone/username and password',
       });
     }
 
+    // Determine what field we are searching
+    let query = {};
+    if (validator.isEmail(loginString)) {
+      query.email = loginString;
+    } else if (validator.isMobilePhone(loginString, 'any', { strictMode: false })) {
+      query.phone = loginString;
+    } else {
+      query.name = loginString;
+    }
+
     // Check for user
-    const user = await User.findOne({ email }).select('+password');
+    let users = await User.find(query).select('+password');
+    let user = null;
+    
+    if (users.length === 1) {
+      user = users[0];
+    } else if (users.length > 1) {
+      for (let u of users) {
+        const isMatch = await u.comparePassword(password);
+        if (isMatch) {
+          user = u;
+          break;
+        }
+      }
+    }
 
     if (!user) {
       return res.status(401).json({

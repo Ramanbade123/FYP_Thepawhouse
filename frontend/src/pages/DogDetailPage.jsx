@@ -212,7 +212,14 @@ const ReviewsSection = ({ petId, user }) => {
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-const imgSrc = (url) => { if (!url) return null; return url.startsWith('http') ? url : `${BASE_URL}${url}`; };
+const imgSrc = (url) => { 
+  if (!url) return null; 
+  let fullUrl = url;
+  if (!url.startsWith('http') && !url.startsWith('/')) {
+    fullUrl = `/uploads/users/${url}`; 
+  }
+  return fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`; 
+};
 
 // Quick "Message Rehomer" button — starts a conversation and redirects to dashboard messages
 const MessageRehomerButton = ({ petId, petName, user }) => {
@@ -252,14 +259,15 @@ const MessageRehomerButton = ({ petId, petName, user }) => {
 const DogDetailPage = () => {
   const { id }       = useParams();
   const navigate     = useNavigate();
-  const [pet, setPet]         = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [pet, setPet]           = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
   const [applying, setApplying] = useState(false);
   const [applied, setApplied]   = useState(false);
   const [applyMessage, setApplyMessage] = useState('');
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -345,10 +353,13 @@ const DogDetailPage = () => {
         <div className="grid lg:grid-cols-2 gap-8">
 
           {/* Left — Image */}
-          <div>
+          <div className="flex flex-col gap-4">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}
               className="rounded-2xl overflow-hidden shadow-2xl aspect-square bg-gradient-to-br from-[#085558]/20 to-[#008737]/20">
-              {imgSrc(pet.primaryImage) ? (
+              {pet.images && pet.images.length > 0 ? (
+                <img src={imgSrc(pet.images[selectedImageIndex])} alt={pet.name} crossOrigin="anonymous"
+                  className="w-full h-full object-cover" />
+              ) : imgSrc(pet.primaryImage) ? (
                 <img src={imgSrc(pet.primaryImage)} alt={pet.name} crossOrigin="anonymous"
                   className="w-full h-full object-cover" />
               ) : (
@@ -358,10 +369,25 @@ const DogDetailPage = () => {
               )}
             </motion.div>
 
+            {/* Thumbnail Gallery */}
+            {pet.images && pet.images.length > 1 && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {pet.images.map((img, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${selectedImageIndex === idx ? 'border-[#008737] shadow-md ring-2 ring-[#008737]/20 scale-100 opacity-100' : 'border-transparent hover:border-gray-300 opacity-60 hover:opacity-100 scale-95 hover:scale-100'}`}
+                  >
+                    <img src={imgSrc(img)} alt={`${pet.name} ${idx + 1}`} crossOrigin="anonymous" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </motion.div>
+            )}
+
             {/* Rehomer contact card */}
             {pet.rehomer && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                className="mt-6 bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
+                className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
                 <h3 className="font-bold text-[#063630] mb-4 flex items-center gap-2">
                   <Users className="h-5 w-5 text-[#008737]" /> Listed by
                 </h3>

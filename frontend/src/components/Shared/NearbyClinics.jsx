@@ -38,30 +38,42 @@ const NearbyClinics = () => {
   const CUSTOM_CLINICS = [
     {
       id: "clinic_1",
-      name: "Kathmandu Veterinary Clinic",
-      address: "Chakrapath Ring Rd, Kathmandu 44600",
-      phone: "01-4720266",
-      website: "https://example.com/kathmandu-vet",
-      opening_hours: "8:00 AM - 5:30 PM",
-      lat: 27.7289,       // Latitude for map pin
-      lon: 85.3333,       // Longitude for map pin
-      rating: 4.5,
-      reviews: 56,
-      // You can provide a direct image URL or leave empty to use a random placeholder
+      name: "Jibachha Veterinary",
+      address: "P89F+4C4, Kathmandu 00977",
+      phone: "982-3651008",
+      website: "",
+      opening_hours: "Open · Closes 6:30 PM",
+      lat: 27.7172,
+      lon: 85.3240,
+      rating: 5.0,
+      reviews: 1,
       imageUrl: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=800&auto=format&fit=crop"
     },
     {
       id: "clinic_2",
-      name: "Animal Medical Centre",
-      address: "Patan, Lalitpur 44700",
-      phone: "01-552XXYY",
+      name: "Kathmandu Veterinary Clinic",
+      address: "Chakrapath Ring Rd, Kathmandu 44600",
+      phone: "01-4720266",
       website: "",
-      opening_hours: "9:00 AM - 6:00 PM",
-      lat: 27.6744,
-      lon: 85.3123,
-      rating: 4.8,
-      reviews: 124,
+      opening_hours: "Closed · Opens 5:30 PM",
+      lat: 27.7289,
+      lon: 85.3333,
+      rating: 3.9,
+      reviews: 56,
       imageUrl: "https://images.unsplash.com/photo-1628009368231-7bb7cbcb0def?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      id: "clinic_3",
+      name: "Vet for Your Pet",
+      address: "P8HQ+6HJ, Banshidhar Marg, Kathmandu 44600",
+      phone: "01-4543505",
+      website: "",
+      opening_hours: "Open · Closes 6:00 PM",
+      lat: 27.7344,
+      lon: 85.3323,
+      rating: 4.2,
+      reviews: 217,
+      imageUrl: "https://images.unsplash.com/photo-1596272875886-f6313ed6c99f?q=80&w=800&auto=format&fit=crop"
     }
   ];
 
@@ -96,8 +108,8 @@ const NearbyClinics = () => {
     return parseFloat((R * c).toFixed(1));
   };
 
-  const getGoogleMapsLink = (lat, lon, name) => {
-    return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&destination_place_id=${encodeURIComponent(name)}`;
+  const getGoogleMapsLink = (address, name) => {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(name + ', ' + address)}`;
   };
 
   // Generate deterministic dummy rating data for the demo
@@ -159,7 +171,7 @@ const NearbyClinics = () => {
           <p className="text-orange-700">We couldn't find any registered veterinary clinics within 5km of your location on OpenStreetMap.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {clinics.map((clinic) => {
             const rating = clinic.rating || 4.0;
             const reviews = clinic.reviews || 0;
@@ -167,8 +179,9 @@ const NearbyClinics = () => {
             // Generate a simple dummy drive time based on distance if available
             const driveTime = clinic.distance ? Math.round(clinic.distance * 3) : 10;
             
-            // Use Google Maps generic embed URL
-            const mapUrl = `https://maps.google.com/maps?q=${clinic.lat},${clinic.lon}&hl=en&z=15&output=embed`;
+            // Use Google Maps generic embed URL with the clinic's name and address
+            const mapQuery = encodeURIComponent(`${clinic.name}, ${clinic.address}`);
+            const mapUrl = `https://maps.google.com/maps?q=${mapQuery}&hl=en&z=15&output=embed`;
             
             return (
             <div key={clinic.id} className="bg-white text-gray-900 border border-gray-200 rounded-2xl shadow-lg border-b-4 border-b-[#008737]/20 overflow-hidden flex flex-col font-sans mb-4">
@@ -213,7 +226,7 @@ const NearbyClinics = () => {
                       <Globe className="h-3.5 w-3.5" /> Website
                     </a>
                   )}
-                  <a href={getGoogleMapsLink(clinic.lat, clinic.lon, clinic.name)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#008737] bg-[#008737] hover:bg-[#063630] transition-colors text-white hover:text-white font-semibold shadow-sm text-sm">
+                  <a href={getGoogleMapsLink(clinic.address, clinic.name)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#008737] bg-[#008737] hover:bg-[#063630] transition-colors text-white hover:text-white font-semibold shadow-sm text-sm">
                     <Navigation className="h-3.5 w-3.5" /> Directions
                   </a>
                   {clinic.phone !== 'N/A' && (
@@ -233,13 +246,7 @@ const NearbyClinics = () => {
                     <span className="text-gray-700">{clinic.address}</span>
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-gray-900 min-w-[70px]">Get there:</span>
-                    <div className="flex items-center gap-2 text-gray-700">
-                      <Car className="h-4 w-4" />
-                      {driveTime} min ({clinic.distance} km)
-                    </div>
-                  </div>
+
 
                   {clinic.phone !== 'N/A' && (
                     <div className="flex gap-4">

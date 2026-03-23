@@ -28,6 +28,7 @@ const donationSchema = new mongoose.Schema(
       enum: ['pending', 'completed', 'failed'],
       default: 'pending',
     },
+    pidx:          { type: String, default: '' },
     transactionId: { type: String, default: '' },
 
     // Linked user if logged in

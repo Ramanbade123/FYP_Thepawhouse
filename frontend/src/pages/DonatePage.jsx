@@ -68,6 +68,22 @@ const DonatePage = () => {
     setLoading(true);
     setError('');
     try {
+      if (form.paymentMethod === 'khalti') {
+        const res = await apiFetch('POST', '/donations/khalti/initiate', {
+          donorName:     form.anonymous ? 'Anonymous' : form.donorName,
+          donorEmail:    form.donorEmail,
+          donorPhone:    form.donorPhone,
+          amount:        finalAmount,
+          purpose:       form.purpose,
+          message:       form.message,
+          anonymous:     form.anonymous,
+        });
+        if (res.data.success && res.data.payment_url) {
+          window.location.href = res.data.payment_url;
+          return;
+        }
+      }
+
       await apiFetch('POST', '/donations', {
         donorName:     form.anonymous ? 'Anonymous' : form.donorName,
         donorEmail:    form.donorEmail,

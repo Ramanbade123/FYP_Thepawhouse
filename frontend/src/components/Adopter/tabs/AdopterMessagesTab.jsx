@@ -19,7 +19,9 @@ const apiFetch = async (method, url, body = null) => {
 
 const imgSrc = (url) => {
   if (!url || url === 'default-profile.jpg') return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/')) return `${BASE_URL}${url}`;
+  return `${BASE_URL}/uploads/users/${url}`;
 };
 
 const Avatar = ({ name, url, size = 'md' }) => {

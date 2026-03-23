@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import RehomerHeader   from '../Rehomer/RehomerHeader';
 import RehomerFooter   from '../Rehomer/RehomerFooter';
 import ListedDogs      from '../Rehomer/ListedDogs';
+import RehomerOverviewTab from '../Rehomer/tabs/RehomerOverviewTab';
 import ApplicationsTab from '../Rehomer/tabs/ApplicationsTab';
 import MessagesTab     from '../Rehomer/tabs/MessagesTab';
 import SettingsTab     from '../Rehomer/tabs/SettingsTab';
@@ -36,8 +37,9 @@ const RehomerDashboard = () => {
       <RehomerHeader user={user} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <div className="container mx-auto px-4 py-8 flex-1">
-        {(activeTab === 'dashboard' || activeTab === 'my-dogs') && <ListedDogs />}
-        {activeTab === 'applications' && <ApplicationsTab />}
+        {activeTab === 'dashboard'    && <RehomerOverviewTab user={user} setActiveTab={setActiveTab} />}
+        {activeTab === 'my-dogs'      && <ListedDogs />}
+        {activeTab === 'applications' && <ApplicationsTab setActiveTab={setActiveTab} />}
         {activeTab === 'vets'         && <NearbyClinics />}
         {activeTab === 'messages'     && <MessagesTab user={user} />}
         {activeTab === 'settings'     && <SettingsTab user={user} onProfileUpdate={setUser} />}

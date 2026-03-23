@@ -309,6 +309,51 @@ const emailTemplates = {
       </html>
     `,
   }),
+
+  petApproval: (petName, rehomerName) => ({
+    subject: `Your Listing for ${petName} is Approved! 🎉`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Listing Approved</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }
+          .header { background: linear-gradient(to right, #008737, #085558); padding: 20px; text-align: center; }
+          .header h1 { color: white; margin: 0; }
+          .content { padding: 30px; background-color: #f9f9f9; }
+          .button { background: #008737; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; }
+          .footer { padding: 20px; text-align: center; background-color: #f0f0f0; font-size: 12px; color: #666; }
+          .highlight { background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #c8e6c9; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Listing Approved! 🎉</h1>
+        </div>
+        <div class="content">
+          <h2>Hello ${rehomerName},</h2>
+          <div class="highlight">
+            <p><strong>Great news!</strong> Your listing for <strong>${petName}</strong> has been approved by our admin team.</p>
+          </div>
+          <p>Your listing is now live and visible to potential adopters in the "Adopt a Dog" section of The Paw House!</p>
+          <p>Adopters can now view your listing and submit their applications. You'll be notified when applications come in.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL}/rehomer/dashboard" class="button">
+              View Your Listings
+            </a>
+          </div>
+          <p>Thank you for using The Paw House to rehome ${petName}!</p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} The Paw House. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
 };
 
 module.exports = { sendEmail, emailTemplates };

@@ -1,5 +1,6 @@
 const Pet  = require('../models/Pet');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const axios = require('axios'); // Add axios for Khalti HTTP requests
 const { sendEmail, emailTemplates } = require('../utils/sendEmail');
 
@@ -11,11 +12,11 @@ exports.createPet = async (req, res) => {
     req.body.rehomer       = req.user.id;
     req.body.adminApproval = 'pending'; // always starts pending
 
-    // Handle uploaded image
-    if (req.file) {
-      const imageUrl = `/uploads/pets/${req.file.filename}`;
-      req.body.primaryImage = imageUrl;
-      req.body.images = [imageUrl];
+    // Handle uploaded images
+    if (req.files && req.files.length > 0) {
+      const imageUrls = req.files.map(file => `/uploads/pets/${file.filename}`);
+      req.body.primaryImage = imageUrls[0];
+      req.body.images = imageUrls;
     }
 
     const pet = await Pet.create(req.body);
@@ -23,6 +24,20 @@ exports.createPet = async (req, res) => {
     await User.findByIdAndUpdate(req.user.id, {
       $push: { petsRehomed: { petId: pet._id, petName: pet.name, status: 'pending' } },
     });
+
+    // Create notification for admins
+    try {
+      const admins = await User.find({ role: 'admin' });
+      for (const admin of admins) {
+        await Notification.create({
+          recipient: admin._id,
+          type: 'system',
+          title: 'New Pet Listing',
+          message: `${req.user.name} has listed a new pet: ${pet.name}. Approval required.`,
+          link: '/admin/dashboard'
+        });
+      }
+    } catch (notifErr) { console.error('Admin notification error:', notifErr); }
 
     res.status(201).json({ success: true, data: pet });
   } catch (error) {
@@ -94,7 +109,7 @@ exports.getPet = async (req, res) => {
 exports.getMyListings = async (req, res) => {
   try {
     const pets = await Pet.find({ rehomer: req.user.id }).sort('-createdAt')
-      .populate('applications.adopter', 'name email phone profileImage location');
+      .populate('applications.adopter', 'name email phone profileImage location address userType adoptionPreferences createdAt');
 
     const stats = {
       total:             pets.length,
@@ -133,11 +148,11 @@ exports.updatePet = async (req, res) => {
       req.body.adminNote     = '';
     }
 
-    // Handle uploaded image
-    if (req.file) {
-      const imageUrl = `/uploads/pets/${req.file.filename}`;
-      req.body.primaryImage = imageUrl;
-      req.body.images = [imageUrl];
+    // Handle uploaded images
+    if (req.files && req.files.length > 0) {
+      const imageUrls = req.files.map(file => `/uploads/pets/${file.filename}`);
+      req.body.primaryImage = imageUrls[0];
+      req.body.images = imageUrls;
     }
 
     pet = await Pet.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -231,6 +246,35 @@ exports.adminUpdateApproval = async (req, res) => {
     pet.approvedAt    = new Date();
 
     await pet.save();
+
+    // Send email notification to rehomer if approved
+    if (adminApproval === 'approved') {
+      try {
+        const rehomer = await User.findById(pet.rehomer);
+        if (rehomer && rehomer.email) {
+          await sendEmail({
+            email: rehomer.email,
+            subject: emailTemplates.petApproval(pet.name, rehomer.name).subject,
+            html: emailTemplates.petApproval(pet.name, rehomer.name).html,
+          });
+        }
+      } catch (emailErr) {
+        console.error('Failed to send pet approval email:', emailErr);
+      }
+    }
+
+    // Create in-app notification for rehomer
+    try {
+      await Notification.create({
+        recipient: pet.rehomer,
+        type: 'system',
+        title: adminApproval === 'approved' ? 'Listing Approved! 🎉' : 'Listing Update',
+        message: adminApproval === 'approved' 
+          ? `Your listing for ${pet.name} has been approved and is now live.`
+          : `There is an update regarding your listing for ${pet.name}. Please check your dashboard.`,
+        link: '/rehomer/dashboard'
+      });
+    } catch (notifErr) { console.error('Rehomer notification error:', notifErr); }
 
     res.status(200).json({ success: true, message: `Pet ${adminApproval}`, data: pet });
   } catch (error) {

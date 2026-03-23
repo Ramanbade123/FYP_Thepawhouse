@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, PawPrint, CheckCircle, ArrowLeft } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, LogIn, AlertCircle, PawPrint, CheckCircle, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ identifier: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  const { email, password } = formData;
+  const { identifier, password } = formData;
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,8 +23,7 @@ const Login = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email || !password) { setError('Please fill in all fields'); return; }
-    if (!/\S+@\S+\.\S+/.test(email)) { setError('Please enter a valid email address'); return; }
+    if (!identifier || !password) { setError('Please fill in all fields'); return; }
 
     setLoading(true);
     setError('');
@@ -33,7 +32,7 @@ const Login = () => {
     try {
       const response = await axios.post(
         'http://localhost:5000/api/auth/login',
-        { email, password },
+        { identifier, password },
         { headers: { 'Content-Type': 'application/json' } }
       );
 
@@ -112,17 +111,17 @@ const Login = () => {
           )}
 
           <form onSubmit={onSubmit} className="space-y-6">
-            {/* Email */}
+            {/* Identifier */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-[#063630] mb-2">Email, Username, or Phone</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-[#085558]" />
+                  <User className="h-5 w-5 text-[#085558]" />
                 </div>
                 <input
-                  type="email" name="email" value={email} onChange={onChange}
+                  type="text" name="identifier" value={identifier} onChange={onChange}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                  placeholder="you@example.com" required
+                  placeholder="Email, phone number, or username" required
                 />
               </div>
             </div>

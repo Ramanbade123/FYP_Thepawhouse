@@ -4,14 +4,14 @@ import { PawPrint, Bell, Home, Dog, FileText, MessageSquare, Settings, ChevronDo
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
-const imgSrc   = (url, updatedAt) => {
+const imgSrc = (url, updatedAt) => {
   if (!url || url === 'default-profile.jpg') return null;
-  const base = url.startsWith('http')
-    ? url
-    : url.startsWith('/')
-      ? `${BASE_URL}${url}`
-      : `${BASE_URL}/uploads/users/${url}`;
-  const bust  = updatedAt ? new Date(updatedAt).getTime() : '';
+  let fullUrl = url;
+  if (!url.startsWith('http') && !url.startsWith('/')) {
+    fullUrl = `/uploads/users/${url}`;
+  }
+  const base = fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`;
+  const bust = updatedAt ? new Date(updatedAt).getTime() : '';
   return bust ? `${base}?t=${bust}` : base;
 };
 

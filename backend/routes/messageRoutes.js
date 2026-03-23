@@ -11,7 +11,7 @@ const {
 } = require('../controllers/messageController');
 
 const { protect }  = require('../middleware/authMiddleware');
-const { isAdopter } = require('../middleware/roleMiddleware');
+const { isAdopter, isRehomer } = require('../middleware/roleMiddleware');
 
 // All routes require login
 router.use(protect);
@@ -19,6 +19,7 @@ router.use(protect);
 // Conversations
 router.get('/',          getMyConversations);           // GET  /api/messages
 router.post('/start',    isAdopter, getOrCreateConversation); // POST /api/messages/start
+router.post('/start-rehomer', isRehomer, require('../controllers/messageController').startConversationAsRehomer); // POST /api/messages/start-rehomer
 
 // Messages within a conversation
 router.get('/:conversationId/messages',           getMessages);   // GET  /api/messages/:id/messages

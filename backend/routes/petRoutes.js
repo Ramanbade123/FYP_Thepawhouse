@@ -35,8 +35,8 @@ router.get('/',    getPets);
 router.get('/:id', getPet);
 
 // Rehomer param routes (after named routes)
-router.post('/',      protect, isRehomer, upload.single('primaryImage'), createPet);
-router.put('/:id',   protect, isRehomer, upload.single('primaryImage'), updatePet);
+router.post('/',      protect, isRehomer, upload.array('images', 5), createPet);
+router.put('/:id',   protect, isRehomer, upload.array('images', 5), updatePet);
 router.delete('/:id',                      protect, isRehomer, deletePet);
 router.get('/:id/applications',            protect, isRehomer, getPetApplications);
 router.put('/:id/applications/:appId',     protect, isRehomer, updateApplicationStatus);

@@ -23,7 +23,12 @@ const apiFetch = async (method, url, body = null) => {
 };
 
 const BASE_URL = API.replace('/api', '');
-const imgSrc = (url) => (!url ? null : url.startsWith('http') ? url : `${BASE_URL}${url}`);
+const imgSrc = (url) => {
+  if (!url || url === 'default-profile.jpg') return null;
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/')) return `${BASE_URL}${url}`;
+  return `${BASE_URL}/uploads/users/${url}`;
+};
 
 // ── Status Badge ──────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => (

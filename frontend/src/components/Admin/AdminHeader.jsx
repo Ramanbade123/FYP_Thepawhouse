@@ -6,13 +6,13 @@ import {
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
-const imgSrc   = (url) => {
+const imgSrc = (url) => {
   if (!url || url === 'default-profile.jpg') return null;
-  return url.startsWith('http')
-    ? url
-    : url.startsWith('/')
-      ? `${BASE_URL}${url}`
-      : `${BASE_URL}/uploads/users/${url}`;
+  let fullUrl = url;
+  if (!url.startsWith('http') && !url.startsWith('/')) {
+    fullUrl = `/uploads/users/${url}`;
+  }
+  return fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`;
 };
 
 const AdminHeader = ({ sidebarOpen, setSidebarOpen, setActiveTab }) => {

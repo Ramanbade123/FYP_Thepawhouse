@@ -8,7 +8,11 @@ const BASE_URL = API.replace('/api', '');
 
 const imgSrc = (url) => {
   if (!url || url === 'default-profile.jpg') return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
+  let fullUrl = url;
+  if (!url.startsWith('http') && !url.startsWith('/')) {
+    fullUrl = `/uploads/${url}`; 
+  }
+  return fullUrl.startsWith('http') ? fullUrl : `${BASE_URL}${fullUrl}`;
 };
 
 const statusStyle = {

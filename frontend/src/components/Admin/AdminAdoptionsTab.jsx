@@ -8,7 +8,12 @@ import {
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
-const imgSrc   = (url) => { if (!url) return null; return url.startsWith('http') ? url : `${BASE_URL}${url}`; };
+const imgSrc = (url) => {
+  if (!url || url === 'default-profile.jpg') return null;
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/')) return `${BASE_URL}${url}`;
+  return `${BASE_URL}/uploads/users/${url}`;
+};
 
 const STATUS_STYLES = {
   pending:   'bg-yellow-100 text-yellow-800 border border-yellow-200',
