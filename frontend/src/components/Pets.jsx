@@ -177,7 +177,7 @@ const Pets = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#063630] mb-4">
             Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#085558]">Perfect Companion</span>
           </h2>
-          <p className="text-lg lg:text-xl text-[#063630]/80 max-w-2xl mx-auto">
+          <p className="text-base lg:text-lg text-[#063630]/80 max-w-[65ch] text-longform mx-auto">
             Discover loyal dogs waiting for their forever homes. Every adoption saves a life.
           </p>
         </div>
@@ -284,7 +284,7 @@ const Pets = () => {
         {!loading && pets.length === 0 && (
           <div className="text-center py-24 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <PawPrint className="h-14 w-14 mx-auto mb-4 text-gray-200" />
-            <p className="text-xl font-bold text-[#063630] mb-2">No dogs found</p>
+            <p className="text-lg font-bold text-[#063630] mb-2">No dogs found</p>
             <p className="text-gray-400 mb-6">Try adjusting your filters or search terms</p>
             <button onClick={clearFilters}
               className="px-6 py-2.5 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-md transition-all">
@@ -325,7 +325,7 @@ const Pets = () => {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="text-xl font-bold text-[#063630]">{safeStr(dog.name)}</h3>
+                      <h3 className="text-lg font-bold text-[#063630]">{safeStr(dog.name)}</h3>
                       <p className="text-[#008737] font-medium text-sm">{safeStr(dog.breed)}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${dog.gender === "female" ? "bg-pink-100 text-pink-800" : "bg-blue-100 text-blue-800"}`}>

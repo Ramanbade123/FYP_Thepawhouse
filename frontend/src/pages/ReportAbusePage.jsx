@@ -100,7 +100,7 @@ const ReportAbusePage = () => {
   );
 
   return (
-    <div className="min-h-screen pt-24 pb-16" style={{ backgroundColor: '#EDEDED', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen pt-24 pb-16 bg-[#EDEDED]">
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#063630] to-[#085558] text-white py-14 px-4 mb-10">
@@ -112,8 +112,12 @@ const ReportAbusePage = () => {
           <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-3" style={{ color: '#ffffff' }}>Report Animal Abuse</h1>
-          <p className="text-green-200 text-lg">Help us protect dogs from neglect, abuse, and cruelty in Nepal</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#063630] tracking-tight mb-4">
+            Report Animal Abuse
+          </h1>
+          <p className="text-base text-gray-600 text-longform mx-auto leading-relaxed">
+            If you witness animal cruelty, neglect, or fighting, please report it immediately. Your action can save an animal's life.
+          </p>
         </div>
       </div>
 

@@ -72,7 +72,7 @@ const PostLostFoundPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-16" style={{ backgroundColor: '#EDEDED', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen pt-24 pb-16 bg-[#EDEDED]">
       <div className="container mx-auto max-w-3xl px-4">
         
         {/* Back Navigation */}

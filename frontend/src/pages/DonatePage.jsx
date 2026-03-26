@@ -120,7 +120,7 @@ const DonatePage = () => {
   );
 
   return (
-    <div className="min-h-screen pt-24 pb-16" style={{ backgroundColor: '#EDEDED', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen pt-24 pb-16 bg-[#EDEDED]">
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#063630] to-[#085558] text-white py-14 px-4 mb-10">
@@ -132,8 +132,8 @@ const DonatePage = () => {
           <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <HandHeart className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-3" style={{ color: '#ffffff' }}>Support The Paw House</h1>
-          <p className="text-green-200 text-lg mb-8">Every rupee helps a dog in Nepal find safety and love</p>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-3">Support The Paw House</h1>
+          <p className="text-base text-green-200 mb-8 text-longform mx-auto">Every rupee helps a dog in Nepal find safety and love</p>
           <div className="flex items-center justify-center gap-8">
             <div><p className="text-4xl font-bold" style={{ color: '#ffffff' }}>NPR {stats.totalRaised.toLocaleString()}</p><p className="text-green-200 text-sm mt-1">Total Raised</p></div>
             <div className="w-px h-12 bg-white/20" />
@@ -159,8 +159,8 @@ const DonatePage = () => {
                       }`}
                       style={form.purpose === p.value ? { borderColor: p.color, backgroundColor: p.color + '10' } : {}}>
                       <Icon className="h-5 w-5 mb-1.5" style={{ color: p.color }} />
-                      <p className="text-xs font-bold text-[#063630]">{p.label}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{p.desc}</p>
+                      <h3 className="text-[#063630] font-bold text-sm lg:text-base mt-2">{p.label}</h3>
+                      <p className="text-[#063630]/60 text-xs mt-1">{p.desc}</p>
                     </button>
                   );
                 })}

@@ -91,7 +91,7 @@ const FAQ = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#063630] mb-4">
             Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#085558]">Questions</span>
           </h2>
-          <p className="text-lg lg:text-xl text-[#063630]/80 max-w-3xl mx-auto mb-8">
+          <p className="text-base lg:text-lg text-[#063630]/80 max-w-[65ch] text-longform mx-auto mb-8">
             Everything you need to know about adopting dogs with The Paw House. Can't find your answer? Contact our support team.
           </p>
 
@@ -136,7 +136,7 @@ const FAQ = () => {
                   className="w-full p-6 lg:p-8 text-left flex justify-between items-center gap-6 group"
                 >
                   <div className="flex-1">
-                    <h3 className="text-lg lg:text-xl font-bold text-[#063630] mb-2">
+                    <h3 className="text-base lg:text-lg font-bold text-[#063630] mb-2">
                       {faq.question}
                     </h3>
                     <AnimatePresence>
@@ -146,7 +146,7 @@ const FAQ = () => {
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.3 }}
-                          className="text-[#063630]/70 leading-relaxed overflow-hidden text-base lg:text-lg"
+                          className="text-[#063630]/70 leading-relaxed overflow-hidden text-sm lg:text-base text-longform"
                         >
                           {faq.answer}
                         </motion.p>

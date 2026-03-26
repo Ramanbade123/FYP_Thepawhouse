@@ -76,7 +76,7 @@ const Process = () => {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#063630] mb-4 lg:mb-6">
             Adopt or Rehome a pet in just
           </h1>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#085558] mb-6 lg:mb-8">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#085558] mb-6 lg:mb-8">
             3 Easy Steps
           </h2>
           
@@ -113,10 +113,10 @@ const Process = () => {
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-xl lg:text-2xl font-bold text-[#063630] mb-3">
+                    <h3 className="text-lg lg:text-xl font-bold text-[#063630] mb-3">
                       {step.title}
                     </h3>
-                    <p className="text-[#063630]/80 text-base lg:text-lg mb-6">
+                    <p className="text-[#063630]/80 text-sm lg:text-base mb-6 text-longform">
                       {step.description}
                     </p>
 
@@ -169,10 +169,10 @@ const Process = () => {
             transition={{ duration: 0.6, delay: 1.3 }}
             className="mt-10 lg:mt-12 pt-8 lg:pt-10 border-t border-[#008737]/10 text-center"
           >
-            <h3 className="text-2xl lg:text-3xl font-bold text-[#063630] mb-4">
+            <h3 className="text-xl lg:text-2xl font-bold text-[#063630] mb-4">
               Ready to Begin Your Journey?
             </h3>
-            <p className="text-[#063630]/80 text-lg lg:text-xl mb-8 max-w-2xl mx-auto">
+            <p className="text-[#063630]/80 text-base lg:text-lg mb-8 max-w-[65ch] text-longform mx-auto">
               Join thousands of happy families who found their perfect companion through our platform
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

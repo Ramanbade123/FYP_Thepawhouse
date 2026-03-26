@@ -53,7 +53,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-lg lg:text-xl text-[#063630]/80 mb-10 lg:mb-12 leading-relaxed max-w-2xl"
+              className="text-base lg:text-lg text-[#063630]/80 mb-10 lg:mb-12 leading-relaxed text-longform"
             >
               Pet adoption and rehoming are both vital aspects of animal welfare, offering hope and a fresh start to pets in need. Open your heart and your home to a shelter pet.
             </motion.p>

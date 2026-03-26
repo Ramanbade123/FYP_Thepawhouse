@@ -122,7 +122,7 @@ const AboutUs = () => {
           <h1 className="text-5xl md:text-6xl font-bold text-[#063630] mb-6">
             Our Story: <span className="text-gradient bg-gradient-to-r from-[#008737] to-[#085558] bg-clip-text text-transparent">Transforming Lives</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base text-gray-600 text-longform mx-auto leading-relaxed">
             Founded in 2025, The Paw House began with a simple mission: to give every 
             dog a chance at a loving home. What started as a small rescue 
             effort has grown into Nepal's most trusted dog adoption network.
@@ -143,7 +143,7 @@ const AboutUs = () => {
               </div>
               <h2 className="text-3xl font-bold text-[#063630]">Our Mission</h2>
             </div>
-            <p className="text-gray-700 text-lg leading-relaxed mb-6">
+            <p className="text-gray-700 text-base leading-relaxed mb-6 text-longform">
               To create a Nepal where no dog sleeps hungry on the streets, and every 
               family has access to healthy, vaccinated canine companions through 
               ethical adoption practices.
@@ -180,7 +180,7 @@ const AboutUs = () => {
               </div>
               <h2 className="text-3xl font-bold text-[#063630]">Our Vision</h2>
             </div>
-            <p className="text-gray-700 text-lg leading-relaxed mb-6">
+            <p className="text-gray-700 text-base leading-relaxed mb-6 text-longform">
               To establish a sustainable model of animal welfare that makes Nepal a 
               pioneer in street dog rehabilitation and responsible pet adoption in 
               South Asia.
@@ -257,7 +257,7 @@ const AboutUs = () => {
               <MapPin className="h-8 w-8 text-[#008737] mr-3" />
               <h2 className="text-4xl font-bold text-[#063630]">Where We Work</h2>
             </div>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 max-w-[65ch] mx-auto text-base">
               We operate across major cities in Nepal, reaching dogs in need wherever they are
             </p>
           </div>

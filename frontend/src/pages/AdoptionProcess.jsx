@@ -50,8 +50,8 @@ const AdoptionProcess = () => {
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-[#008737]/10 to-[#085558]/10 rounded-2xl mb-6">
             <PawPrint className="h-8 w-8 text-[#008737]" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#063630] mb-4">Our Adoption Process</h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">A simple, transparent journey to finding your perfect canine companion. We guide you through every step with care and support.</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#063630] mb-4">Adoption Process</h1>
+          <p className="text-base text-gray-600 text-longform mx-auto">A simple, transparent journey to finding your perfect canine companion. We guide you through every step with care and support.</p>
         </motion.div>
 
         <div className="max-w-6xl mx-auto">
@@ -178,8 +178,8 @@ const AdoptionProcess = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-16 text-center">
             <div className="bg-gradient-to-r from-[#008737]/5 to-[#085558]/5 rounded-2xl p-8 max-w-4xl mx-auto">
               <Heart className="h-12 w-12 text-[#008737] mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-[#063630] mb-4">Every Dog Deserves a Loving Home</h3>
-              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">Our process ensures that every adoption is a perfect match, giving dogs a second chance at happiness and families a loyal companion.</p>
+              <h3 className="text-3xl md:text-4xl font-bold text-[#063630] mb-4">Ready to Start?</h3>
+              <p className="text-base text-gray-600 mb-6 text-longform mx-auto">Our process ensures that every adoption is a perfect match, giving dogs a second chance at happiness and families a loyal companion.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/adopt" className="px-8 py-3 bg-gradient-to-r from-[#008737] to-[#085558] rounded-full font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
                   <Search className="h-5 w-5" /> Start Searching

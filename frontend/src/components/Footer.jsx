@@ -75,7 +75,7 @@ const Footer = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="lg:col-span-1"
           >
-            <h3 className="text-lg lg:text-xl font-bold mb-6 pb-3 border-b border-white text-white">Quick Links</h3>
+            <h3 className="text-base lg:text-lg font-bold mb-6 pb-3 border-b border-white text-white">Quick Links</h3>
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               <div className="space-y-3">
                 {quickLinksLeft.map((link, index) => (
@@ -109,7 +109,7 @@ const Footer = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="lg:col-span-1"
           >
-            <h3 className="text-lg lg:text-xl font-bold mb-6 pb-3 border-b border-white text-white">Contact Us</h3>
+            <h3 className="text-base lg:text-lg font-bold mb-6 pb-3 border-b border-white text-white">Contact Us</h3>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 pt-1">
@@ -142,7 +142,7 @@ const Footer = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="lg:col-span-1"
           >
-            <h3 className="text-lg lg:text-xl font-bold mb-6 pb-3 border-b border-white text-white">Stay Updated</h3>
+            <h3 className="text-base lg:text-lg font-bold mb-6 pb-3 border-b border-white text-white">Stay Updated</h3>
             <p className="text-white mb-4 text-sm lg:text-base leading-relaxed">
               Join our newsletter for adoption stories, pet care tips, and updates.
             </p>

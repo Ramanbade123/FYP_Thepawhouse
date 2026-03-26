@@ -118,14 +118,11 @@ const CareGuide = () => {
              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#c6f7d9]">The Paw Care Guide</span>
           </motion.h1>
           
-          <motion.p 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed"
+          <p 
+            className="text-base text-white/90 text-longform mx-auto leading-relaxed"
           >
             Everything you need to know to give your canine companion the healthy, happy, and fulfilling life they deserve in Nepal.
-          </motion.p>
+          </p>
         </div>
       </section>
 
@@ -168,10 +165,10 @@ const CareGuide = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <h2 className="text-4xl lg:text-6xl font-bold text-[#063630] mb-8 leading-tight">
+                <h2 className="text-3xl lg:text-5xl font-bold text-[#063630] mb-6 leading-tight">
                   {content[activeTab].title}
                 </h2>
-                <p className="text-2xl text-[#063630]/70 mb-12 leading-relaxed">
+                <p className="text-lg lg:text-xl text-[#063630]/70 mb-10 leading-relaxed text-longform">
                   {content[activeTab].subtitle}
                 </p>
               </motion.div>
@@ -188,7 +185,7 @@ const CareGuide = () => {
                     <div className="mt-1 p-2 bg-[#008737]/10 rounded-xl group-hover:bg-[#008737] transition-colors duration-300">
                       <CheckCircle2 className="h-7 w-7 text-[#008737] group-hover:text-white transition-colors duration-300" />
                     </div>
-                    <p className="text-xl text-[#063630] font-medium leading-relaxed">
+                    <p className="text-base text-[#063630] font-medium leading-relaxed text-longform">
                       {tip}
                     </p>
                   </motion.div>
@@ -223,10 +220,10 @@ const CareGuide = () => {
                     {React.createElement(categories.find(c => c.id === activeTab).icon, { className: "h-20 w-20 text-white" })}
                   </motion.div>
                   
-                  <h3 className="text-3xl font-black text-[#063630] mb-6 uppercase tracking-widest">Recommended Standard</h3>
+                  <h3 className="text-xl lg:text-2xl font-black text-[#063630] mb-6 uppercase tracking-widest">Recommended Standard</h3>
                   
                   <div className="bg-[#EDEDED] px-12 py-10 rounded-[30px] inline-block mb-6 shadow-inner">
-                    <span className="text-7xl lg:text-8xl font-black text-[#008737] tracking-tighter">
+                    <span className="text-5xl lg:text-7xl font-black text-[#008737] tracking-tighter">
                       {content[activeTab].stats.value}
                     </span>
                     <p className="text-lg font-bold text-[#063630]/60 mt-3 uppercase tracking-widest">
@@ -234,7 +231,7 @@ const CareGuide = () => {
                     </p>
                   </div>
                   
-                  <p className="text-xl text-[#063630]/60 font-medium italic">
+                  <p className="text-base text-[#063630]/60 font-medium italic">
                     {content[activeTab].stats.sub}
                   </p>
                 </div>
@@ -274,7 +271,7 @@ const CareGuide = () => {
                 Caring Through the Seasons
                 </span>
             </motion.h2>
-            <p className="text-white/90 max-w-3xl mx-auto text-lg lg:text-xl xl:text-2xl leading-relaxed px-4">
+            <p className="text-white/90 max-w-[65ch] mx-auto text-base lg:text-lg leading-relaxed px-4">
                 Nepal's climate varies drastically from the Terai to the Himalayas. Adjust your dog's care routine based on the local conditions.
             </p>
             </div>
@@ -317,7 +314,7 @@ const CareGuide = () => {
                 </div>
                 
                 {/* Season Title - Now using solid white color */}
-                <h3 className={`text-2xl lg:text-3xl font-bold mb-4 lg:mb-6 text-center text-white leading-tight`}>
+                <h3 className={`text-xl lg:text-2xl font-bold mb-4 lg:mb-5 text-center text-white leading-tight`}>
                     {season.title}
                 </h3>
                 
@@ -362,7 +359,7 @@ const CareGuide = () => {
                 </h2>
             </div>
             
-            <p className="text-xl md:text-2xl lg:text-3xl text-white/90 mb-12 md:mb-16 font-medium leading-relaxed max-w-5xl">
+            <p className="text-base md:text-lg lg:text-xl text-white/90 mb-12 md:mb-16 font-medium leading-relaxed max-w-[65ch]">
                 Knowing what to do in the first 5 minutes of an emergency can save your pet's life. Keep these procedures handy.
             </p>
 
@@ -398,7 +395,7 @@ const CareGuide = () => {
                 <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-white text-[#008737] px-8 md:px-12 py-5 md:py-6 rounded-xl md:rounded-2xl font-black text-lg md:text-xl hover:shadow-[0_20px_50px_rgba(255,255,255,0.3)] transition-all flex items-center justify-center gap-3 w-full sm:w-auto min-w-[280px]"
+                className="bg-white text-[#008737] px-8 md:px-12 py-5 md:py-6 rounded-xl md:rounded-2xl font-black text-base md:text-lg hover:shadow-[0_20px_50px_rgba(255,255,255,0.3)] transition-all flex items-center justify-center gap-3 w-full sm:w-auto min-w-[280px]"
                 >
                 <MapPin className="h-5 w-5 md:h-6 md:w-6" />
                 Find Nearest 24/7 Vet
@@ -421,7 +418,7 @@ const CareGuide = () => {
             </motion.div>
             <div className="max-w-2xl">
               <h4 className="text-3xl font-black text-[#063630] mb-3">Did you know?</h4>
-              <p className="text-2xl text-[#063630]/70 leading-relaxed font-medium">Proper care and early socialization can extend a dog's life by up to <span className="text-[#008737] font-black">5 years</span>. Start your journey today!</p>
+              <p className="text-lg text-[#063630]/70 leading-relaxed font-medium text-longform">Proper care and early socialization can extend a dog's life by up to <span className="text-[#008737] font-black">5 years</span>. Start your journey today!</p>
             </div>
           </div>
         </div>

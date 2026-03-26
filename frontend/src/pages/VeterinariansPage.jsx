@@ -14,8 +14,8 @@ const VeterinariansPage = () => {
           <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-6">
             Find Veterinary Care Near You
           </h1>
-          <p className="text-xl text-emerald-100/80 max-w-2xl mx-auto leading-relaxed">
-            Locate trusted local veterinarians and animal hospitals to ensure your pets receive the best care possible.
+          <p className="text-base text-emerald-100/90 text-longform mx-auto leading-relaxed">
+            Find trusted, qualified veterinary professionals in your area. 
           </p>
         </div>
       </div>

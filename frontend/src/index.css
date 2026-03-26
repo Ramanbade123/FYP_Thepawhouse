@@ -3,19 +3,49 @@
 @tailwind utilities;
 
 @layer base {
+  /* Modern Web Typography - Interaction Heavy */
+  :root {
+    /* 
+      1. Default font size: 16px
+      2. Secondary font size: 14px (Tailwind text-sm)
+      3. Tertiary/Caption: 12px (Tailwind text-xs)
+      4. Headlines: 30-48px (Tailwind text-3xl to text-5xl)
+    */
+  }
+
   html {
     scroll-behavior: smooth;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 16px; /* Strict 16px base for modern interaction-heavy UI */
   }
-  
+
   body {
     @apply antialiased bg-[#EDEDED] text-[#063630];
     margin: 0;
     padding: 0;
   }
 
+  /* 2. Body text: 50-75 characters per line for long text */
+  p.text-longform, 
+  article p, 
+  .content-readable p {
+    max-width: 65ch; /* Best practice approx 65 characters */
+    line-height: 1.6;
+  }
+
+  /* 3. Headlines - Emphasised */
+  h1, h2, h3 {
+    @apply font-bold tracking-tight text-[#063630];
+  }
+
+  h1 {
+    /* Safe fallback, though tailwind text-4xl/text-5xl overrides this */
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 1.1;
+  }
+
   /* Fix for any remaining white text visibility issues */
-  h1, h2, h3, h4, h5, h6, p, span, a, li, button, input, textarea {
+  h4, h5, h6, span, a, li, button, input, textarea {
     @apply text-[#063630];
   }
 }

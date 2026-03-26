@@ -175,7 +175,7 @@ const DiseaseAwarenessPage = () => {
   });
 
   return (
-    <div className="min-h-screen pt-24 pb-16" style={{ backgroundColor: '#EDEDED', fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <div className="min-h-screen pt-24 pb-16 bg-[#EDEDED]">
 
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#063630] to-[#085558] text-white py-14 px-4 mb-10">
@@ -187,8 +187,11 @@ const DiseaseAwarenessPage = () => {
           <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Stethoscope className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-3" style={{ color: '#ffffff' }}>Dog Disease Awareness</h1>
-          <p className="text-green-200 text-lg mb-8">Know the signs, prevent the spread, protect your dog</p>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-3">Dog Disease Awareness</h1>
+          <p className="text-base text-[#cceae7] mb-8 text-longform mx-auto">
+            Know the signs, understand the risks, and keep your furry friend healthy. 
+            Information on 28 common dog diseases including treatment and prevention.
+          </p>
           <div className="flex items-center justify-center gap-8">
             <div><p className="text-4xl font-bold" style={{ color: '#ffffff' }}>{diseases.length}+</p><p className="text-green-200 text-sm mt-1">Diseases Covered</p></div>
             <div className="w-px h-12 bg-white/20" />

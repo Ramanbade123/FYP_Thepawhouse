@@ -84,7 +84,7 @@ const Testimonials = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#063630] mb-4">
             Happy Families, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#085558]">Happy Pets</span>
           </h2>
-          <p className="text-lg lg:text-xl text-[#063630]/80 max-w-2xl mx-auto mb-8 lg:mb-12">
+          <p className="text-base lg:text-lg text-[#063630]/80 max-w-[65ch] text-longform mx-auto mb-8 lg:mb-12">
             Read what fellow pet parents say about their adopted companions and our adoption process.
           </p>
 
@@ -102,7 +102,7 @@ const Testimonials = () => {
                   <div className="w-12 h-12 bg-gradient-to-br from-[#008737] to-[#085558] rounded-full flex items-center justify-center mb-3">
                     <stat.icon className="h-6 w-6 text-white" style={{ color: '#ffffff' }} />
                   </div>
-                  <h3 className="text-2xl lg:text-3xl font-bold text-[#063630] mb-1">{stat.value}</h3>
+                  <h3 className="text-xl lg:text-2xl font-bold text-[#063630] mb-1">{stat.value}</h3>
                   <p className="text-[#063630]/70 text-sm">{stat.label}</p>
                 </div>
               </motion.div>
@@ -163,7 +163,7 @@ const Testimonials = () => {
                       </div>
 
                       {/* Content */}
-                      <p className="text-lg lg:text-xl text-[#063630]/80 mb-8 leading-relaxed">
+                      <p className="text-base lg:text-lg text-[#063630]/80 mb-8 leading-relaxed text-longform">
                         "{testimonial.content}"
                       </p>
 
@@ -172,7 +172,7 @@ const Testimonials = () => {
                         <div className="flex items-center">
                           <div className="mr-4 text-3xl lg:text-4xl">{testimonial.image}</div>
                           <div>
-                            <h4 className="text-lg lg:text-xl font-bold text-[#063630]">{testimonial.name}</h4>
+                            <h4 className="text-base lg:text-lg font-bold text-[#063630]">{testimonial.name}</h4>
                             <p className="text-[#008737] font-medium text-sm lg:text-base">{testimonial.role}</p>
                           </div>
                         </div>

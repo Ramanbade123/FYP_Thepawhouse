@@ -436,7 +436,7 @@ const DogDetailPage = () => {
                 </span>
               </div>
               <h1 className="text-4xl font-bold text-[#063630] mb-1">{pet.name}</h1>
-              <p className="text-xl text-[#008737] font-semibold">{pet.breed}</p>
+              <p className="text-lg text-[#008737] font-semibold">{pet.breed}</p>
             </div>
 
             {/* Quick stats */}

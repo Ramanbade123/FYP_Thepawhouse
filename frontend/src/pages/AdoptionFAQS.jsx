@@ -79,7 +79,7 @@ const AdoptionFAQs = () => {
             <HelpCircle className="h-8 w-8 text-[#008737]" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-[#063630] mb-4">Adoption FAQs</h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">Find answers to common questions about adopting a dog through The Paw House. Can't find what you're looking for? Contact our team.</p>
+          <p className="text-base text-gray-600 text-longform mx-auto">Find answers to common questions about adopting a dog through The Paw House. Can't find what you're looking for? Contact our team.</p>
         </motion.div>
 
         {/* Stats */}
@@ -214,8 +214,8 @@ const AdoptionFAQs = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-16 text-center">
             <div className="bg-gradient-to-r from-[#008737]/5 to-[#085558]/5 rounded-2xl p-8 max-w-4xl mx-auto">
               <Users className="h-12 w-12 text-[#008737] mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-[#063630] mb-4">Ready to Meet Your New Best Friend?</h3>
-              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">Thousands of dogs have found loving homes through our careful matching process. Your perfect companion is waiting.</p>
+              <h3 className="text-3xl md:text-4xl font-bold text-[#063630] mb-4">Ready to Meet Your New Best Friend?</h3>
+              <p className="text-base text-gray-600 mb-6 text-longform mx-auto">Thousands of dogs have found loving homes through our careful matching process. Your perfect companion is waiting.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/adopt" className="px-8 py-3 bg-gradient-to-r from-[#008737] to-[#085558] rounded-full font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
                   <Search className="h-5 w-5" /> Browse Available Dogs

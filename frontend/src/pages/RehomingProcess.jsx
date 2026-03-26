@@ -69,8 +69,8 @@ const RehomingProcess = () => {
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-[#085558]/10 to-[#0a7a8c]/10 rounded-2xl mb-6">
             <Home className="h-8 w-8 text-[#085558]" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#063630] mb-4">Rehoming Your Dog</h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">A compassionate, secure process to find your dog a loving new home. We're here to support you every step of the way.</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-[#063630] mb-4">Rehoming Process</h1>
+            <p className="text-base text-gray-600 text-longform mx-auto">A compassionate, secure process to find your dog a loving new home. We're here to support you every step of the way.</p>
         </motion.div>
 
         {/* Benefits */}
@@ -249,8 +249,8 @@ const RehomingProcess = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-16 text-center">
             <div className="bg-gradient-to-r from-[#085558]/5 to-[#0a7a8c]/5 rounded-2xl p-8 max-w-4xl mx-auto">
               <Heart className="h-12 w-12 text-[#085558] mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-[#063630] mb-4">Making the Right Decision for Your Dog</h3>
-              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">Rehoming is a difficult decision, but you're doing what's best for your dog. We're here to make sure they find a loving home where they'll be cherished.</p>
+                <h3 className="text-3xl md:text-4xl font-bold text-[#063630] mb-4">Ready to Begin?</h3>
+                <p className="text-base text-gray-600 mb-6 text-longform mx-auto">Rehoming is a difficult decision, but you're doing what's best for your dog. We're here to make sure they find a loving home where they'll be cherished.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/contact" className="px-8 py-3 bg-gradient-to-r from-[#085558] to-[#0a7a8c] rounded-full font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
                   <MessageCircle className="h-5 w-5" /> Start Rehoming Process
