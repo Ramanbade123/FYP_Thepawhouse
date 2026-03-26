@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Stethoscope, Search, AlertCircle, ChevronDown, ChevronUp, Shield, Zap, Users } from 'lucide-react';
+import { Stethoscope, Search, AlertCircle, ChevronDown, ChevronUp, Shield, Zap, Users, Activity, Bug, Wind, Info, HeartPulse } from 'lucide-react';
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const authHeaders = (extra = {}) => {
@@ -20,10 +20,19 @@ const apiFetch = async (method, url, body = null, isForm = false) => {
 const CATEGORIES = ['all', 'viral', 'bacterial', 'parasitic', 'fungal', 'nutritional', 'genetic', 'other'];
 
 const SEVERITY_STYLES = {
-  mild:     { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Mild'     },
-  moderate: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Moderate' },
-  severe:   { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Severe'   },
-  fatal:    { bg: 'bg-red-100',    text: 'text-red-700',    label: 'Fatal'    },
+  mild:     { bg: 'bg-green-50',  text: 'text-green-700',  border: 'border-green-200', label: 'Mild'     },
+  moderate: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', label: 'Moderate' },
+  severe:   { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', label: 'Severe'   },
+  fatal:    { bg: 'bg-red-50',    text: 'text-red-700',    border: 'border-red-200', label: 'Fatal'    },
+};
+
+const CATEGORY_ICONS = {
+  viral: <Activity className="w-5 h-5 text-purple-500" />,
+  bacterial: <Bug className="w-5 h-5 text-emerald-500" />,
+  parasitic: <Bug className="w-5 h-5 text-orange-500" />,
+  fungal: <Wind className="w-5 h-5 text-blue-500" />,
+  genetic: <HeartPulse className="w-5 h-5 text-rose-500" />,
+  other: <Info className="w-5 h-5 text-gray-500" />
 };
 
 // Seeded diseases shown when DB is empty
@@ -43,66 +52,96 @@ const SEED_DISEASES = [
 const DiseaseCard = ({ disease }) => {
   const [expanded, setExpanded] = useState(false);
   const sev = SEVERITY_STYLES[disease.severity] || SEVERITY_STYLES.moderate;
+  const CatIcon = CATEGORY_ICONS[disease.category] || CATEGORY_ICONS.other;
 
   return (
-    <div className="bg-white rounded-2xl border border-[#008737]/10 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200">
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div>
-            <h3 className="font-bold text-[#063630] text-lg leading-tight">{disease.name}</h3>
-            <p className="text-sm text-gray-500 capitalize mt-0.5">{disease.category} · {disease.affectedArea}</p>
+    <div className={`bg-white rounded-3xl border ${expanded ? sev.border : 'border-gray-100'} shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden group`}>
+      <div className="p-6 flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-2xl ${sev.bg} flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+              {CatIcon}
+            </div>
+            <div>
+              <h3 className="font-bold text-[#063630] text-lg leading-tight group-hover:text-[#008737] transition-colors">{disease.name}</h3>
+              <p className="text-sm text-gray-500 capitalize mt-0.5 font-medium">{disease.category} • {disease.affectedArea}</p>
+            </div>
           </div>
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${sev.bg} ${sev.text}`}>{sev.label}</span>
+          <span className={`text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0 border ${sev.bg} ${sev.text} ${sev.border}`}>
+            {sev.label}
+          </span>
         </div>
 
         {/* Badges */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {disease.isContagious  && <span className="flex items-center gap-1 text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-full font-medium"><Zap className="h-3 w-3" /> Contagious</span>}
-          {disease.zoonoticRisk  && <span className="flex items-center gap-1 text-xs bg-red-50 text-red-700 px-2 py-1 rounded-full font-medium"><Users className="h-3 w-3" /> Risk to Humans</span>}
-          {disease.commonInNepal && <span className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-medium"><Shield className="h-3 w-3" /> Common in Nepal</span>}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {disease.isContagious  && <span className="flex items-center gap-1.5 text-xs bg-orange-50/80 text-orange-700 px-2.5 py-1 rounded-lg font-semibold border border-orange-100/50"><Zap className="h-3.5 w-3.5 text-orange-500" /> Contagious</span>}
+          {disease.zoonoticRisk  && <span className="flex items-center gap-1.5 text-xs bg-red-50/80 text-red-700 px-2.5 py-1 rounded-lg font-semibold border border-red-100/50"><Users className="h-3.5 w-3.5 text-red-500" /> Risk to Humans</span>}
+          {disease.commonInNepal && <span className="flex items-center gap-1.5 text-xs bg-blue-50/80 text-blue-700 px-2.5 py-1 rounded-lg font-semibold border border-blue-100/50"><Shield className="h-3.5 w-3.5 text-blue-500" /> Common in Nepal</span>}
         </div>
 
         {/* Symptoms preview */}
-        <div className="mb-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Key Symptoms</p>
+        <div className="mb-4 flex-1">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Key Symptoms</p>
           <div className="flex flex-wrap gap-1.5">
             {disease.symptoms?.slice(0, expanded ? undefined : 3).map((s, i) => (
-              <span key={i} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{s}</span>
+              <span key={i} className="text-[13px] bg-gray-50 border border-gray-100 text-gray-600 px-2.5 py-1 rounded-lg font-medium">{s}</span>
             ))}
             {!expanded && disease.symptoms?.length > 3 && (
-              <span className="text-xs text-[#008737] font-medium">+{disease.symptoms.length - 3} more</span>
+              <span className="text-[13px] text-[#008737] bg-[#008737]/5 px-2.5 py-1 rounded-lg font-semibold">+{disease.symptoms.length - 3} more</span>
             )}
           </div>
         </div>
 
         <button onClick={() => setExpanded(p => !p)}
-          className="flex items-center gap-1 text-sm text-[#008737] font-semibold hover:text-[#085558] transition-colors">
-          {expanded ? <><ChevronUp className="h-4 w-4" /> Show Less</> : <><ChevronDown className="h-4 w-4" /> Full Details</>}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 mt-2 rounded-xl text-sm font-semibold transition-colors bg-gray-50 hover:bg-[#008737] text-gray-600 hover:text-white group">
+          {expanded ? <><ChevronUp className="h-4 w-4" /> View Less</> : <><ChevronDown className="h-4 w-4 group-hover:translate-y-0.5 transition-transform" /> Full Details</>}
         </button>
       </div>
 
-      {expanded && (
-        <div className="border-t border-[#008737]/10 p-5 space-y-4" style={{ backgroundColor: '#EDEDED' }}>
+      {/* Expanded Content */}
+      <div className={`transition-all duration-300 ease-in-out border-t overflow-hidden ${expanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0 border-transparent'}`} style={expanded ? { borderColor: 'rgba(0,135,55,0.1)' } : {}}>
+        <div className="p-6 bg-gray-50/50 space-y-5">
           {disease.causes?.length > 0 && (
             <div>
-              <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Causes</p>
-              <ul className="space-y-1">{disease.causes.map((c, i) => <li key={i} className="text-sm text-gray-700 flex gap-2"><span className="text-[#008737] mt-0.5">•</span>{c}</li>)}</ul>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5" /> Causes
+              </p>
+              <ul className="space-y-1.5">
+                {disease.causes.map((c, i) => (
+                  <li key={i} className="text-[13px] text-gray-700 flex items-start gap-2 leading-relaxed">
+                    <span className="text-gray-400 mt-0.5">•</span>{c}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
+          
           {disease.prevention?.length > 0 && (
-            <div>
-              <p className="text-xs font-bold text-green-700 uppercase tracking-wide mb-2">Prevention</p>
-              <ul className="space-y-1">{disease.prevention.map((p, i) => <li key={i} className="text-sm text-gray-700 flex gap-2"><span className="text-green-600 mt-0.5">✓</span>{p}</li>)}</ul>
+            <div className="p-4 bg-green-50/50 rounded-2xl border border-green-100/50">
+              <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5" /> Prevention
+              </p>
+              <ul className="space-y-1.5">
+                {disease.prevention.map((p, i) => (
+                  <li key={i} className="text-[13px] text-green-800 flex items-start gap-2 leading-relaxed">
+                    <span className="text-green-500 mt-0.5 font-bold">✓</span>{p}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
+          
           {disease.treatment && (
-            <div>
-              <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">Treatment</p>
-              <p className="text-sm text-gray-700">{disease.treatment}</p>
+            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+              <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" /> Treatment
+              </p>
+              <p className="text-[13px] text-blue-900 leading-relaxed">{disease.treatment}</p>
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -191,7 +230,7 @@ const DiseaseAwarenessPage = () => {
             <p className="text-[#063630]/60">No diseases found matching your search.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map(d => <DiseaseCard key={d._id} disease={d} />)}
           </div>
         )}

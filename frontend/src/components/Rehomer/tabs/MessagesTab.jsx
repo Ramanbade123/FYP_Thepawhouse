@@ -65,14 +65,14 @@ const MessagesTab = ({ user }) => {
     finally { setLoadingConvos(false); }
   }, []);
 
-  const fetchMessages = useCallback(async (convoId) => {
+  const fetchMessages = useCallback(async (convoId, isPolling = false) => {
     if (!convoId) return;
-    setLoadingMsgs(true);
+    if (!isPolling) setLoadingMsgs(true);
     try {
       const data = await apiFetch('GET', `/messages/${convoId}/messages`);
       setMessages(data.data || []);
     } catch {}
-    finally { setLoadingMsgs(false); }
+    finally { if (!isPolling) setLoadingMsgs(false); }
   }, []);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
@@ -80,15 +80,15 @@ const MessagesTab = ({ user }) => {
   useEffect(() => {
     if (!activeConvo) return;
     pollRef.current = setInterval(() => {
-      fetchMessages(activeConvo._id);
+      fetchMessages(activeConvo._id, true);
       fetchConversations();
-    }, 5000);
+    }, 3000);
     return () => clearInterval(pollRef.current);
   }, [activeConvo, fetchMessages, fetchConversations]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, [messages.length, activeConvo?._id]);
 
   const openConvo = (convo) => {
     setActiveConvo(convo);
@@ -259,14 +259,14 @@ const MessagesTab = ({ user }) => {
                         <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
                           {!isMine && <Avatar name={msg.sender?.name} url={msg.sender?.profileImage} size="sm" />}
                           <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
-                            <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-xs lg:max-w-md ${
-                              isMine ? 'bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-br-sm' : 'bg-gray-100 text-[#063630] rounded-bl-sm'
+                            <div className={`px-4 py-3 rounded-2xl text-sm max-w-xs md:max-w-md shadow-sm ${
+                              isMine ? 'bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-br-sm' : 'bg-white text-[#063630] border border-gray-100 rounded-bl-sm'
                             }`} style={isMine ? { color: '#fff' } : {}}>
                               {msg.text}
                             </div>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Clock className="h-3 w-3 text-gray-400" />
-                              <span className="text-xs text-gray-400">{timeAgo(msg.createdAt)}</span>
+                            <div className="flex items-center gap-1 mt-1.5 opacity-70 hover:opacity-100 transition-opacity">
+                              <Clock className="h-3 w-3 text-gray-500" />
+                              <span className="text-[11px] font-medium text-gray-500">{timeAgo(msg.createdAt)}</span>
                               {isMine && msg.readAt && <CheckCheck className="h-3 w-3 text-[#008737]" />}
                             </div>
                           </div>
@@ -278,13 +278,13 @@ const MessagesTab = ({ user }) => {
                 </div>
 
                 {/* Input */}
-                <div className="p-4 border-t border-gray-100 bg-gray-50/30">
-                  <div className="flex items-end gap-2">
+                <div className="p-4 border-t border-gray-100 bg-white">
+                  <div className="flex items-end gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100 focus-within:ring-2 focus-within:ring-[#008737]/20 focus-within:border-[#008737] transition-all">
                     <textarea value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={handleKeyDown}
-                      placeholder="Type a message... (Enter to send)" rows={1} maxLength={1000}
-                      className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#008737] resize-none bg-white" />
+                      placeholder="Type your message..." rows={1} maxLength={1000}
+                      className="flex-1 bg-transparent border-none px-3 py-2 text-sm focus:outline-none resize-none min-h-[40px] max-h-[120px]" />
                     <button onClick={handleSend} disabled={!newMsg.trim() || sending}
-                      className="p-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl hover:shadow-md transition-all disabled:opacity-50 flex-shrink-0"
+                      className="p-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:shadow-none flex-shrink-0"
                       style={{ color: '#fff' }}>
                       <Send className="h-4 w-4" />
                     </button>

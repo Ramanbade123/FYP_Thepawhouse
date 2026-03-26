@@ -145,31 +145,38 @@ const RehomerHeader = ({ user, activeTab, setActiveTab }) => {
 
               {/* Notifications Dropdown menu */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <p className="font-semibold text-[#063630] text-sm">Notifications</p>
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden transform origin-top-right transition-all">
+                  <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 backdrop-blur-sm">
+                    <p className="font-bold text-[#063630] text-sm">Notifications</p>
                     {unreadCount > 0 && (
-                      <span className="text-xs bg-[#008737]/10 text-[#008737] px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-[10px] bg-[#008737]/10 text-[#008737] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
                         {unreadCount} New
                       </span>
                     )}
                   </div>
-                  <div className="max-h-80 overflow-y-auto">
+                  <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-gray-500">No notifications yet.</div>
+                      <div className="p-8 text-center flex flex-col items-center justify-center">
+                        <Bell className="h-8 w-8 text-gray-200 mb-2" />
+                        <p className="text-sm text-gray-500 font-medium">No notifications yet</p>
+                      </div>
                     ) : (
                       notifications.map(n => (
                         <div 
                           key={n._id} 
                           onClick={() => handleMarkAsRead(n._id, n.link)}
-                          className={`p-3 border-b border-gray-50 hover:bg-gray-50 flex gap-3 text-sm transition-colors cursor-pointer ${!n.read ? 'bg-[#008737]/5' : ''}`}
+                          className={`p-4 border-b border-gray-50 hover:bg-gray-50 flex gap-3 transition-colors cursor-pointer ${!n.read ? 'bg-[#f0fdf4]' : 'bg-white'}`}
                         >
-                          {!n.read && <div className="w-2 h-2 rounded-full bg-[#008737] mt-1.5 flex-shrink-0" />}
-                          <div className={n.read ? 'pl-5' : ''}>
-                            <p className="font-semibold text-gray-800 text-xs mb-0.5">{n.title || n.type}</p>
-                            <p className={`text-gray-600 ${!n.read ? 'font-medium text-gray-800' : ''}`}>{n.message || n.text}</p>
-                            <span className="text-xs text-gray-400 mt-1 block">
-                              {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : n.time}
+                          <div className={`mt-1.5 flex-shrink-0 w-2 h-2 rounded-full ${!n.read ? 'bg-[#008737] shadow-[0_0_8px_rgba(0,135,55,0.4)]' : 'bg-transparent'}`} />
+                          <div className="text-left w-full">
+                            <p className={`text-sm mb-1 ${!n.read ? 'font-bold text-[#063630]' : 'font-semibold text-gray-700'}`}>
+                              {n.title || n.type}
+                            </p>
+                            <p className={`text-xs leading-relaxed ${!n.read ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
+                              {n.message || n.text}
+                            </p>
+                            <span className="text-[10px] text-gray-400 mt-2 block font-medium">
+                              {n.createdAt ? new Date(n.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : n.time}
                             </span>
                           </div>
                         </div>

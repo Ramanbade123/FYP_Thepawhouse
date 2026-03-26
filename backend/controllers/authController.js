@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { sendTokenResponse } = require('../utils/generateToken');
 const validator = require('validator');
 const { sendEmail, emailTemplates } = require('../utils/sendEmail');
+const Notification = require('../models/Notification');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -719,6 +720,27 @@ exports.verifyEmail = async (req, res) => {
         html: emailTemplates.welcome(user.name).html,
       });
     } catch (emailError) {}
+
+    try {
+      await Notification.create({
+        recipient: user._id,
+        type: 'system',
+        title: 'Welcome!',
+        message: `Welcome to The Paw House, ${user.name}! Your email has been verified.`,
+        link: '/adopter/dashboard?tab=settings'
+      });
+      // Notify admins
+      const admins = await User.find({ role: 'admin' });
+      for (const admin of admins) {
+        await Notification.create({
+          recipient: admin._id,
+          type: 'system',
+          title: 'New User Verified',
+          message: `${user.name} has registered and verified their email.`,
+          link: '/admin/dashboard?tab=users'
+        });
+      }
+    } catch (notifErr) { console.error('Notification error:', notifErr); }
 
     sendTokenResponse(user, 200, res);
   } catch (error) {

@@ -13,6 +13,7 @@ import RehomingFAQs from './pages/Rehomingfaqs'
 import ListDogPage from './pages/ListDogPage';
 import EditDogPage from './pages/EditDogPage'; 
 import LostFoundPage from './pages/LostFoundPage';
+import PostLostFoundPage from './pages/PostLostFoundPage';
 import ReportAbusePage from './pages/ReportAbusePage';
 import DiseaseAwarenessPage from './pages/DiseaseAwarenessPage';
 import VeterinariansPage from './pages/VeterinariansPage';
@@ -161,6 +162,7 @@ function App() {
         <Route path="/list-dog" element={<ListDogPage />} />
         <Route path="/edit-dog/:id" element={<PrivateRoute allowedRoles={['rehomer']}><EditDogPage /></PrivateRoute>} />
         <Route path="/lost-found" element={<MainLayout><LostFoundPage /></MainLayout>} />
+        <Route path="/post-lost-found" element={<MainLayout><PostLostFoundPage /></MainLayout>} />
         <Route path="/report" element={<MainLayout><ReportAbusePage /></MainLayout>} />
         <Route path="/disease-awareness" element={<MainLayout><DiseaseAwarenessPage /></MainLayout>} />
         <Route path="/veterinarians" element={<MainLayout><VeterinariansPage /></MainLayout>} />

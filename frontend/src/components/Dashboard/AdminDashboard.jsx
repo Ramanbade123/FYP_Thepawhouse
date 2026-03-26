@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Users, Dog, Home, Settings,
   UserCheck, Calendar, ChevronRight, Clock
@@ -37,12 +38,21 @@ const DashStatCard = ({ title, value, change, icon: Icon, iconColor, bgColor, bo
 );
 
 const AdminDashboard = () => {
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab]     = useState('dashboard');
   const [stats, setStats] = useState({
     totalUsers: 0, totalAdopters: 0, totalRehomers: 0,
     pendingVerifications: 0, pendingPets: 0,
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
 
   useEffect(() => {
     const fetchStats = async () => {

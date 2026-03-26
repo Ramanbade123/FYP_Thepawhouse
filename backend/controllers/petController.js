@@ -34,7 +34,7 @@ exports.createPet = async (req, res) => {
           type: 'system',
           title: 'New Pet Listing',
           message: `${req.user.name} has listed a new pet: ${pet.name}. Approval required.`,
-          link: '/admin/dashboard'
+          link: '/admin/dashboard?tab=pets'
         });
       }
     } catch (notifErr) { console.error('Admin notification error:', notifErr); }
@@ -272,7 +272,7 @@ exports.adminUpdateApproval = async (req, res) => {
         message: adminApproval === 'approved' 
           ? `Your listing for ${pet.name} has been approved and is now live.`
           : `There is an update regarding your listing for ${pet.name}. Please check your dashboard.`,
-        link: '/rehomer/dashboard'
+        link: '/rehomer/dashboard?tab=my-dogs'
       });
     } catch (notifErr) { console.error('Rehomer notification error:', notifErr); }
 
@@ -306,6 +306,27 @@ exports.applyForPet = async (req, res) => {
     await User.findByIdAndUpdate(req.user.id, {
       $push: { petsAdopted: { petId: pet._id, petName: pet.name, status: 'pending' } },
     });
+
+    try {
+      await Notification.create({
+        recipient: pet.rehomer,
+        type: 'adoption',
+        title: 'New Application',
+        message: `Someone has applied to adopt ${pet.name}.`,
+        link: `/rehomer/dashboard?tab=applications`
+      });
+      
+      const admins = await User.find({ role: 'admin' });
+      for (const admin of admins) {
+        await Notification.create({
+          recipient: admin._id,
+          type: 'system',
+          title: 'New Adoption Application',
+          message: `A new application has been submitted for ${pet.name}.`,
+          link: `/admin/dashboard?tab=adoptions`
+        });
+      }
+    } catch (err) { console.error('Notification err:', err); }
 
     res.status(200).json({ success: true, message: 'Application submitted', data: pet });
   } catch (error) {
@@ -415,6 +436,27 @@ exports.verifyKhaltiAndApply = async (req, res) => {
           $push: { petsAdopted: { petId: pet._id, petName: pet.name, status: 'pending' } },
         });
 
+        try {
+          await Notification.create({
+            recipient: pet.rehomer,
+            type: 'adoption',
+            title: 'New Application',
+            message: `Someone has applied to adopt ${pet.name} (via Khalti).`,
+            link: `/rehomer/dashboard?tab=applications`
+          });
+          
+          const admins = await User.find({ role: 'admin' });
+          for (const admin of admins) {
+            await Notification.create({
+              recipient: admin._id,
+              type: 'system',
+              title: 'New Adoption Application',
+              message: `A new application has been submitted for ${pet.name} (via Khalti).`,
+              link: `/admin/dashboard?tab=adoptions`
+            });
+          }
+        } catch (err) { console.error('Notification err:', err); }
+
         res.status(200).json({ success: true, message: 'Application submitted successfully via Khalti', data: pet });
     } else {
         res.status(400).json({ success: false, error: 'Payment verification failed or payment not completed' });
@@ -472,16 +514,22 @@ exports.updateApplicationStatus = async (req, res) => {
       pet.adoptedBy   = application.adopter._id || application.adopter;
       pet.adoptedDate = new Date();
       pet.applications.forEach(a => {
-        if (a._id.toString() !== req.params.appId) {
+        if (a._id.toString() !== req.params.appId && a.status === 'pending') {
           a.status = 'rejected';
           if (a.adopter && a.adopter.email) toNotifyRejected.push(a.adopter);
         }
       });
+    } else if (status === 'rejected') {
+      // Revert pet status to available if there are no more active applications
+      const hasActiveApps = pet.applications.some(a => a.status === 'pending' || a.status === 'approved');
+      if (!hasActiveApps) {
+        pet.status = 'available';
+      }
     }
 
     await pet.save();
 
-    // ── Send notification emails (non-blocking) ──────────────────────────────
+    // ── Send notification emails & in-app notifications ──────────────────────────────
     const adopter  = application.adopter;
     const petName  = pet.name;
 
@@ -489,9 +537,29 @@ exports.updateApplicationStatus = async (req, res) => {
       if (status === 'approved') {
         const tmpl = emailTemplates.adoptionApproval(petName, adopter.name || 'Adopter');
         sendEmail({ email: adopter.email, ...tmpl }).catch(err => console.error('Approval email error:', err));
+
+        try {
+            await Notification.create({
+                recipient: adopter._id || adopter,
+                type: 'adoption',
+                title: 'Application Approved! 🎉',
+                message: `Your application for ${pet.name} has been approved!`,
+                link: '/adopter/dashboard?tab=applications'
+            });
+        } catch(e) {}
       } else if (status === 'rejected') {
         const tmpl = emailTemplates.adoptionRejection(petName, adopter.name || 'Adopter');
         sendEmail({ email: adopter.email, ...tmpl }).catch(err => console.error('Rejection email error:', err));
+
+        try {
+            await Notification.create({
+                recipient: adopter._id || adopter,
+                type: 'adoption',
+                title: 'Application Update',
+                message: `Your application for ${pet.name} was not selected this time.`,
+                link: '/adopter/dashboard?tab=applications'
+            });
+        } catch(e) {}
       }
     }
 
@@ -499,7 +567,30 @@ exports.updateApplicationStatus = async (req, res) => {
     toNotifyRejected.forEach(otherAdopter => {
       const tmpl = emailTemplates.adoptionRejection(petName, otherAdopter.name || 'Adopter');
       sendEmail({ email: otherAdopter.email, ...tmpl }).catch(err => console.error('Auto-rejection email error:', err));
+      
+      try {
+          Notification.create({
+              recipient: otherAdopter._id || otherAdopter,
+              type: 'adoption',
+              title: 'Application Update',
+              message: `Your application for ${pet.name} was not selected this time.`,
+              link: '/adopter/dashboard?tab=applications'
+          }).catch(e => {});
+      } catch(e) {}
     });
+
+    try {
+        const admins = await User.find({ role: 'admin' });
+        for (const admin of admins) {
+            await Notification.create({
+                recipient: admin._id,
+                type: 'system',
+                title: 'Application Status Updated',
+                message: `Application for ${pet.name} was ${status}.`,
+                link: '/admin/dashboard?tab=adoptions'
+            });
+        }
+    } catch(e) {}
     // ─────────────────────────────────────────────────────────────────────────
 
     res.status(200).json({ success: true, data: pet });

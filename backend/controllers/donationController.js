@@ -1,4 +1,6 @@
 const Donation = require('../models/Donation');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
 const axios    = require('axios');
 
 // GET all donations — admin only
@@ -155,6 +157,33 @@ exports.verifyKhaltiDonation = async (req, res) => {
       donation.paymentStatus = 'completed';
       donation.transactionId = pidx;
       await donation.save();
+
+      // Notify Donor if registered user
+      if (donation.donatedBy) {
+        try {
+          await Notification.create({
+            recipient: donation.donatedBy,
+            type: 'system',
+            title: 'Donation Received',
+            message: `Thank you for your generous donation of Rs.${donation.amount}! 🐾`,
+            link: '/donate'
+          });
+        } catch (err) {}
+      }
+
+      // Notify Admins
+      try {
+        const admins = await User.find({ role: 'admin' });
+        for (const admin of admins) {
+          await Notification.create({
+            recipient: admin._id,
+            type: 'system',
+            title: 'New Donation',
+            message: `New donation of Rs.${donation.amount} received from ${donation.donorName || 'Anonymous'}.`,
+            link: '/admin/dashboard?tab=reports'
+          });
+        }
+      } catch (err) {}
 
       res.status(200).json({ success: true, message: 'Donation success', data: donation });
     } else {

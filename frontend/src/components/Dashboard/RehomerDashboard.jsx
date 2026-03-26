@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import RehomerHeader   from '../Rehomer/RehomerHeader';
 import RehomerFooter   from '../Rehomer/RehomerFooter';
@@ -11,9 +12,18 @@ import NearbyClinics   from '../Shared/NearbyClinics';
 import HelpAndSupport  from '../Shared/HelpAndSupport';
 
 const RehomerDashboard = () => {
+  const location = useLocation();
   const [user, setUser]           = useState(null);
   const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');

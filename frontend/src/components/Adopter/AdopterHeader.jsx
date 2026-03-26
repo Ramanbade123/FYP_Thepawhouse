@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PawPrint, Bell, Search, FileText, MessageSquare, Settings, ChevronDown, User, LogOut, Stethoscope, HelpCircle, Heart } from 'lucide-react';
 
@@ -25,11 +25,49 @@ const tabs = [
 
 const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const menuRef = useRef(null);
+  const notifRef = useRef(null);
   const navigate = useNavigate();
 
+  const [notifications, setNotifications] = useState([]);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setNotifications(data.data || []);
+    } catch {}
+  }, []);
+
   useEffect(() => {
-    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  const handleMarkAsRead = async (id, link) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API}/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+      setShowNotifications(false);
+      if (link) navigate(link);
+    } catch {}
+  };
+
+  useEffect(() => {
+    const handler = (e) => { 
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); 
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
@@ -74,9 +112,64 @@ const AdopterHeader = ({ user, activeTab, setActiveTab }) => {
 
           {/* Right */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            <button className="p-2 text-gray-500 hover:text-[#085558] relative">
-              <Bell className="h-5 w-5" />
-            </button>
+            {/* Notifications */}
+            <div className="relative" ref={notifRef}>
+              <button 
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setShowMenu(false);
+                }}
+                className="p-2 text-gray-500 hover:text-[#085558] relative"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
+
+              {/* Notifications Dropdown menu */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden transform origin-top-right transition-all">
+                  <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 backdrop-blur-sm">
+                    <p className="font-bold text-[#063630] text-sm">Notifications</p>
+                    {unreadCount > 0 && (
+                      <span className="text-[10px] bg-[#008737]/10 text-[#008737] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                        {unreadCount} New
+                      </span>
+                    )}
+                  </div>
+                  <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center flex flex-col items-center justify-center">
+                        <Bell className="h-8 w-8 text-gray-200 mb-2" />
+                        <p className="text-sm text-gray-500 font-medium">No notifications yet</p>
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div 
+                          key={n._id} 
+                          onClick={() => handleMarkAsRead(n._id, n.link)}
+                          className={`p-4 border-b border-gray-50 hover:bg-gray-50 flex gap-3 transition-colors cursor-pointer ${!n.read ? 'bg-[#f0fdf4]' : 'bg-white'}`}
+                        >
+                          <div className={`mt-1.5 flex-shrink-0 w-2 h-2 rounded-full ${!n.read ? 'bg-[#008737] shadow-[0_0_8px_rgba(0,135,55,0.4)]' : 'bg-transparent'}`} />
+                          <div className="text-left w-full">
+                            <p className={`text-sm mb-1 ${!n.read ? 'font-bold text-[#063630]' : 'font-semibold text-gray-700'}`}>
+                              {n.title || n.type}
+                            </p>
+                            <p className={`text-xs leading-relaxed ${!n.read ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
+                              {n.message || n.text}
+                            </p>
+                            <span className="text-[10px] text-gray-400 mt-2 block font-medium">
+                              {n.createdAt ? new Date(n.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : n.time}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* User dropdown */}
             <div className="relative" ref={menuRef}>

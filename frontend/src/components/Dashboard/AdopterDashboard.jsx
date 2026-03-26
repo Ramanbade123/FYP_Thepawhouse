@@ -18,10 +18,14 @@ const AdopterDashboard = () => {
   const [activeTab, setActiveTab] = useState(location.state?.tab || 'browse');
 
   useEffect(() => {
-    if (location.state?.tab) {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    } else if (location.state?.tab) {
       setActiveTab(location.state.tab);
     }
-  }, [location.state]);
+  }, [location]);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user') || 'null');

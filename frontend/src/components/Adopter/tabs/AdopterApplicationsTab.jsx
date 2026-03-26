@@ -28,6 +28,7 @@ const AdopterApplicationsTab = () => {
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState('');
   const [startingChat, setStartingChat] = useState(false);
+  const [filter, setFilter]             = useState('all');
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -82,8 +83,39 @@ const AdopterApplicationsTab = () => {
     <div className="text-center py-16"><p className="text-red-500">{error}</p></div>
   );
 
+  const filtered = filter === 'all' ? applications : applications.filter(a => a.status === filter);
+  const counts = {
+    all:       applications.length,
+    pending:   applications.filter(a => a.status === 'pending').length,
+    reviewing: applications.filter(a => a.status === 'reviewing').length,
+    approved:  applications.filter(a => a.status === 'approved').length,
+    rejected:  applications.filter(a => a.status === 'rejected').length,
+  };
+
   return (
     <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-[#063630]">My Applications</h2>
+      </div>
+
+      {/* Filter pills */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {[
+          { key: 'all',       label: 'All'       },
+          { key: 'pending',   label: 'Pending'   },
+          { key: 'approved',  label: 'Approved'  },
+          { key: 'rejected',  label: 'Rejected'  },
+        ].map(({ key, label }) => (
+          <button key={key} onClick={() => setFilter(key)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              filter === key
+                ? 'bg-[#008737] text-white shadow-md'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-[#008737]'
+            }`}>
+            {label} <span className="ml-1 opacity-70">({counts[key]})</span>
+          </button>
+        ))}
+      </div>
 
       {applications.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
@@ -93,15 +125,19 @@ const AdopterApplicationsTab = () => {
           <h3 className="text-lg font-bold text-[#063630] mb-2">No applications yet</h3>
           <p className="text-gray-500 text-sm">Browse dogs and apply to adopt one!</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+          <p className="text-gray-400">No {filter} applications found.</p>
+        </div>
       ) : (
         <div className="space-y-4">
-          {applications.map((app, i) => {
+          {filtered.map((app, i) => {
             const s = statusStyle[app.status] || statusStyle.pending;
             const Icon = s.icon;
             return (
               <motion.div key={app._id}
                 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
-                className="bg-white rounded-xl border border-gray-100 p-5 flex items-center justify-between hover:shadow-md transition-shadow">
+                className={`bg-white rounded-xl border p-5 flex items-center justify-between hover:shadow-md transition-shadow ${app.status === 'rejected' ? 'border-red-100 bg-red-50/10' : 'border-gray-100'}`}>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-xl overflow-hidden bg-gradient-to-br from-[#085558]/20 to-[#008737]/20 flex-shrink-0 flex items-center justify-center">
                     {app.pet?.primaryImage
@@ -112,6 +148,9 @@ const AdopterApplicationsTab = () => {
                     <h3 className="font-bold text-[#063630]">{app.pet?.name}</h3>
                     <p className="text-gray-500 text-sm">{app.pet?.breed} • {app.pet?.ageDisplay}</p>
                     <p className="text-gray-400 text-xs mt-0.5">Applied {new Date(app.appliedAt).toLocaleDateString()}</p>
+                    {app.status === 'rejected' && (
+                      <p className="text-red-500 text-xs font-medium mt-1 uppercase tracking-wider">Application Rejected</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
