@@ -296,28 +296,7 @@ const AdminPetManagement = () => {
         </button>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Pending Review', count: summary.pending,  color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-200', icon: Clock,       key: 'pending'  },
-          { label: 'Approved',       count: summary.approved, color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-200',  icon: CheckCircle, key: 'approved' },
-          { label: 'Rejected',       count: summary.rejected, color: 'text-red-600',    bg: 'bg-red-50',    border: 'border-red-200',    icon: XCircle,     key: 'rejected' },
-        ].map(({ label, count, color, bg, border, icon: Icon, key }) => (
-          <button key={key}
-            onClick={() => { setFilterApproval(filterApproval === key ? '' : key); setPage(1); }}
-            className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
-              filterApproval === key ? `${bg} ${border}` : 'bg-white border-gray-100 hover:border-gray-200'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <Icon className={`h-5 w-5 ${color}`} />
-              {filterApproval === key && <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">Active filter</span>}
-            </div>
-            <p className={`text-2xl font-bold ${color}`}>{count}</p>
-            <p className="text-gray-600 text-sm">{label}</p>
-          </button>
-        ))}
-      </div>
+
 
       {/* Search + filter bar */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-3 items-center">
@@ -356,6 +335,7 @@ const AdminPetManagement = () => {
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Location</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Applications</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Approval</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600">Status</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Listed</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600">Actions</th>
               </tr>
@@ -390,6 +370,11 @@ const AdminPetManagement = () => {
                   <td className="px-4 py-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border capitalize ${approvalColors[pet.adminApproval]}`}>
                       {pet.adminApproval}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${statusColors[pet.status] || 'bg-gray-100 text-gray-800'}`}>
+                      {pet.status || 'unknown'}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">

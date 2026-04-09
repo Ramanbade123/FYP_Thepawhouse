@@ -21,6 +21,18 @@ const INITIAL = {
   imagePreviews: [],
 };
 
+const NEPAL_PROVINCES = [
+  "Koshi Province", "Madhesh Province", "Bagmati Province",
+  "Gandaki Province", "Lumbini Province", "Karnali Province",
+  "Sudurpashchim Province"
+];
+
+const NEPAL_CITIES = [
+  "Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur", "Birgunj", "Biratnagar",
+  "Dharan", "Butwal", "Hetauda", "Janakpur", "Dhangadhi", "Nepalgunj", "Itahari",
+  "Birendranagar", "Tikapur", "Tulsipur", "Ghorahi", "Rajbiraj", "Damak"
+].sort();
+
 const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/10 transition-all";
 const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2";
 
@@ -103,6 +115,38 @@ const ListDogPage = () => {
   const submit = async (e) => {
     e.preventDefault();
     setError(''); setLoading(true);
+
+    const textRegex = /^[A-Za-z\s\-']+$/;
+    if (!textRegex.test(form.name.trim())) {
+      setError("Dog's name contains invalid characters. Only letters, spaces, hyphens, and apostrophes are allowed.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setLoading(false);
+      return;
+    }
+    if (!textRegex.test(form.breed.trim())) {
+      setError("Breed contains invalid characters. Only letters, spaces, hyphens, and apostrophes are allowed.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setLoading(false);
+      return;
+    }
+    if (form.color && !textRegex.test(form.color.trim())) {
+      setError("Color contains invalid characters.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setLoading(false);
+      return;
+    }
+    if (form.description.length < 10 || !/[aeiouyAEIOUY]/.test(form.description)) {
+      setError("Please enter a meaningful description.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setLoading(false);
+      return;
+    }
+    if (form.reason && (form.reason.length < 5 || !/[aeiouyAEIOUY]/.test(form.reason))) {
+      setError("Please enter a meaningful reason for rehoming.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -414,14 +458,18 @@ const ListDogPage = () => {
               <SectionHeader number="5" title="Location & Photo" subtitle="Where is the dog located and a photo for the listing" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className={labelClass}>City</label>
-                  <input name="location.city" value={form['location.city']} onChange={set}
-                    className={inputClass} placeholder="e.g. Kathmandu" />
+                  <label className={labelClass}>State / Province <span className="text-[#008737]">*</span></label>
+                  <select name="location.state" value={form['location.state']} onChange={set} required className={inputClass}>
+                    <option value="">Select Province</option>
+                    {NEPAL_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className={labelClass}>State / Province</label>
-                  <input name="location.state" value={form['location.state']} onChange={set}
-                    className={inputClass} placeholder="e.g. Bagmati" />
+                  <label className={labelClass}>City <span className="text-[#008737]">*</span></label>
+                  <select name="location.city" value={form['location.city']} onChange={set} required className={inputClass}>
+                    <option value="">Select City</option>
+                    {NEPAL_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelClass}>Dog's Photos (Max 5)</label>

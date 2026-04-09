@@ -6,6 +6,7 @@ import RehomerFooter   from '../Rehomer/RehomerFooter';
 import ListedDogs      from '../Rehomer/ListedDogs';
 import RehomerOverviewTab from '../Rehomer/tabs/RehomerOverviewTab';
 import ApplicationsTab from '../Rehomer/tabs/ApplicationsTab';
+import PaymentsTab     from '../Rehomer/tabs/PaymentsTab';
 import MessagesTab     from '../Rehomer/tabs/MessagesTab';
 import SettingsTab     from '../Rehomer/tabs/SettingsTab';
 import NearbyClinics   from '../Shared/NearbyClinics';
@@ -50,6 +51,7 @@ const RehomerDashboard = () => {
         {activeTab === 'dashboard'    && <RehomerOverviewTab user={user} setActiveTab={setActiveTab} />}
         {activeTab === 'my-dogs'      && <ListedDogs />}
         {activeTab === 'applications' && <ApplicationsTab setActiveTab={setActiveTab} />}
+        {activeTab === 'payments'     && <PaymentsTab />}
         {activeTab === 'vets'         && <NearbyClinics />}
         {activeTab === 'messages'     && <MessagesTab user={user} />}
         {activeTab === 'settings'     && <SettingsTab user={user} onProfileUpdate={setUser} />}

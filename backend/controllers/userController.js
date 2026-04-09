@@ -8,7 +8,7 @@ exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
       .select('-password')
-      .populate('favorites', 'name breed age image');
+      .populate('favorites', 'name breed age primaryImage location gender status');
 
     res.status(200).json({
       success: true,

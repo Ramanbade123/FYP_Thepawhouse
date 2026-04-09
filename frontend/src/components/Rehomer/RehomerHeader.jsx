@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PawPrint, Bell, Home, Dog, FileText, MessageSquare, Settings, ChevronDown, LogOut, User, Stethoscope, HelpCircle } from 'lucide-react';
+import { PawPrint, Bell, Home, Dog, FileText, MessageSquare, Settings, ChevronDown, LogOut, User, Stethoscope, HelpCircle, DollarSign } from 'lucide-react';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -31,6 +31,7 @@ const tabs = [
   { id: 'dashboard',    label: 'Dashboard',    icon: Home          },
   { id: 'my-dogs',      label: 'My Dogs',      icon: Dog           },
   { id: 'applications', label: 'Applications', icon: FileText      },
+  { id: 'payments',     label: 'Payments',     icon: DollarSign    },
   { id: 'vets',         label: 'Veterinary Care', icon: Stethoscope},
   { id: 'messages',     label: 'Messages',     icon: MessageSquare },
   { id: 'settings',     label: 'Settings',     icon: Settings      },

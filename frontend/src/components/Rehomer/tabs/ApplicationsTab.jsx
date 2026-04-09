@@ -110,6 +110,16 @@ const AppDetailModal = ({ app, petId, onClose, onAction, onMessage }) => {
             <InfoRow label="Applied for"  value={app.petName} />
             <InfoRow label="Applied on"   value={new Date(app.appliedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} />
             <InfoRow label="Member since" value={a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : null} />
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-gray-400 text-xs">Payment Status</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                app.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 
+                app.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
+                'bg-gray-100 text-gray-500'
+              }`}>
+                {app.paymentStatus || 'unpaid'}
+              </span>
+            </div>
           </SectionCard>
 
           {/* Contact info */}
@@ -336,6 +346,7 @@ const ApplicationsTab = ({ setActiveTab }) => {
                 <th className="text-left px-5 py-3 font-semibold text-gray-600">Dog</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600">Message</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600">Date</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Payment</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600">Status</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600">Action</th>
               </tr>
@@ -366,6 +377,15 @@ const ApplicationsTab = ({ setActiveTab }) => {
                     {app.message || <span className="italic text-gray-300">No message</span>}
                   </td>
                   <td className="px-5 py-3 text-gray-500 text-xs">{new Date(app.appliedAt).toLocaleDateString()}</td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      app.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 
+                      app.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
+                      'bg-gray-100 text-gray-500'
+                    }`}>
+                      {app.paymentStatus || 'unpaid'}
+                    </span>
+                  </td>
                   <td className="px-5 py-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusColor[app.status]}`}>
                       {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}

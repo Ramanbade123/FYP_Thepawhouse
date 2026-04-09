@@ -12,11 +12,10 @@ import RecentUsersTable   from '../Admin/RecentUsersTable';
 import AdminPetManagement from '../Admin/AdminPetManagement';
 import AdminCommunityTab  from '../Admin/AdminCommunityTab';
 import AdminMessagesTab   from '../Admin/AdminMessagesTab';
-import AdminAdoptionsTab  from '../Admin/AdminAdoptionsTab';
 import AdminReportsTab    from '../Admin/AdminReportsTab';
-import AdminVerificationsTab from '../Admin/AdminVerificationsTab';
 import AdminSettingsTab   from '../Admin/AdminSettingsTab';
 import AdminPendingPets   from '../Admin/AdminPendingPets';
+import AdminPaymentsTab  from '../Admin/AdminPaymentsTab';
 
 const API = 'http://localhost:5000/api';
 
@@ -84,7 +83,6 @@ const AdminDashboard = () => {
     { title: 'Adopters',              value: stats.totalAdopters,        change: '+8.2%',         icon: UserCheck, iconColor: 'text-green-600',  bgColor: 'bg-green-50',  borderColor: 'border-green-100'  },
     { title: 'Rehomers',              value: stats.totalRehomers,        change: '+5.7%',         icon: Home,      iconColor: 'text-purple-600', bgColor: 'bg-purple-50', borderColor: 'border-purple-100' },
     { title: 'Pets Pending Review',   value: stats.pendingPets,          change: 'Action needed', icon: Dog,       iconColor: 'text-yellow-600', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-100' },
-    { title: 'Pending Verifications', value: stats.pendingVerifications, change: '+4.2%',         icon: UserCheck, iconColor: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-100' },
   ];
 
   return (
@@ -157,20 +155,20 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'pets' && <AdminPetManagement />}
+          {activeTab === 'pets' && (
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+               <AdminPetManagement />
+            </div>
+          )}
 
           {activeTab === 'community' && <AdminCommunityTab />}
           {activeTab === 'messages'  && <AdminMessagesTab />}
 
-          {activeTab === 'adoptions' && <AdminAdoptionsTab />}
-
           {activeTab === 'reports' && <AdminReportsTab />}
-
-          {activeTab === 'verifications' && <AdminVerificationsTab />}
-
+          {activeTab === 'payments' && <AdminPaymentsTab />}
           {activeTab === 'settings' && <AdminSettingsTab />}
 
-          {!['dashboard','users','pets','adoptions','community','messages','reports','verifications','settings'].includes(activeTab) && (
+          {!['dashboard','users','pets','community','messages','reports','settings', 'payments'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-4 capitalize">{activeTab}</h2>
               <p className="text-gray-500">Coming soon.</p>

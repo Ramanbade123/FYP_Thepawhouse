@@ -1,5 +1,6 @@
 const Pet  = require('../models/Pet');
 const User = require('../models/User');
+const Payment = require('../models/Payment');
 const Notification = require('../models/Notification');
 const axios = require('axios'); // Add axios for Khalti HTTP requests
 const { sendEmail, emailTemplates } = require('../utils/sendEmail');
@@ -9,8 +10,17 @@ const { sendEmail, emailTemplates } = require('../utils/sendEmail');
 // ─────────────────────────────────────────────────────────────
 exports.createPet = async (req, res) => {
   try {
+    const existingPet = await Pet.findOne({
+      rehomer: req.user.id,
+      name: new RegExp(`^${req.body.name}$`, 'i'),
+      breed: new RegExp(`^${req.body.breed}$`, 'i')
+    });
+    if (existingPet) {
+      return res.status(400).json({ success: false, error: 'You have already listed a dog with this exact name and breed.' });
+    }
+
     req.body.rehomer       = req.user.id;
-    req.body.adminApproval = 'pending'; // always starts pending
+    req.body.adminApproval = 'approved'; // automatically approved
 
     // Handle uploaded images
     if (req.files && req.files.length > 0) {
@@ -140,13 +150,7 @@ exports.updatePet = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Not authorized' });
     }
 
-    // If rehomer edits an approved listing, reset approval so admin re-reviews
-    if (pet.adminApproval === 'approved' && req.user.role !== 'admin') {
-      req.body.adminApproval = 'pending';
-      req.body.approvedBy    = null;
-      req.body.approvedAt    = null;
-      req.body.adminNote     = '';
-    }
+
 
     // Handle uploaded images
     if (req.files && req.files.length > 0) {
@@ -385,6 +389,19 @@ exports.initiateKhaltiPayment = async (req, res) => {
     );
 
     if (khaltiResponse.data && khaltiResponse.data.payment_url) {
+        // Create a pending payment record
+        await Payment.create({
+            pet: pet._id,
+            adopter: req.user.id,
+            rehomer: pet.rehomer,
+            amount: amountNPR,
+            currency: 'NPR',
+            status: 'pending',
+            pidx: khaltiResponse.data.pidx,
+            message: req.body.message || '',
+            paymentMethod: 'khalti'
+        });
+
         res.status(200).json({ 
             success: true, 
             payment_url: khaltiResponse.data.payment_url,
@@ -420,6 +437,17 @@ exports.verifyKhaltiAndApply = async (req, res) => {
     );
 
     if (khaltiResponse.data && khaltiResponse.data.status === 'Completed') {
+        // Find and update the payment record
+        const payment = await Payment.findOneAndUpdate(
+            { pidx },
+            { 
+                status: 'completed', 
+                transactionId: khaltiResponse.data.transaction_id,
+                paidAt: new Date()
+            },
+            { new: true }
+        );
+
         const pet = await Pet.findById(req.params.id);
         if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
 
@@ -428,7 +456,13 @@ exports.verifyKhaltiAndApply = async (req, res) => {
             return res.status(400).json({ success: false, error: 'You have already applied for this pet' });
         }
 
-        pet.applications.push({ adopter: req.user.id, message: message || '', status: 'pending' });
+        pet.applications.push({ 
+            adopter: req.user.id, 
+            message: message || '', 
+            status: 'pending',
+            paymentStatus: 'paid',
+            paymentId: payment ? payment._id : null
+        });
         pet.status = 'pending';
         await pet.save();
 
@@ -709,6 +743,39 @@ exports.adminGetAllApplications = async (req, res) => {
     res.status(200).json({ success: true, total, totalPages: Math.ceil(total / parseInt(limit)), data: paginated });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// REHOMER: Get payment history for their pets → GET /api/pets/rehomer/payments
+// ─────────────────────────────────────────────────────────────
+exports.getPaymentHistory = async (req, res) => {
+  try {
+    const payments = await Payment.find({ rehomer: req.user.id })
+      .populate('pet', 'name primaryImage breed')
+      .populate('adopter', 'name email phone')
+      .sort('-createdAt');
+
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN: Get all payment history → GET /api/pets/admin/payments
+// ─────────────────────────────────────────────────────────────
+exports.adminGetPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find({})
+      .populate('pet', 'name primaryImage breed')
+      .populate('adopter', 'name email phone')
+      .populate('rehomer', 'name email phone')
+      .sort('-createdAt');
+
+    res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };

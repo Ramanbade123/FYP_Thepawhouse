@@ -80,9 +80,15 @@ const RecentApplications = () => {
                     {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}
                   </span>
                 </div>
-                <p className="text-gray-500 text-xs mb-2 ml-9">
-                  Applied for <span className="font-medium text-[#085558]">{app.petName}</span>
-                  {' · '}{new Date(app.appliedAt).toLocaleDateString()}
+                <p className="text-gray-500 text-xs mb-2 ml-9 flex items-center gap-2">
+                  <span>Applied for <span className="font-medium text-[#085558]">{app.petName}</span></span>
+                  <span>·</span>
+                  <span>{new Date(app.appliedAt).toLocaleDateString()}</span>
+                  {app.paymentStatus === 'paid' && (
+                    <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[9px] font-bold rounded uppercase tracking-wider">
+                      Paid
+                    </span>
+                  )}
                 </p>
                 {app.message && (
                   <p className="text-gray-400 text-xs italic ml-9 truncate">"{app.message}"</p>

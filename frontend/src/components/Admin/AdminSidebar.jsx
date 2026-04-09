@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Dog, Home,
   Settings, LogOut, X,
-  Shield, MessageSquare, Search, PawPrint, BarChart3
+  Shield, MessageSquare, Search, PawPrint, BarChart3, CreditCard
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -16,10 +16,9 @@ const AdminSidebar = ({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) 
     { id: 'dashboard',     label: 'Dashboard',       icon: <LayoutDashboard className="h-5 w-5" /> },
     { id: 'users',         label: 'User Management', icon: <Users className="h-5 w-5" /> },
     { id: 'pets',          label: 'Pet Management',  icon: <Dog className="h-5 w-5" /> },
-    { id: 'adoptions',     label: 'Adoptions',       icon: <Home className="h-5 w-5" /> },
     { id: 'community',     label: 'Lost & Found',    icon: <Search className="h-5 w-5" /> },
     { id: 'reports',       label: 'Reports',         icon: <BarChart3 className="h-5 w-5" /> },
-    { id: 'verifications', label: 'Verifications',   icon: <Shield className="h-5 w-5" /> },
+    { id: 'payments',      label: 'Finance',         icon: <CreditCard className="h-5 w-5" /> },
     { id: 'messages',      label: 'Messages',        icon: <MessageSquare className="h-5 w-5" /> },
     { id: 'settings',      label: 'Settings',        icon: <Settings className="h-5 w-5" /> },
   ];

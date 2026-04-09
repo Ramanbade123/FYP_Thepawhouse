@@ -151,20 +151,7 @@ const BrowseDogsTab = () => {
 
   return (
     <div>
-      {/* Header */}
-      <div className="text-center mb-10">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }}
-          className="inline-flex items-center gap-2 bg-[#008737]/10 text-[#008737] px-4 py-2 rounded-full mb-4">
-          <Bone className="h-4 w-4" />
-          <span className="text-sm font-semibold">Meet Our Friends</span>
-        </motion.div>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#063630] mb-3">
-          Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#008737] to-[#085558]">Perfect Companion</span>
-        </h2>
-        <p className="text-lg text-[#063630]/80 max-w-2xl mx-auto">
-          Discover loyal dogs from across Nepal waiting for their forever homes. Every adoption saves a life.
-        </p>
-      </div>
+
 
       {/* Search & Filters box */}
       <div className="bg-white rounded-2xl shadow-xl border border-[#008737]/10 p-6 mb-8 lg:mb-12">

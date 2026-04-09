@@ -71,10 +71,12 @@ const petSchema = new mongoose.Schema(
 
     // Applications
     applications: [{
-      adopter:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      status:    { type: String, enum: ['pending', 'reviewing', 'approved', 'rejected'], default: 'pending' },
-      message:   { type: String, maxlength: 500 },
-      appliedAt: { type: Date, default: Date.now },
+      adopter:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      status:       { type: String, enum: ['pending', 'reviewing', 'approved', 'rejected'], default: 'pending' },
+      message:      { type: String, maxlength: 500 },
+      appliedAt:    { type: Date, default: Date.now },
+      paymentStatus: { type: String, enum: ['unpaid', 'pending', 'paid', 'failed'], default: 'unpaid' },
+      paymentId:    { type: mongoose.Schema.Types.ObjectId, ref: 'Payment', default: null },
     }],
 
     favoritesCount: { type: Number, default: 0 },
