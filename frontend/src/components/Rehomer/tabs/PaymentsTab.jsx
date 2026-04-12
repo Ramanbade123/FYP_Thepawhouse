@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { RefreshCw, DollarSign, Download, ExternalLink, User, Dog, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { RefreshCw, DollarSign, Download, ExternalLink, User, Dog, Calendar, CheckCircle, Clock, Eye, X, Printer } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const PaymentsTab = () => {
+    const navigate = useNavigate();
     const [payments, setPayments] = useState([]);
     const [loading, setLoading]   = useState(true);
     const [stats, setStats]       = useState({ total: 0, pending: 0, completed: 0 });
@@ -39,6 +41,8 @@ const PaymentsTab = () => {
 
     return (
         <div className="space-y-6">
+
+            
             <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-[#063630]">Payment History</h2>
                 <button onClick={fetchPayments} 
@@ -75,18 +79,19 @@ const PaymentsTab = () => {
                                 <th className="text-left px-6 py-4 font-semibold text-gray-600">Amount</th>
                                 <th className="text-left px-6 py-4 font-semibold text-gray-600">Status</th>
                                 <th className="text-left px-6 py-4 font-semibold text-gray-600">Date</th>
+                                <th className="text-right px-6 py-4 font-semibold text-gray-600">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {loading ? (
                                 Array(3).fill(0).map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td colSpan="6" className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-full"></div></td>
+                                        <td colSpan="7" className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-full"></div></td>
                                     </tr>
                                 ))
                             ) : payments.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-400">
+                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
                                         <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <DollarSign className="h-6 w-6" />
                                         </div>
@@ -109,7 +114,7 @@ const PaymentsTab = () => {
                                                 <div className="w-8 h-8 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                                                     {p.pet?.primaryImage ? (
                                                         <img src={p.pet.primaryImage.startsWith('http') ? p.pet.primaryImage : `${API.replace('/api', '')}${p.pet.primaryImage}`} 
-                                                             alt={p.pet.name} className="w-full h-full object-cover" />
+                                                             alt={p.pet?.name} className="w-full h-full object-cover" />
                                                     ) : <Dog className="h-4 w-4 m-2 text-gray-400" />}
                                                 </div>
                                                 <span className="font-semibold text-[#063630]">{p.pet?.name || 'Unknown Pet'}</span>
@@ -135,6 +140,14 @@ const PaymentsTab = () => {
                                         <td className="px-6 py-4 text-gray-400 text-xs">
                                             {new Date(p.createdAt).toLocaleDateString()}
                                         </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button 
+                                                onClick={() => navigate('/receipt', { state: { payment: p } })}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#008737] bg-[#008737]/10 hover:bg-[#008737]/20 rounded-lg transition-colors"
+                                            >
+                                                <Eye className="h-3.5 w-3.5" /> Details
+                                            </button>
+                                        </td>
                                     </motion.tr>
                                 ))
                             )}
@@ -142,6 +155,8 @@ const PaymentsTab = () => {
                     </table>
                 </div>
             </div>
+
+
         </div>
     );
 };

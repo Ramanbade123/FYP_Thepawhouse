@@ -385,6 +385,45 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+// @desc    Toggle user active status (Admin only)
+// @route   PUT /api/users/:id/toggle-status
+// @access  Private/Admin
+exports.toggleActiveStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+    }
+
+    // Don't allow banning oneself
+    if (user._id.toString() === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot ban your own account',
+      });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      data: user,
+      message: `User ${user.isActive ? 'unbanned' : 'banned'} successfully`,
+    });
+  } catch (error) {
+    console.error('Toggle status error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error',
+    });
+  }
+};
+
 // @desc    Toggle favorite status for a pet
 // @route   POST /api/users/favorites/:petId
 // @access  Private (Adopter)

@@ -233,19 +233,20 @@ exports.login = async (req, res) => {
     if (!loginString || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Please provide email/phone/username and password',
+        error: 'Please provide email and password',
       });
     }
 
-    // Determine what field we are searching
-    let query = {};
-    if (validator.isEmail(loginString)) {
-      query.email = loginString;
-    } else if (validator.isMobilePhone(loginString, 'any', { strictMode: false })) {
-      query.phone = loginString;
-    } else {
-      query.name = loginString;
+
+    // Restrict search to email only as per requirement
+    if (!validator.isEmail(loginString)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a valid email address',
+      });
     }
+    let query = { email: loginString };
+
 
     // Check for user
     let users = await User.find(query).select('+password');

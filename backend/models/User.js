@@ -358,6 +358,14 @@ userSchema.statics.findByLocation = function(city, state) {
   });
 };
 
+// CASCADE DELETE: Remove pets when a user is deleted
+userSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+  console.log(`🗑️ Deleting pets for user: ${this._id}`);
+  await mongoose.model('Pet').deleteMany({ rehomer: this._id });
+  next();
+});
+
 const User = mongoose.model('User', userSchema);
+
 
 module.exports = User;

@@ -86,11 +86,7 @@ const ListedDogs = ({ onStatsChange }) => {
           </div>
         </div>
 
-        {/* Info banner */}
-        <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-5 text-sm text-blue-700">
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <span>New listings must be <strong>approved by an admin</strong> before they appear to adopters.</span>
-        </div>
+
 
         {loading && (
           <div className="flex justify-center py-12">

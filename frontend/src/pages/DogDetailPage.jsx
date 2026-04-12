@@ -290,25 +290,23 @@ const DogDetailPage = () => {
     setApplying(true);
     try {
       const token = localStorage.getItem('token');
-      // Call the new Khalti initiate endpoint
-      const res   = await fetch(`${API}/pets/${id}/apply/initiate`, {
+      const res   = await fetch(`${API}/pets/${id}/apply`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body:    JSON.stringify({ message: applyMessage || 'I would love to adopt this dog!' }),
       });
       const data = await res.json();
-      if (data.success && data.payment_url) {
-        // Redirect to Khalti checkout page
-        window.location.href = data.payment_url;
+      if (data.success) {
+        setApplied(true);
+        setShowApplyForm(false);
       } else {
-        alert(data.error || 'Could not initiate payment.');
-        setApplying(false);
+        alert(data.error || 'Could not submit application.');
       }
     } catch { 
       alert('Server error. Please try again.'); 
+    } finally {
       setApplying(false);
     }
-    // Note: Do not set applying to false immediately on success as we are redirecting away
   };
 
   if (loading) return (
@@ -384,40 +382,7 @@ const DogDetailPage = () => {
               </motion.div>
             )}
 
-            {/* Rehomer contact card */}
-            {pet.rehomer && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl p-5 shadow-lg border border-gray-100">
-                <h3 className="font-bold text-[#063630] mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-[#008737]" /> Listed by
-                </h3>
-                <div className="flex items-center gap-3 mb-4">
-                  {pet.rehomer.profileImage ? (
-                    <img src={imgSrc(pet.rehomer.profileImage)} alt={pet.rehomer.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-[#008737]/20" />
-                  ) : (
-                    <div className="w-12 h-12 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {pet.rehomer.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-[#063630]">{pet.rehomer.name}</p>
-                    <p className="text-sm text-gray-500">{pet.rehomer.location?.city || pet.rehomer.location?.state || 'Nepal'}</p>
-                  </div>
-                </div>
-                {applied ? (
-                  <div className="w-full py-3 bg-green-50 text-green-700 rounded-xl text-center font-semibold flex items-center justify-center gap-2">
-                    <CheckCircle className="h-5 w-5" /> Application Submitted!
-                  </div>
-                ) : (
-                  <button onClick={handleApply} disabled={applying || !user || user?.role !== 'adopter'}
-                    className="w-full py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-60"
-                    style={{ color: '#ffffff' }}>
-                    {applying ? 'Submitting...' : user?.role === 'adopter' ? `Adopt ${pet.name}` : user ? 'Only adopters can apply' : 'Login to Apply'}
-                  </button>
-                )}
-              </motion.div>
-            )}
+
           </div>
 
           {/* Right — Details */}
@@ -504,11 +469,31 @@ const DogDetailPage = () => {
             </div>
 
             {/* Rehoming info */}
-            {(pet.reason || pet.urgency || pet.rehomingFee !== undefined) && (
+            {(pet.reason || pet.urgency || pet.rehomingFee !== undefined || pet.rehomer) && (
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
                 <h3 className="font-bold text-[#063630] mb-4 flex items-center gap-2">
                   <Clock className="h-5 w-5 text-[#008737]" /> Rehoming Info
                 </h3>
+
+                {/* Rehomer Info added here */}
+                {pet.rehomer && (
+                  <div className="flex items-center gap-3 mb-4 p-4 border border-gray-100 bg-gray-50 rounded-xl">
+                    {pet.rehomer.profileImage ? (
+                      <img src={imgSrc(pet.rehomer.profileImage)} alt={pet.rehomer.name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-[#008737]/20" />
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-r from-[#085558] to-[#008737] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        {pet.rehomer.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-0.5">Listed By</p>
+                      <p className="font-semibold text-[#063630]">{pet.rehomer.name}</p>
+                      <p className="text-sm text-gray-500">{pet.rehomer.location?.city || pet.rehomer.location?.state || 'Nepal'}</p>
+                    </div>
+                  </div>
+                )}
+
                 {pet.reason && (
                   <div className="mb-3">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Reason for Rehoming</p>
@@ -555,7 +540,7 @@ const DogDetailPage = () => {
                   <button onClick={handleApply} disabled={applying}
                     className="flex-1 py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-60"
                     style={{ color: '#ffffff' }}>
-                    {applying ? 'Redirecting...' : `Proceed to Payment`}
+                    {applying ? 'Submitting...' : `Submit Application`}
                   </button>
                   <button onClick={() => setShowApplyForm(false)}
                     className="px-4 py-3 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50">
@@ -580,14 +565,10 @@ const DogDetailPage = () => {
             )}
           </motion.div>
         </div>
-
-        {/* Reviews — full width below */}
-        <div className="max-w-5xl mx-auto px-4 pb-12 mt-10">
-          <ReviewsSection petId={pet._id || id} user={user} />
-        </div>
       </div>
     </div>
   );
 };
 
 export default DogDetailPage;
+

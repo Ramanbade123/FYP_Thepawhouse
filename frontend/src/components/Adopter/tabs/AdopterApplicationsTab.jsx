@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, Clock, CheckCircle, XCircle, Dog, MessageCircle } from 'lucide-react';
+import { FileText, Clock, CheckCircle, XCircle, Dog, MessageCircle, DollarSign } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = API.replace('/api', '');
@@ -70,6 +70,25 @@ const AdopterApplicationsTab = () => {
       alert('Error starting conversation.');
     } finally {
       setStartingChat(false);
+    }
+  };
+
+  const handlePayment = async (petId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res   = await fetch(`${API}/pets/${petId}/apply/initiate`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ message: 'Paying adoption fee' }),
+      });
+      const data = await res.json();
+      if (data.success && data.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        alert(data.error || 'Could not initiate payment.');
+      }
+    } catch { 
+      alert('Server error. Please try again.'); 
     }
   };
 
@@ -157,17 +176,37 @@ const AdopterApplicationsTab = () => {
                   <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${s.cls}`}>
                     <Icon className="h-3.5 w-3.5" /> {s.label}
                   </span>
-                  {app.status === 'approved' && (
-                    <button 
-                      onClick={() => handleChat(app.pet._id)}
-                      disabled={startingChat}
-                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#008737] to-[#085558] rounded-xl hover:shadow-md transition-all disabled:opacity-60"
-                      title="Chat with Rehomer"
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" /> 
-                      {startingChat ? 'Starting...' : 'Chat'}
-                    </button>
-                  )}
+                    <div className="flex gap-2 mt-2">
+                       {app.paymentStatus === 'paid' && app.payment && (
+                         <button 
+                           onClick={() => navigate('/receipt', { state: { payment: app.payment } })}
+                           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#008737] rounded-xl hover:shadow-md transition-all"
+                         >
+                           <FileText className="h-3.5 w-3.5" /> 
+                           Receipt
+                         </button>
+                      )}
+                      {app.status === 'approved' && app.paymentStatus !== 'paid' && (
+                        <button 
+                          onClick={() => handlePayment(app.pet._id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#008737] rounded-xl hover:shadow-md transition-all"
+                        >
+                          <DollarSign className="h-3.5 w-3.5" /> 
+                          Pay Fee
+                        </button>
+                      )}
+                      {app.status === 'approved' && (
+                        <button 
+                          onClick={() => handleChat(app.pet._id)}
+                          disabled={startingChat}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#085558] border border-[#085558]/30 rounded-xl hover:bg-[#085558]/10 transition-all disabled:opacity-60"
+                          title="Chat with Rehomer"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" /> 
+                          {startingChat ? 'Starting...' : 'Chat'}
+                        </button>
+                      )}
+                    </div>
                 </div>
               </motion.div>
             );

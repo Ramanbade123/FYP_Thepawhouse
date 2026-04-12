@@ -21,6 +21,9 @@ import DonatePage from './pages/DonatePage';
 import DogDetailPage from './pages/DogDetailPage';
 import KhaltiCallback from './pages/KhaltiCallback';
 import KhaltiDonationVerify from './pages/KhaltiDonationVerify';
+import ReceiptPage from './pages/ReceiptPage';
+import ApplicationReviewPage from './pages/ApplicationReviewPage';
+import AdminPetReviewPage from './pages/AdminPetReviewPage';
 
 // Components
 import Navbar from './components/Navbar'
@@ -117,6 +120,14 @@ function App() {
           }
         />
         <Route
+          path="/admin/pets/:id"
+          element={
+            <PrivateRoute allowedRoles={['admin']}>
+              <AdminPetReviewPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/adopter/dashboard"
           element={
             <PrivateRoute allowedRoles={['adopter']}>
@@ -170,6 +181,8 @@ function App() {
         <Route path="/dogs/:id" element={<DogDetailPage />} />
         <Route path="/payment/khalti/verify" element={<PrivateRoute allowedRoles={['adopter']}><KhaltiCallback /></PrivateRoute>} />
         <Route path="/donate/verify" element={<KhaltiDonationVerify />} />
+        <Route path="/receipt" element={<PrivateRoute><ReceiptPage /></PrivateRoute>} />
+        <Route path="/application/review" element={<PrivateRoute><ApplicationReviewPage /></PrivateRoute>} />
         
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

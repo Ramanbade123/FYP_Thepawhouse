@@ -11,7 +11,9 @@ const {
   initiateKhaltiPayment, verifyKhaltiAndApply,
   deleteApplication,
   getPaymentHistory,
-  adminGetPayments
+  adminGetPayments,
+  getPaymentReceipt,
+  getAdminPetDetail
 } = require('../controllers/petController');
 
 const { protect }                        = require('../middleware/authMiddleware');
@@ -26,6 +28,7 @@ router.put('/admin/:id/approval',      protect, isAdmin,   adminUpdateApproval);
 router.get('/admin/applications',      protect, isAdmin,   adminGetAllApplications);
 router.put('/admin/applications/:petId/:appId', protect, isAdmin, updateApplicationStatus);
 router.get('/admin/payments',          protect, isAdmin, adminGetPayments);
+router.get('/admin/:id/detail',        protect, isAdmin, getAdminPetDetail);
 
 // Rehomer named routes (must be before /:id)
 router.get('/rehomer/my-listings',     protect, isRehomer, getMyListings);
@@ -33,6 +36,9 @@ router.get('/rehomer/payments',        protect, isRehomer, getPaymentHistory);
 
 // Adopter named routes (must be before /:id)
 router.get('/adopter/my-applications', protect, isAdopter, getMyApplications);
+
+// Payment receipt (must be before /:id wildcard)
+router.get('/payments/:id',            protect, getPaymentReceipt);
 
 // Public
 router.get('/',    getPets);
@@ -50,5 +56,6 @@ router.delete('/:id/applications/:appId',  protect, isRehomer, deleteApplication
 router.post('/:id/apply',                  protect, isAdopter, applyForPet);
 router.post('/:id/apply/initiate',         protect, isAdopter, initiateKhaltiPayment);
 router.post('/:id/apply/verify',           protect, isAdopter, verifyKhaltiAndApply);
+
 
 module.exports = router;

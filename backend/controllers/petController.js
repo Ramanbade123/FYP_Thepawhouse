@@ -114,6 +114,32 @@ exports.getPet = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
+// ADMIN: Detailed pet view  →  GET /api/pets/admin/:id
+// ─────────────────────────────────────────────────────────────
+exports.getAdminPetDetail = async (req, res) => {
+  try {
+    const pet = await Pet.findById(req.params.id)
+      .populate('rehomer', 'name phone email location profileImage')
+      .populate('adoptedBy', 'name email phone profileImage location')
+      .populate('applications.adopter', 'name email phone profileImage')
+      .populate('applications.paymentId');
+
+    if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
+    
+    // Find the successful payment if adopted
+    let payment = null;
+    const paidApp = pet.applications.find(a => a.paymentStatus === 'paid');
+    if (paidApp && paidApp.paymentId) {
+      payment = paidApp.paymentId;
+    }
+
+    res.status(200).json({ success: true, data: pet, payment });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
 // REHOMER: My listings  →  GET /api/pets/rehomer/my-listings
 // ─────────────────────────────────────────────────────────────
 exports.getMyListings = async (req, res) => {
@@ -298,18 +324,35 @@ exports.applyForPet = async (req, res) => {
       return res.status(400).json({ success: false, error: 'This pet is not available for adoption' });
     }
 
-    const alreadyApplied = pet.applications.some(a => a.adopter.toString() === req.user.id);
-    if (alreadyApplied) {
-      return res.status(400).json({ success: false, error: 'You have already applied for this pet' });
+    const existingApp = pet.applications.find(a => a.adopter.toString() === req.user.id);
+    
+    if (existingApp) {
+      if (existingApp.status === 'rejected') {
+        // Allow re-applying by resetting the rejected application
+        existingApp.status = 'pending';
+        existingApp.message = req.body.message || '';
+        existingApp.appliedAt = Date.now();
+        pet.status = 'pending';
+        await pet.save();
+
+        // Update the user's petsAdopted status back to pending
+        await User.updateOne(
+          { _id: req.user.id, "petsAdopted.petId": pet._id },
+          { $set: { "petsAdopted.$.status": "pending" } }
+        );
+      } else {
+        return res.status(400).json({ success: false, error: 'You already have an active application for this pet' });
+      }
+    } else {
+      // Create new application
+      pet.applications.push({ adopter: req.user.id, message: req.body.message || '', status: 'pending' });
+      pet.status = 'pending';
+      await pet.save();
+
+      await User.findByIdAndUpdate(req.user.id, {
+        $push: { petsAdopted: { petId: pet._id, petName: pet.name, status: 'pending' } },
+      });
     }
-
-    pet.applications.push({ adopter: req.user.id, message: req.body.message || '', status: 'pending' });
-    pet.status = 'pending';
-    await pet.save();
-
-    await User.findByIdAndUpdate(req.user.id, {
-      $push: { petsAdopted: { petId: pet._id, petName: pet.name, status: 'pending' } },
-    });
 
     try {
       await Notification.create({
@@ -350,9 +393,12 @@ exports.initiateKhaltiPayment = async (req, res) => {
       return res.status(400).json({ success: false, error: 'This pet is not available for adoption' });
     }
 
-    const alreadyApplied = pet.applications.some(a => a.adopter.toString() === req.user.id);
-    if (alreadyApplied) {
-      return res.status(400).json({ success: false, error: 'You have already applied for this pet' });
+    const application = pet.applications.find(a => a.adopter.toString() === req.user.id);
+    if (!application) {
+      return res.status(400).json({ success: false, error: 'Application not found' });
+    }
+    if (application.paymentStatus === 'paid') {
+      return res.status(400).json({ success: false, error: 'Adoption fee is already paid' });
     }
 
     // Amount calculation. If no rehomingFee, charge minimum 10 NPR for spam protection.
@@ -451,32 +497,22 @@ exports.verifyKhaltiAndApply = async (req, res) => {
         const pet = await Pet.findById(req.params.id);
         if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
 
-        const alreadyApplied = pet.applications.some(a => a.adopter.toString() === req.user.id);
-        if (alreadyApplied) {
-            return res.status(400).json({ success: false, error: 'You have already applied for this pet' });
+        const application = pet.applications.find(a => a.adopter.toString() === req.user.id);
+        if (!application) {
+            return res.status(404).json({ success: false, error: 'Application not found' });
         }
 
-        pet.applications.push({ 
-            adopter: req.user.id, 
-            message: message || '', 
-            status: 'pending',
-            paymentStatus: 'paid',
-            paymentId: payment ? payment._id : null
-        });
-        pet.status = 'pending';
+        application.paymentStatus = 'paid';
+        application.paymentId = payment ? payment._id : null;
         await pet.save();
-
-        await User.findByIdAndUpdate(req.user.id, {
-          $push: { petsAdopted: { petId: pet._id, petName: pet.name, status: 'pending' } },
-        });
 
         try {
           await Notification.create({
             recipient: pet.rehomer,
-            type: 'adoption',
-            title: 'New Application',
-            message: `Someone has applied to adopt ${pet.name} (via Khalti).`,
-            link: `/rehomer/dashboard?tab=applications`
+            type: 'system',
+            title: 'Adoption Fee Paid',
+            message: `${req.user.name} has paid the adoption fee for ${pet.name} (via Khalti).`,
+            link: `/rehomer/dashboard?tab=payments`
           });
           
           const admins = await User.find({ role: 'admin' });
@@ -484,14 +520,20 @@ exports.verifyKhaltiAndApply = async (req, res) => {
             await Notification.create({
               recipient: admin._id,
               type: 'system',
-              title: 'New Adoption Application',
-              message: `A new application has been submitted for ${pet.name} (via Khalti).`,
+              title: 'Adoption Payment Received',
+              message: `The adoption fee for ${pet.name} has been paid via Khalti.`,
               link: `/admin/dashboard?tab=adoptions`
             });
           }
         } catch (err) { console.error('Notification err:', err); }
 
-        res.status(200).json({ success: true, message: 'Application submitted successfully via Khalti', data: pet });
+        // Populate payment details for the receipt
+        const populatedPayment = await Payment.findById(payment._id)
+          .populate('pet',     'name breed primaryImage')
+          .populate('adopter', 'name email phone')
+          .populate('rehomer', 'name email phone');
+
+        res.status(200).json({ success: true, message: 'Payment successfully processed', data: pet, payment: populatedPayment });
     } else {
         res.status(400).json({ success: false, error: 'Payment verification failed or payment not completed' });
     }
@@ -675,7 +717,16 @@ exports.deleteApplication = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.getMyApplications = async (req, res) => {
   try {
-    const pets = await Pet.find({ 'applications.adopter': req.user.id }).populate('rehomer', 'name phone');
+    const pets = await Pet.find({ 'applications.adopter': req.user.id })
+      .populate('rehomer', 'name email phone')
+      .populate({
+        path: 'applications.paymentId',
+        populate: [
+          { path: 'pet',     select: 'name breed primaryImage' },
+          { path: 'adopter', select: 'name email phone' },
+          { path: 'rehomer', select: 'name email phone' }
+        ]
+      });
 
     const myApplications = pets.map(pet => {
       const app = pet.applications.find(a => a.adopter.toString() === req.user.id);
@@ -685,12 +736,15 @@ exports.getMyApplications = async (req, res) => {
         status:    app.status,
         message:   app.message,
         appliedAt: app.appliedAt,
+        paymentStatus: app.paymentStatus,
+        payment:   app.paymentId, // This is now populated
         rehomer:   pet.rehomer,
       };
     });
 
     res.status(200).json({ success: true, count: myApplications.length, data: myApplications });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
@@ -758,6 +812,33 @@ exports.getPaymentHistory = async (req, res) => {
       .sort('-createdAt');
 
     res.status(200).json({ success: true, count: payments.length, data: payments });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// Get Payment Receipt → GET /api/pets/payments/:id
+// ─────────────────────────────────────────────────────────────
+exports.getPaymentReceipt = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id)
+      .populate('pet',     'name breed primaryImage')
+      .populate('adopter', 'name email phone')
+      .populate('rehomer', 'name email phone');
+
+    if (!payment) return res.status(404).json({ success: false, error: 'Payment not found' });
+
+    // Authorization: only the adopter, rehomer, or admin can see the receipt
+    if (
+      payment.adopter._id.toString() !== req.user.id &&
+      payment.rehomer._id.toString() !== req.user.id &&
+      req.user.role !== 'admin'
+    ) {
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    res.status(200).json({ success: true, data: payment });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server error' });
   }

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
     DollarSign, RefreshCw, Dog, User, 
     Calendar, CheckCircle, Clock, Search,
-    Filter, CreditCard, ArrowRight
+    Filter, CreditCard, Eye, X, Printer
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const AdminPaymentsTab = () => {
+    const navigate = useNavigate();
     const [payments, setPayments] = useState([]);
     const [loading, setLoading]   = useState(true);
     const [search, setSearch]     = useState('');
@@ -57,6 +59,8 @@ const AdminPaymentsTab = () => {
 
     return (
         <div className="space-y-6">
+
+
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">Financial Overview</h2>
@@ -120,7 +124,7 @@ const AdminPaymentsTab = () => {
                                 <th className="text-left px-6 py-4 font-semibold text-gray-600">Adopter</th>
                                 <th className="text-left px-6 py-4 font-semibold text-gray-600">Amount</th>
                                 <th className="text-left px-6 py-4 font-semibold text-gray-600">Status</th>
-                                <th className="text-left px-6 py-4 font-semibold text-gray-600">Date</th>
+                                <th className="text-left px-6 py-4 font-semibold text-gray-600">Date/Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -179,9 +183,18 @@ const AdminPaymentsTab = () => {
                                                 {p.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-500 text-xs">
-                                            {new Date(p.createdAt).toLocaleDateString()}
-                                            <div className="text-[10px]">{new Date(p.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col items-start gap-2">
+                                                <div className="text-gray-500 text-xs">
+                                                    {new Date(p.createdAt).toLocaleDateString()}
+                                                </div>
+                                                <button 
+                                                    onClick={() => navigate('/receipt', { state: { payment: p } })}
+                                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-full transition-colors"
+                                                >
+                                                    <Eye className="h-3 w-3" /> View Receipt
+                                                </button>
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 ))
@@ -190,6 +203,8 @@ const AdminPaymentsTab = () => {
                     </table>
                 </div>
             </div>
+
+
         </div>
     );
 };

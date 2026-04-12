@@ -8,6 +8,7 @@ const KhaltiCallback = () => {
   const location = useLocation();
   const [status, setStatus] = useState('verifying'); // verifying, success, error
   const [message, setMessage] = useState('Verifying your payment...');
+  const [paymentData, setPaymentData] = useState(null);
   const hasVerified = useRef(false);
   
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -52,6 +53,7 @@ const KhaltiCallback = () => {
         if (data.success) {
           setStatus('success');
           setMessage('Payment verified and your adoption application has been submitted successfully!');
+          setPaymentData(data.payment);
         } else {
           setStatus('error');
           setMessage(data.error || 'Payment verified but failed to submit application.');
@@ -85,12 +87,21 @@ const KhaltiCallback = () => {
             <CheckCircle className="h-16 w-16 text-[#008737] mb-4" />
             <h2 className="text-2xl font-bold text-[#063630] mb-2">Success!</h2>
             <p className="text-gray-600 mb-6">{message}</p>
-            <Link 
-              to="/adopter/dashboard" 
-              className="px-6 py-3 bg-gradient-to-r from-[#008737] to-[#085558] text-white rounded-xl font-semibold hover:shadow-lg transition-all w-full"
-            >
-              Go to Dashboard
-            </Link>
+            <div className="flex flex-col gap-3 w-full">
+              <button 
+                onClick={() => navigate('/receipt', { state: { payment: paymentData } })}
+                className="px-6 py-3 bg-[#008737] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                style={{ color: '#ffffff' }}
+              >
+                View & Download Receipt
+              </button>
+              <Link 
+                to="/adopter/dashboard" 
+                className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+              >
+                Go to Dashboard
+              </Link>
+            </div>
           </div>
         )}
 

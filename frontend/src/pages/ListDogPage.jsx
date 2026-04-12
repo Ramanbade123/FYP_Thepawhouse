@@ -4,6 +4,8 @@ import {
   Dog, PawPrint, CheckCircle, ArrowLeft,
   Heart, Shield, Upload, Info, ImagePlus, X, Plus
 } from 'lucide-react';
+import { NEPAL_DATA, CITY_TO_PROVINCE } from '../data/nepalData';
+
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -21,17 +23,8 @@ const INITIAL = {
   imagePreviews: [],
 };
 
-const NEPAL_PROVINCES = [
-  "Koshi Province", "Madhesh Province", "Bagmati Province",
-  "Gandaki Province", "Lumbini Province", "Karnali Province",
-  "Sudurpashchim Province"
-];
+// Removed local NEPAL_PROVINCES and NEPAL_CITIES in favor of central data
 
-const NEPAL_CITIES = [
-  "Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur", "Birgunj", "Biratnagar",
-  "Dharan", "Butwal", "Hetauda", "Janakpur", "Dhangadhi", "Nepalgunj", "Itahari",
-  "Birendranagar", "Tikapur", "Tulsipur", "Ghorahi", "Rajbiraj", "Damak"
-].sort();
 
 const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/10 transition-all";
 const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2";
@@ -77,7 +70,6 @@ const ListDogPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [done, setDone]       = useState(false);
-  const [activeStep, setActiveStep] = useState(null);
 
   const set = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -97,9 +89,27 @@ const ListDogPage = () => {
         };
       });
     } else {
-      setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+      setForm(prev => {
+        let nextForm = { ...prev, [name]: type === 'checkbox' ? checked : value };
+
+        if (name === 'location.state') {
+          // When province changes, if current city doesn't belong to it, clear it
+          if (nextForm['location.city'] && nextForm['location.city'] !== 'Other' && CITY_TO_PROVINCE[nextForm['location.city']] !== value) {
+            nextForm['location.city'] = '';
+          }
+        } else if (name === 'location.city') {
+          // When city changes, set province automatically (if not "Other")
+          if (value && value !== 'Other' && CITY_TO_PROVINCE[value]) {
+            nextForm['location.state'] = CITY_TO_PROVINCE[value];
+          }
+        }
+
+        return nextForm;
+      });
     }
   };
+
+
 
   const removeImage = (index) => {
     setForm(prev => {
@@ -215,6 +225,7 @@ const ListDogPage = () => {
             <button
               onClick={() => navigate('/rehomer/dashboard')}
               className="w-full py-3.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#008737]/20 transition-all text-sm"
+              style={{ color: '#ffffff' }}
             >
               Back to Dashboard
             </button>
@@ -276,37 +287,6 @@ const ListDogPage = () => {
 
       <div className="container mx-auto px-4 py-10 max-w-4xl relative z-10">
 
-        {/* ── Hero ─────────────────────────────────────────────────── */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#008737]/10 rounded-full mb-5">
-            <Dog className="h-4 w-4 text-[#085558]" />
-            <span className="text-xs font-bold text-[#085558] uppercase tracking-widest">Rehoming Form</span>
-          </div>
-          <h2 className="text-3xl font-bold text-[#063630] mb-3 leading-tight">
-            Find Your Dog<br />a Loving New Home
-          </h2>
-          <p className="text-sm text-gray-500 max-w-lg mx-auto leading-relaxed">
-            Complete the form below with accurate details about your dog. Our team will review your listing before publishing it to verified adopters.
-          </p>
-        </div>
-
-        {/* ── Trust badges ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
-          {[
-            { icon: Shield,  label: 'Safe & Secure',  desc: 'All adopters are verified' },
-            { icon: Heart,   label: 'Caring Matches', desc: 'We find the right families' },
-            { icon: Dog,     label: 'Free to List',   desc: 'No cost to rehome' },
-          ].map(({ icon: Icon, label, desc }) => (
-            <div key={label} className="bg-white rounded-2xl p-5 text-center shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-              <div className="w-11 h-11 bg-gradient-to-br from-[#085558]/10 to-[#008737]/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Icon className="h-5 w-5 text-[#085558]" />
-              </div>
-              <p className="font-bold text-[#063630] text-sm">{label}</p>
-              <p className="text-gray-400 text-xs mt-1">{desc}</p>
-            </div>
-          ))}
-        </div>
-
         {/* ── Form ─────────────────────────────────────────────────── */}
         <form onSubmit={submit} className="space-y-4">
 
@@ -349,10 +329,8 @@ const ListDogPage = () => {
                 <div>
                   <label className={labelClass}>Age <span className="text-[#008737]">*</span></label>
                   <div className="flex gap-2">
-                    <input name="age.value" type="number" min="0" max="30"
-                      value={form['age.value']} onChange={set} required
-                      className={`${inputClass} flex-1`}
-                      placeholder="e.g. 3" />
+                    <input name="age.value" type="number" min="0" max="30" value={form['age.value']} onChange={set} required
+                      className={`${inputClass} flex-1`} placeholder="e.g. 3" />
                     <select name="age.unit" value={form['age.unit']} onChange={set}
                       className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#008737] focus:bg-white transition-all">
                       <option value="months">Months</option>
@@ -367,66 +345,29 @@ const ListDogPage = () => {
                 <div className="md:col-span-2">
                   <label className={labelClass}>Description <span className="text-[#008737]">*</span></label>
                   <textarea name="description" value={form.description} onChange={set} required rows={4}
-                    className={`${inputClass} resize-none`}
-                    placeholder="Tell potential adopters about your dog's personality, daily routine, favourite activities, and what makes them special..." />
-                  <p className="text-xs text-gray-400 mt-2 flex items-center gap-1.5">
-                    <Info className="h-3 w-3" /> A detailed description greatly increases adoption chances.
-                  </p>
+                    className={`${inputClass} resize-none`} placeholder="Tell potential adopters about your dog's temperament, habits, and what kind of home they'd thrive in..." />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ── Section 2: Health ────────────────────────────────── */}
+          {/* ── Section 2: Health ──────────────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-8 py-6 border-b border-gray-50">
-              <SectionHeader number="2" title="Health & Medical" subtitle="Vaccination, neutering, and microchip status" />
+              <SectionHeader number="2" title="Health & Medical" subtitle="Vaccination, neutering, and health status" />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <ToggleCard name="vaccinated"   checked={form.vaccinated}   onChange={set} label="Vaccinated"        description="Up to date on vaccines" />
-                <ToggleCard name="neutered"     checked={form.neutered}     onChange={set} label="Neutered / Spayed" description="Sterilisation confirmed" />
-                <ToggleCard name="microchipped" checked={form.microchipped} onChange={set} label="Microchipped"      description="Registered microchip" />
+                <ToggleCard name="vaccinated"   checked={form.vaccinated}   onChange={set} label="Vaccinated"   description="Up to date on vaccines" />
+                <ToggleCard name="neutered"     checked={form.neutered}     onChange={set} label="Neutered"     description="Spayed or neutered" />
+                <ToggleCard name="microchipped" checked={form.microchipped} onChange={set} label="Microchipped" description="Has a microchip" />
               </div>
             </div>
           </div>
 
-          {/* ── Section 3: Personality ───────────────────────────── */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-8 py-6">
-              <SectionHeader number="3" title="Personality & Compatibility" subtitle="Help adopters understand what your dog is like" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
-                <ToggleCard name="goodWithKids" checked={form.goodWithKids} onChange={set} label="Good with Kids" description="Child-friendly temperament" />
-                <ToggleCard name="goodWithDogs" checked={form.goodWithDogs} onChange={set} label="Good with Dogs" description="Sociable with other dogs" />
-                <ToggleCard name="goodWithCats" checked={form.goodWithCats} onChange={set} label="Good with Cats" description="Comfortable around cats" />
-              </div>
 
-              <div>
-                <label className={labelClass}>Activity Level</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    ['low',    'Prefers calm, relaxed days'],
-                    ['medium', 'Moderate walks & playtime'],
-                    ['high',   'Very energetic, loves exercise'],
-                  ].map(([val, label, desc]) => (
-                    <label key={val}
-                      className={`flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                        form.activityLevel === val
-                          ? 'border-[#008737] bg-gradient-to-br from-[#008737]/5 to-[#085558]/5 shadow-sm'
-                          : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white'
-                      }`}>
-                      <input type="radio" name="activityLevel" value={val} checked={form.activityLevel === val} onChange={set} className="hidden" />
-                      <span className="font-bold text-sm text-[#063630]">{label}</span>
-                      <span className="text-xs text-gray-400 mt-1 leading-snug">{desc}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Section 4: Rehoming Details ──────────────────────── */}
+          {/* ── Section 3: Rehoming Details ─────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-8 py-6">
-              <SectionHeader number="4" title="Rehoming Details" subtitle="Urgency, fee, and reason for rehoming" />
+            <div className="px-8 py-6 border-b border-gray-50">
+              <SectionHeader number="3" title="Rehoming Details" subtitle="Urgency, fees, and reason" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Urgency</label>
@@ -439,39 +380,41 @@ const ListDogPage = () => {
                 </div>
                 <div>
                   <label className={labelClass}>Rehoming Fee (NPR)</label>
-                  <input name="rehomingFee" type="number" min="0" value={form.rehomingFee} onChange={set}
-                    className={inputClass} placeholder="0 for free" />
+                  <input name="rehomingFee" type="number" min="0" value={form.rehomingFee} onChange={set} className={inputClass} placeholder="0 for free" />
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelClass}>Reason for Rehoming</label>
                   <textarea name="reason" value={form.reason} onChange={set} rows={3}
-                    className={`${inputClass} resize-none`}
-                    placeholder="Please briefly explain why you need to find a new home for your dog. Being transparent helps us find the best match..." />
+                    className={`${inputClass} resize-none`} placeholder="Briefly explain why you're rehoming your dog..." />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ── Section 5: Location & Photo ──────────────────────── */}
+          {/* ── Section 4: Location & Photos ────────────────────────── */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-8 py-6">
-              <SectionHeader number="5" title="Location & Photo" subtitle="Where is the dog located and a photo for the listing" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <SectionHeader number="4" title="Location & Photos" subtitle="Where is the dog and what do they look like?" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                 <div>
                   <label className={labelClass}>State / Province <span className="text-[#008737]">*</span></label>
                   <select name="location.state" value={form['location.state']} onChange={set} required className={inputClass}>
                     <option value="">Select Province</option>
-                    {NEPAL_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                    {Object.keys(NEPAL_DATA).map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelClass}>City <span className="text-[#008737]">*</span></label>
                   <select name="location.city" value={form['location.city']} onChange={set} required className={inputClass}>
                     <option value="">Select City</option>
-                    {NEPAL_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {(form['location.state'] ? NEPAL_DATA[form['location.state']] : Object.values(NEPAL_DATA).flat().filter((v, i, a) => a.indexOf(v) === i).sort()).map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
-                <div className="md:col-span-2">
+              </div>
+
+              <div className="md:col-span-2">
                   <label className={labelClass}>Dog's Photos (Max 5)</label>
                   {!form.imagePreviews || form.imagePreviews.length === 0 ? (
                     <label className="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer bg-gray-50 hover:bg-white hover:border-[#008737] transition-all duration-200 group">
@@ -482,7 +425,7 @@ const ListDogPage = () => {
                         </div>
                         <div className="text-center">
                           <p className="text-sm font-semibold text-[#063630]">Click to upload photos</p>
-                          <p className="text-xs text-gray-400 mt-1">JPG, PNG or WEBP — max 5 images</p>
+                          <p className="text-xs text-gray-400 mt-1">High quality, well-lit photos work best</p>
                         </div>
                       </div>
                     </label>
@@ -513,42 +456,49 @@ const ListDogPage = () => {
                           </label>
                         )}
                       </div>
+                      <p className="text-[10px] text-gray-400 italic px-1 flex items-center gap-1.5">
+                        <Info className="h-2.5 w-2.5" /> First photo will be used as the primary listing image.
+                      </p>
                     </div>
                   )}
                 </div>
-              </div>
             </div>
           </div>
 
-          {/* ── Submit ───────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between gap-4">
-              <button type="button" onClick={() => navigate(-1)}
-                className="px-8 py-3.5 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all text-sm">
+          {/* ── Submit Button ───────────────────────────────────────── */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-gray-400">
+              <Shield className="h-5 w-5" />
+              <p className="text-xs max-w-[240px]">Your listing will be reviewed by our team before going public.</p>
+            </div>
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <button
+                type="button"
+                onClick={() => navigate('/rehomer/dashboard')}
+                className="flex-1 md:flex-none px-8 py-3.5 border-2 border-gray-100 text-gray-500 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-200 transition-all text-sm"
+              >
                 Cancel
               </button>
-              <button type="submit" disabled={loading}
-                className="flex-1 max-w-xs py-3.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#008737]/25 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2.5 text-sm"
-                style={{ color: '#ffffff' }}>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 md:flex-none px-12 py-3.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-bold hover:shadow-lg hover:shadow-[#008737]/25 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2.5 text-sm"
+                style={{ color: '#ffffff' }}
+              >
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Submitting your listing...
+                    <span>Processing...</span>
                   </>
                 ) : (
                   <>
-                    <Upload className="h-4 w-4" style={{ color: '#ffffff' }} />
-                    Submit for Review
+                    <Upload className="h-4 w-4" />
+                    <span>List Dog Now</span>
                   </>
                 )}
               </button>
             </div>
-            <p className="text-center text-xs text-gray-400 mt-4 flex items-center justify-center gap-1.5">
-              <Shield className="h-3 w-3" />
-              Your listing will be reviewed by our admin team before going live to adopters.
-            </p>
           </div>
-
         </form>
       </div>
     </div>

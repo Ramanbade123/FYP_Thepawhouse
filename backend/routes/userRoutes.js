@@ -8,7 +8,7 @@ const {
 
 const {
   getProfile, updateProfile, updatePreferences, toggleFavorite,
-  getDashboardStats, getUsers, getUserById, updateUser, deleteUser,
+  getDashboardStats, getUsers, getUserById, updateUser, deleteUser, toggleActiveStatus
 } = require('../controllers/userController');
 
 const { protect }  = require('../middleware/authMiddleware');
@@ -35,7 +35,7 @@ router.get('/dashboard/stats', protect, getDashboardStats);
 // ── Admin only ────────────────────────────────────────────────
 router.get('/',     protect, isAdmin, getUsers);
 router.get('/:id',  protect, isAdmin, getUserById);
-router.put('/:id',  protect, isAdmin, updateUser);
+router.put('/:id/toggle-status', protect, isAdmin, toggleActiveStatus);
 router.delete('/:id', protect, isAdmin, deleteUser);
 
 module.exports = router;

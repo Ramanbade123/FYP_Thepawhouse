@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Dog, RefreshCw, CheckCircle, XCircle, Eye, Clock, User, Trash2, MessageSquare } from 'lucide-react';
 import ConfirmDeleteModal from '../../Shared/ConfirmDeleteModal';
@@ -21,173 +22,12 @@ const statusColor = {
   rejected:  'bg-red-100    text-red-800',
 };
 
-// Modal to view application detail + approve/reject
-const InfoRow = ({ label, value }) => value ? (
-  <div className="flex justify-between items-center py-1.5 border-b border-gray-50 last:border-0">
-    <span className="text-gray-400 text-xs">{label}</span>
-    <span className="text-gray-700 text-xs font-medium text-right max-w-[60%]">{value}</span>
-  </div>
-) : null;
 
-const Badge = ({ children, color = 'gray' }) => {
-  const colors = {
-    green:  'bg-green-100 text-green-700',
-    blue:   'bg-blue-100 text-blue-700',
-    purple: 'bg-purple-100 text-purple-700',
-    orange: 'bg-orange-100 text-orange-700',
-    gray:   'bg-gray-100 text-gray-600',
-    teal:   'bg-teal-100 text-teal-700',
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[color]}`}>
-      {children}
-    </span>
-  );
-};
-
-const SectionCard = ({ title, icon, children }) => (
-  <div className="bg-gray-50 rounded-xl p-3.5">
-    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-      <span>{icon}</span>{title}
-    </p>
-    {children}
-  </div>
-);
-const AppDetailModal = ({ app, petId, onClose, onAction, onMessage }) => {
-  const [loading, setLoading] = useState(false);
-  const a = app.adopter || {};
-  const prefs = a.adoptionPreferences || {};
-
-  const act = async (status) => {
-    setLoading(true);
-    await onAction(petId, app._id, status);
-    setLoading(false);
-    onClose();
-  };
-
-  const handleMessage = async () => {
-    setLoading(true);
-    await onMessage(petId, a._id);
-    setLoading(false);
-    onClose();
-  };
-
-  const fullAddress = [a.address?.street, a.address?.city, a.address?.state]
-    .filter(Boolean).join(', ');
-
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-
-        {/* Header banner */}
-        <div className="bg-gradient-to-r from-[#085558] to-[#008737] p-5 flex items-center gap-4">
-          {a.profileImage && a.profileImage.trim() !== '' && a.profileImage !== 'default-profile.jpg' ? (
-            <img src={imgSrc(a.profileImage)} alt={a.name}
-              className="w-16 h-16 rounded-full object-cover border-3 border-white/30 flex-shrink-0 shadow-lg" />
-          ) : (
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-white/30">
-              <span className="text-white font-bold text-2xl">
-                {a.name?.charAt(0)?.toUpperCase() || '?'}
-              </span>
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-white text-lg leading-tight">{a.name || 'Unknown Applicant'}</h3>
-            <p className="text-white/70 text-sm truncate">{a.email}</p>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              {a.userType && <Badge color="teal">{a.userType.charAt(0).toUpperCase() + a.userType.slice(1)}</Badge>}
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusColor[app.status]}`}>
-                {app.status?.charAt(0).toUpperCase() + app.status?.slice(1)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-5 space-y-3 max-h-[65vh] overflow-y-auto">
-
-          {/* Application info */}
-          <SectionCard title="Application Details" icon="📋">
-            <InfoRow label="Applied for"  value={app.petName} />
-            <InfoRow label="Applied on"   value={new Date(app.appliedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} />
-            <InfoRow label="Member since" value={a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : null} />
-            <div className="flex justify-between items-center py-1.5">
-              <span className="text-gray-400 text-xs">Payment Status</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                app.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 
-                app.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
-                'bg-gray-100 text-gray-500'
-              }`}>
-                {app.paymentStatus || 'unpaid'}
-              </span>
-            </div>
-          </SectionCard>
-
-          {/* Contact info */}
-          <SectionCard title="Contact Information" icon="📞">
-            <InfoRow label="Phone"   value={a.phone} />
-            <InfoRow label="Email"   value={a.email} />
-            <InfoRow label="Address" value={fullAddress || null} />
-            {!fullAddress && <p className="text-xs text-gray-300 italic">No address provided</p>}
-          </SectionCard>
-
-          {/* Living situation */}
-          {(prefs.houseType || prefs.activityLevel || prefs.experienceLevel) && (
-            <SectionCard title="Living Situation" icon="🏠">
-              <InfoRow label="Home type"       value={prefs.houseType ? prefs.houseType.charAt(0).toUpperCase() + prefs.houseType.slice(1) : null} />
-              <InfoRow label="Activity level"  value={prefs.activityLevel ? prefs.activityLevel.charAt(0).toUpperCase() + prefs.activityLevel.slice(1) : null} />
-              <InfoRow label="Experience"      value={prefs.experienceLevel ? prefs.experienceLevel.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase()) : null} />
-              <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-100">
-                {prefs.hasYard       && <Badge color="green">Has Yard</Badge>}
-                {prefs.hasOtherPets  && <Badge color="orange">Has Other Pets</Badge>}
-                {prefs.hasChildren   && <Badge color="blue">Has Children</Badge>}
-                {!prefs.hasYard && !prefs.hasOtherPets && !prefs.hasChildren &&
-                  <span className="text-xs text-gray-300 italic">No lifestyle tags</span>}
-              </div>
-            </SectionCard>
-          )}
-
-          {/* Message */}
-          {app.message && (
-            <SectionCard title="Message from Applicant" icon="💬">
-              <p className="text-sm text-gray-600 italic leading-relaxed">"{app.message}"</p>
-            </SectionCard>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-wrap gap-3 p-4 border-t border-gray-100 bg-gray-50">
-          <button onClick={onClose}
-            className="flex-1 min-w-[100px] py-2.5 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-100 transition-colors text-sm">
-            Close
-          </button>
-          
-          <button onClick={handleMessage} disabled={loading}
-            className="flex-1 min-w-[100px] py-2.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl font-medium hover:bg-blue-100 disabled:opacity-60 transition-colors text-sm flex items-center justify-center gap-1.5">
-            <MessageSquare className="h-4 w-4" /> Message
-          </button>
-
-          {(app.status === 'pending' || app.status === 'reviewing') && (
-            <>
-              <button onClick={() => act('rejected')} disabled={loading}
-                className="flex-[1.5] py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-60 transition-colors text-sm flex items-center justify-center gap-1.5">
-                <XCircle className="h-4 w-4" /> Reject
-              </button>
-              <button onClick={() => act('approved')} disabled={loading}
-                className="flex-[1.5] py-2.5 bg-gradient-to-r from-[#085558] to-[#008737] text-white rounded-xl font-medium hover:shadow-md disabled:opacity-60 transition-all text-sm flex items-center justify-center gap-1.5">
-                <CheckCircle className="h-4 w-4" /> Approve
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ApplicationsTab = ({ setActiveTab }) => {
+  const navigate = useNavigate();
   const [pets, setPets]         = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [selected, setSelected] = useState(null); // { app, petId, petName }
   const [filter, setFilter]     = useState('all');
   const [deleteTarget, setDeleteTarget] = useState(null); // { petId, appId }
 
@@ -282,15 +122,7 @@ const ApplicationsTab = ({ setActiveTab }) => {
         message="This action cannot be undone. Are you sure you want to remove this application permanently?"
       />
 
-      {selected && (
-        <AppDetailModal
-          app={selected.app}
-          petId={selected.petId}
-          onClose={() => setSelected(null)}
-          onAction={handleAction}
-          onMessage={handleMessage}
-        />
-      )}
+
 
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -394,7 +226,7 @@ const ApplicationsTab = ({ setActiveTab }) => {
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setSelected({ app, petId: app.petId })}
+                        onClick={() => navigate('/application/review', { state: { app, petId: app.petId } })}
                         className="flex items-center gap-1 px-3 py-1.5 text-[#085558] border border-[#085558]/30 rounded-lg hover:bg-[#085558]/10 transition-colors text-xs font-medium"
                       >
                         <Eye className="h-3.5 w-3.5" /> View

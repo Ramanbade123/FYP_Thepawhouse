@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Lock, Home, Eye, EyeOff, AlertCircle, CheckCircle, Heart, PawPrint, Shield, ArrowLeft, Camera, Upload, X, KeyRound, RefreshCw } from 'lucide-react';
 import axios from 'axios';
+import { NEPAL_DATA, CITY_TO_PROVINCE } from '../../data/nepalData';
+
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -38,24 +40,41 @@ const Register = () => {
   const { name, email, phone, password, confirmPassword, role, address, adoptionPreferences } = formData;
 
   const onChange = (e) => {
-    if (e.target.name.startsWith('address.')) {
-      const field = e.target.name.split('.')[1];
+    const { name, value, type, checked } = e.target;
+
+    if (name.startsWith('address.')) {
+      const field = name.split('.')[1];
+      let newAddress = { ...address, [field]: value };
+
+      if (field === 'state') {
+        // When province changes, if current city doesn't belong to it, clear it
+        if (newAddress.city && newAddress.city !== 'Other' && CITY_TO_PROVINCE[newAddress.city] !== value) {
+          newAddress.city = '';
+        }
+      } else if (field === 'city') {
+        // When city changes, set province automatically (if not "Other")
+        if (value && value !== 'Other' && CITY_TO_PROVINCE[value]) {
+          newAddress.state = CITY_TO_PROVINCE[value];
+        }
+      }
+
       setFormData({
         ...formData,
-        address: { ...address, [field]: e.target.value }
+        address: newAddress
       });
-    } else if (e.target.name.startsWith('adoptionPreferences.')) {
-      const field = e.target.name.split('.')[1];
-      const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    } else if (name.startsWith('adoptionPreferences.')) {
+      const field = name.split('.')[1];
+      const val = type === 'checkbox' ? checked : value;
       setFormData({
         ...formData,
-        adoptionPreferences: { ...formData.adoptionPreferences, [field]: value }
+        adoptionPreferences: { ...formData.adoptionPreferences, [field]: val }
       });
     } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
+      setFormData({ ...formData, [name]: value });
     }
     setError('');
   };
+
 
   const validateStep1 = () => {
     return true; // Role selection always valid
@@ -332,9 +351,10 @@ const Register = () => {
 
             {/* Name Field */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">
                 Full Name *
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-[#085558]" />
@@ -353,9 +373,10 @@ const Register = () => {
 
             {/* Email Field */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">
                 Email Address *
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-[#085558]" />
@@ -374,9 +395,10 @@ const Register = () => {
 
             {/* Phone Field */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">
                 Phone Number *
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Phone className="h-5 w-5 text-[#085558]" />
@@ -397,9 +419,10 @@ const Register = () => {
 
             {/* User Type */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">
                 I am registering as:
               </label>
+
               <div className="grid grid-cols-2 gap-3">
                 {['individual', 'family', 'organization', 'shelter'].map((type) => (
                   <button
@@ -421,15 +444,17 @@ const Register = () => {
             {/* Adopter Experience (Only if Adopter) */}
             {role === 'adopter' && (
               <div className="space-y-4 pb-2">
-                <h3 className="text-lg font-semibold text-[#063630] flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-[#063630] flex items-center gap-2 justify-start">
                   <PawPrint className="h-5 w-5 text-[#085558]" />
                   Pet Experience
                 </h3>
+
                 
                 <div>
-                  <label className="block text-sm font-medium text-[#063630] mb-2">
+                  <label className="block text-sm font-medium text-[#063630] mb-2 text-left">
                     What is your experience level with dogs? *
                   </label>
+
                   <select
                     name="adoptionPreferences.experienceLevel"
                     value={adoptionPreferences.experienceLevel}
@@ -452,19 +477,21 @@ const Register = () => {
                     onChange={onChange}
                     className="w-5 h-5 rounded border-gray-300 text-[#008737] focus:ring-[#008737]"
                   />
-                  <label htmlFor="hasOtherPets" className="text-sm font-medium text-[#063630]">
+                  <label htmlFor="hasOtherPets" className="text-sm font-medium text-[#063630] text-left">
                     I currently have other pets at home
                   </label>
+
                 </div>
               </div>
             )}
 
             {/* Address Fields */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#063630] flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-[#063630] flex items-center gap-2 justify-start">
                 <Home className="h-5 w-5 text-[#085558]" />
                 Location *
               </h3>
+
               
               <div className="grid grid-cols-2 gap-4">
                 <select
@@ -475,13 +502,9 @@ const Register = () => {
                   required
                 >
                   <option value="">Select Province *</option>
-                  <option value="Koshi">Koshi</option>
-                  <option value="Madhesh">Madhesh</option>
-                  <option value="Bagmati">Bagmati</option>
-                  <option value="Gandaki">Gandaki</option>
-                  <option value="Lumbini">Lumbini</option>
-                  <option value="Karnali">Karnali</option>
-                  <option value="Sudurpashchim">Sudurpashchim</option>
+                  {Object.keys(NEPAL_DATA).map(province => (
+                    <option key={province} value={province}>{province}</option>
+                  ))}
                 </select>
 
                 <select
@@ -492,31 +515,21 @@ const Register = () => {
                   required
                 >
                   <option value="">Select City *</option>
-                  <option value="Kathmandu">Kathmandu</option>
-                  <option value="Lalitpur">Lalitpur</option>
-                  <option value="Bhaktapur">Bhaktapur</option>
-                  <option value="Pokhara">Pokhara</option>
-                  <option value="Biratnagar">Biratnagar</option>
-                  <option value="Birgunj">Birgunj</option>
-                  <option value="Bharatpur">Bharatpur</option>
-                  <option value="Butwal">Butwal</option>
-                  <option value="Hetauda">Hetauda</option>
-                  <option value="Dharan">Dharan</option>
-                  <option value="Itahari">Itahari</option>
-                  <option value="Nepalgunj">Nepalgunj</option>
-                  <option value="Dhangadhi">Dhangadhi</option>
-                  <option value="Janakpur">Janakpur</option>
-                  <option value="Other">Other</option>
+                  {(address.state ? NEPAL_DATA[address.state] : Object.values(NEPAL_DATA).flat().filter((v, i, a) => a.indexOf(v) === i).sort()).map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
                 </select>
+
               </div>
             </div>
 
             {/* Profile Photo (optional) */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-[#063630] flex items-center gap-2">
+              <h3 className="text-sm font-medium text-[#063630] flex items-center gap-2 justify-start">
                 <Camera className="h-4 w-4 text-[#085558]" />
                 Profile Photo <span className="text-gray-400 font-normal">(optional)</span>
               </h3>
+
               <div className="flex items-center gap-5">
                 <div className="relative flex-shrink-0">
                   <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#008737]/30 bg-gradient-to-br from-[#008737]/10 to-[#085558]/10 flex items-center justify-center">
@@ -555,9 +568,10 @@ const Register = () => {
 
             {/* Password Field */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">
                 Password *
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-[#085558]" />
@@ -590,9 +604,10 @@ const Register = () => {
 
             {/* Confirm Password Field */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">
                 Confirm Password *
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-[#085558]" />
@@ -657,7 +672,8 @@ const Register = () => {
               Enter it below to verify your account.
             </p>
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">Verification Code</label>
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">Verification Code</label>
+
               <input
                 type="text"
                 maxLength={6}

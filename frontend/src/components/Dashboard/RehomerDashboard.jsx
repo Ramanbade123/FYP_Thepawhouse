@@ -52,7 +52,7 @@ const RehomerDashboard = () => {
         {activeTab === 'my-dogs'      && <ListedDogs />}
         {activeTab === 'applications' && <ApplicationsTab setActiveTab={setActiveTab} />}
         {activeTab === 'payments'     && <PaymentsTab />}
-        {activeTab === 'vets'         && <NearbyClinics />}
+        {activeTab === 'vets'         && <NearbyClinics currentUser={user} />}
         {activeTab === 'messages'     && <MessagesTab user={user} />}
         {activeTab === 'settings'     && <SettingsTab user={user} onProfileUpdate={setUser} />}
         {activeTab === 'help'         && <HelpAndSupport role="rehomer" />}

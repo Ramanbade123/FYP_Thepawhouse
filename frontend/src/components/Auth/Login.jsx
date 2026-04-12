@@ -111,25 +111,28 @@ const Login = () => {
           )}
 
           <form onSubmit={onSubmit} className="space-y-6">
-            {/* Identifier */}
+            {/* Email Address */}
             <div>
-              <label className="block text-sm font-medium text-[#063630] mb-2">Email, Username, or Phone</label>
+              <label className="block text-sm font-medium text-[#063630] mb-2 text-left">Email Address</label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-[#085558]" />
                 </div>
                 <input
-                  type="text" name="identifier" value={identifier} onChange={onChange}
+                  type="email" name="identifier" value={identifier} onChange={onChange}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/20 transition-all duration-200 text-[#063630]"
-                  placeholder="Email, phone number, or username" required
+                  placeholder="Enter Your Email" required
                 />
+
               </div>
             </div>
 
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-[#063630]">Password</label>
+                <label className="block text-sm font-medium text-[#063630] text-left">Password</label>
+
                 <Link to="/forgot-password" className="text-sm text-[#008737] hover:text-[#085558] font-medium">
                   Forgot password?
                 </Link>

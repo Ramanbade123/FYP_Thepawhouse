@@ -59,7 +59,7 @@ const RehomerOverviewTab = ({ user, setActiveTab }) => {
         }
 
         // 2. Fetch conversations (for count)
-        const msgsRes = await fetch(`${API}/messages/conversations`, { headers });
+        const msgsRes = await fetch(`${API}/messages`, { headers });
         const msgsData = await msgsRes.json();
         let tConvos = 0;
         if (msgsData.success && msgsData.data) {

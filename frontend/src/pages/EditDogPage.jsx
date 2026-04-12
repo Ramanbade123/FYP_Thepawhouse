@@ -4,20 +4,13 @@ import {
   PawPrint, CheckCircle, ArrowLeft,
   Shield, Upload, Info, ImagePlus, X, RefreshCw, Plus
 } from 'lucide-react';
+import { NEPAL_DATA, CITY_TO_PROVINCE } from '../data/nepalData';
+
 
 const API = 'http://localhost:5000/api';
 
-const NEPAL_PROVINCES = [
-  "Koshi Province", "Madhesh Province", "Bagmati Province",
-  "Gandaki Province", "Lumbini Province", "Karnali Province",
-  "Sudurpashchim Province"
-];
+// Removed local NEPAL_PROVINCES and NEPAL_CITIES in favor of central data
 
-const NEPAL_CITIES = [
-  "Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Bharatpur", "Birgunj", "Biratnagar",
-  "Dharan", "Butwal", "Hetauda", "Janakpur", "Dhangadhi", "Nepalgunj", "Itahari",
-  "Birendranagar", "Tikapur", "Tulsipur", "Ghorahi", "Rajbiraj", "Damak"
-].sort();
 
 const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-[#008737] focus:ring-2 focus:ring-[#008737]/10 transition-all";
 const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2";
@@ -134,9 +127,26 @@ const EditDogPage = () => {
         };
       });
     } else {
-      setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+      setForm(prev => {
+        let nextForm = { ...prev, [name]: type === 'checkbox' ? checked : value };
+
+        if (name === 'location.state') {
+          // When province changes, if current city doesn't belong to it, clear it
+          if (nextForm['location.city'] && nextForm['location.city'] !== 'Other' && CITY_TO_PROVINCE[nextForm['location.city']] !== value) {
+            nextForm['location.city'] = '';
+          }
+        } else if (name === 'location.city') {
+          // When city changes, set province automatically (if not "Other")
+          if (value && value !== 'Other' && CITY_TO_PROVINCE[value]) {
+            nextForm['location.state'] = CITY_TO_PROVINCE[value];
+          }
+        }
+
+        return nextForm;
+      });
     }
   };
+
 
   const removeImage = (index) => {
     setForm(prev => {
@@ -388,39 +398,7 @@ const EditDogPage = () => {
           {/* Section 3 */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
             <div className="px-8 py-6">
-              <SectionHeader number="3" title="Personality & Compatibility" subtitle="Help adopters understand what your dog is like" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-7">
-                <ToggleCard name="goodWithKids" checked={form.goodWithKids} onChange={set} label="Good with Kids" description="Child-friendly temperament" />
-                <ToggleCard name="goodWithDogs" checked={form.goodWithDogs} onChange={set} label="Good with Dogs" description="Sociable with other dogs" />
-                <ToggleCard name="goodWithCats" checked={form.goodWithCats} onChange={set} label="Good with Cats" description="Comfortable around cats" />
-              </div>
-              <div>
-                <label className={labelClass}>Activity Level</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    ['low',    'Low',    'Prefers calm, relaxed days'],
-                    ['medium', 'Medium', 'Moderate walks & playtime'],
-                    ['high',   'High',   'Very energetic, loves exercise'],
-                  ].map(([val, label, desc]) => (
-                    <label key={val} className={`flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                      form.activityLevel === val
-                        ? 'border-[#008737] bg-gradient-to-br from-[#008737]/5 to-[#085558]/5 shadow-sm'
-                        : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white'
-                    }`}>
-                      <input type="radio" name="activityLevel" value={val} checked={form.activityLevel === val} onChange={set} className="hidden" />
-                      <span className="font-bold text-sm text-[#063630]">{label}</span>
-                      <span className="text-xs text-gray-400 mt-1 leading-snug">{desc}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4 */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-            <div className="px-8 py-6">
-              <SectionHeader number="4" title="Rehoming Details" subtitle="Urgency, fee, and reason for rehoming" />
+              <SectionHeader number="3" title="Rehoming Details" subtitle="Urgency, fee, and reason for rehoming" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>Urgency</label>
@@ -453,16 +431,19 @@ const EditDogPage = () => {
                   <label className={labelClass}>State / Province <span className="text-[#008737]">*</span></label>
                   <select name="location.state" value={form['location.state']} onChange={set} required className={inputClass}>
                     <option value="">Select Province</option>
-                    {NEPAL_PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                    {Object.keys(NEPAL_DATA).map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelClass}>City <span className="text-[#008737]">*</span></label>
                   <select name="location.city" value={form['location.city']} onChange={set} required className={inputClass}>
                     <option value="">Select City</option>
-                    {NEPAL_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {(form['location.state'] ? NEPAL_DATA[form['location.state']] : Object.values(NEPAL_DATA).flat().filter((v, i, a) => a.indexOf(v) === i).sort()).map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div className="md:col-span-2">
                   <label className={labelClass}>Dog's Photos (Max 5)</label>
                   {!form.imagePreviews || form.imagePreviews.length === 0 ? (
