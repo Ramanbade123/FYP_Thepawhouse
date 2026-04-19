@@ -85,7 +85,7 @@ exports.getPets = async (req, res) => {
     const skip  = (page - 1) * limit;
 
     const [pets, total] = await Promise.all([
-      Pet.find(filter).populate('rehomer', 'name phone location').sort('-createdAt').skip(skip).limit(limit),
+      Pet.find(filter).populate('rehomer', 'name phone address').sort('-createdAt').skip(skip).limit(limit),
       Pet.countDocuments(filter),
     ]);
 
@@ -100,7 +100,7 @@ exports.getPets = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.getPet = async (req, res) => {
   try {
-    const pet = await Pet.findById(req.params.id).populate('rehomer', 'name phone email location profileImage');
+    const pet = await Pet.findById(req.params.id).populate('rehomer', 'name phone email address profileImage');
     if (!pet) return res.status(404).json({ success: false, error: 'Pet not found' });
     // Increment views silently — don't let a save failure block the response
     Pet.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).catch(() => {});
@@ -119,8 +119,8 @@ exports.getPet = async (req, res) => {
 exports.getAdminPetDetail = async (req, res) => {
   try {
     const pet = await Pet.findById(req.params.id)
-      .populate('rehomer', 'name phone email location profileImage')
-      .populate('adoptedBy', 'name email phone profileImage location')
+      .populate('rehomer', 'name phone email address profileImage')
+      .populate('adoptedBy', 'name email phone profileImage address')
       .populate('applications.adopter', 'name email phone profileImage')
       .populate('applications.paymentId');
 
@@ -761,7 +761,7 @@ exports.adminGetAllApplications = async (req, res) => {
 
     const pets = await Pet.find({ 'applications.0': { $exists: true } })
       .populate('rehomer', 'name email')
-      .populate('applications.adopter', 'name email phone profileImage location')
+      .populate('applications.adopter', 'name email phone profileImage address')
       .sort('-createdAt');
 
     // Flatten all applications

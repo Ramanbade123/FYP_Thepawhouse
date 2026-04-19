@@ -489,7 +489,7 @@ const DogDetailPage = () => {
                     <div>
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-0.5">Listed By</p>
                       <p className="font-semibold text-[#063630]">{pet.rehomer.name}</p>
-                      <p className="text-sm text-gray-500">{pet.rehomer.location?.city || pet.rehomer.location?.state || 'Nepal'}</p>
+                      <p className="text-sm text-gray-500">{pet.rehomer.address?.city || pet.rehomer.address?.state || 'Nepal'}</p>
                     </div>
                   </div>
                 )}

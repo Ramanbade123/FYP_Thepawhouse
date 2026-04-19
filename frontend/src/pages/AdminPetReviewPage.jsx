@@ -232,7 +232,7 @@ const AdminPetReviewPage = () => {
                  <div className="space-y-2 pt-2">
                     <p className="text-xs text-gray-500 flex items-center gap-2"><Mail className="h-3 w-3" /> {pet.rehomer?.email}</p>
                     <p className="text-xs text-gray-500 flex items-center gap-2"><Phone className="h-3 w-3" /> {pet.rehomer?.phone || 'No phone'}</p>
-                    <p className="text-xs text-gray-500 flex items-center gap-2"><MapPin className="h-3 w-3" /> {pet.rehomer?.location?.city}, {pet.rehomer?.location?.state}</p>
+                    <p className="text-xs text-gray-500 flex items-center gap-2"><MapPin className="h-3 w-3" /> {pet.location?.city}, {pet.location?.state}</p>
                  </div>
               </div>
            </div>
@@ -277,6 +277,7 @@ const AdminPetReviewPage = () => {
                             <div className="flex justify-between text-[10px]">
                                <span className="text-gray-400 uppercase">Method:</span>
                                <span className="font-bold text-gray-600">Digital Wallet</span>
+                            </div>
                          </div>
                          <button 
                            onClick={() => navigate(`/payments/${payment._id}`, { state: { payment } })}
